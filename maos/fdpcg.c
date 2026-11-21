@@ -61,6 +61,13 @@
 
    clipping xsel in FD essentially removed the boundary conditiona, making
    infinite subapertures. The sum of xsel in FD has to be 1.
+
+   @param[in] nx Grid size along x.
+   @param[in] ny Grid size along y.
+   @param[in] dx Grid sampling (m).
+   @param[in] saloc Subaperture lower left corner coordinate.
+   @param[in] saa Normalized subaperture area. Subapertures with area above 0.9 are selected.
+   @return Newly allocated Fourier domain convolution operator of the selection function. The caller frees it.
 */
 static csp*
 fdpcg_saselect(long nx, long ny, real dx, loc_t* saloc, real* saa){
@@ -109,6 +116,15 @@ fdpcg_saselect(long nx, long ny, real dx, loc_t* saloc, real* saa){
 
    shift=1: apply a fftshift with permutation vector.
    half=1: only using (half+1) of the inner most dimension (FFT is hermitian for real matrix)
+
+   @param[in] nx Grid size along x of each layer.
+   @param[in] ny Grid size along y of each layer.
+   @param[in] os Over sampling ratio of each layer relative to the subaperture.
+   @param[in] bs Size of each diagonal block.
+   @param[in] nps Number of layers.
+   @param[in] shift Whether to apply fftshift in the permutation vector.
+   @param[in] half Whether to only use about half of the frequencies.
+   @return Newly allocated permutation vector. Negative entries indicate a conjugate is needed. The caller frees it.
 */
 static lmat*
 fdpcg_perm(const long* nx, const long* ny, const real* os, int bs, int nps, int shift, int half){
@@ -190,6 +206,13 @@ fdpcg_perm(const long* nx, const long* ny, const real* os, int bs, int nps, int 
 
 /**
    Compute gradient operator in Fourier domain. Subapertures are denoted with lower left corner, so no shift is required.
+
+   @param[out] gx Gradient operator along x. Newly allocated.
+   @param[out] gy Gradient operator along y. Newly allocated.
+   @param[in] nx Grid size along x.
+   @param[in] ny Grid size along y.
+   @param[in] dx Grid sampling (m).
+   @param[in] dsa Subaperture size (m). Must be multiple of dx.
 */
 static void
 fdpcg_g(cmat** gx, cmat** gy, long nx, long ny, real dx, real dsa){
@@ -246,6 +269,16 @@ fdpcg_g(cmat** gx, cmat** gy, long nx, long ny, real dx, real dsa){
 /**
    Propagate operator for nlayer screens to ground of size
    nxp*nxp, sampling dx, with displacement of dispx, dispy.
+
+   @param[in] nps Number of layers.
+   @param[in] nxp Ground grid size along x.
+   @param[in] nyp Ground grid size along y.
+   @param[in] nx Grid size along x of each layer.
+   @param[in] ny Grid size along y of each layer.
+   @param[in] dx Ground grid sampling (m).
+   @param[in] dispx Displacement along x of each layer (m).
+   @param[in] dispy Displacement along y of each layer (m).
+   @return Newly allocated transpose of the Fourier domain propagation operator. The caller frees it.
 */
 static csp*
 fdpcg_prop_trans(long nps, long nxp, long nyp, long* nx, long* ny, real dx, real* dispx, real* dispy){
@@ -322,7 +355,13 @@ fdpcg_prop_trans(long nps, long nxp, long nyp, long* nx, long* ny, real dx, real
 }
 
 /**
-  Prepare data for Tomography Fourier Domain Preconditioner. atm is used to provide wind velocity information.
+   Prepare data for Tomography Fourier Domain Preconditioner.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstructor.
+   @param[in] powfs WFS type data.
+   @param[in] atm Atmosphere screens. Used to provide wind velocity information for delay compensation. May be NULL.
+   @return Newly allocated preconditioner data. Free with fdpcg_free().
 */
 fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t* powfs, mapcell* atm){
 	TIC;tic;
@@ -587,6 +626,9 @@ typedef struct{
 }fdpcg_info_t;
 /**
    Copy x vector and do FFT on each layer
+
+   @param[in,out] pdata Shared thread data. data->xhati is updated. Layers are distributed among threads with data->ips.
+   @return NULL.
 */
 static void* fdpcg_fft(void *pdata){
 	fdpcg_info_t *data=(fdpcg_info_t *)pdata;
@@ -669,7 +711,11 @@ static void* fdpcg_ifft(void *pdata){
    Apply the Fourier domain preconditioner. Preconditioner solves xout=M^-1*xin
    where M is the preconditioner matrix. Here M^-1 is applied in Fourier Domain
    via xout=IFFT(M*FFT(xin));
- */
+
+   @param[out] xout Output. Allocated if NULL. The content is replaced.
+   @param[in] A The reconstructor (recon_t).
+   @param[in] xin Input.
+*/
 void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	TIC_tm; tic_tm;
 	const recon_t* recon=(recon_t*)A;
@@ -747,6 +793,8 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 
 /**
    Free fdpcg related data structs.
+
+   @param[in] fdpcg The struct to free. May be NULL.
 */
 void fdpcg_free(fdpcg_t* fdpcg){
 	if(!fdpcg) return;

@@ -26,9 +26,18 @@ class lock_t{
 	pthread_mutex_t& mutex;
 	int enable;
 public:
+	/**
+	   Scoped lock: lock the mutex if enabled. It is unlocked on destruction.
+
+	   @param[in,out] _mutex Mutex to lock.
+	   @param[in] _enable Whether to lock at all.
+	*/
 	lock_t(pthread_mutex_t& _mutex, int _enable=1):mutex(_mutex), enable(_enable){
 		if(enable) LOCK(mutex);
 	}
+	/**
+	   Unlock the mutex if it was locked.
+	*/
 	~lock_t(){
 		if(enable) UNLOCK(mutex);
 	}
@@ -43,10 +52,16 @@ class cumemcache_t{
 	long nmemcache=0;
 	pthread_mutex_t mutex_cache;
 	
+	/**
+	   Initialize the mutexes.
+	*/
 	cumemcache_t(){
 		pthread_mutex_init(&mutex_cache, 0);
 		pthread_mutex_init(&mutex_hash, 0);
 	}
+	/**
+	   Free the type conversion cache.
+	*/
 	~cumemcache_t(){
 		free(memcache); memcache=NULL; nmemcache=0;
 	}
@@ -68,6 +83,17 @@ void type_convert(M *out, const N *in, long nx){
 	}
 }
 
+/**
+   Convert and copy CPU array to preallocated GPU memory. A cached host buffer
+   is used for type conversion when the types differ in size. Errors out if
+   dest is a deduplicated pointer shared by more than one user.
+
+   @param[out] dest GPU memory of nx*ny elements.
+   @param[in] src CPU array of nx*ny elements.
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @param[in] stream Stream to copy in.
+*/
 template<typename M, typename N>
 void cp2gpu(M* dest, const N* src, long nx, long ny, cudaStream_t stream=0){
 	M* from=0;
@@ -111,7 +137,19 @@ void cp2gpu(M* dest, const N* src, long nx, long ny, cudaStream_t stream=0){
 		}
 	}
 }
-/*Convert and copy CPU data to GPU with deduplication if cuda_dedup is set.*/
+/**
+   Convert and copy CPU data to GPU with deduplication if cuda_dedup is set.
+   Identical data already in the same GPU are reference counted instead of
+   copied. *dest is allocated if NULL.
+
+   @param[in,out] dest Pointer to GPU memory. Allocated (or set to the
+   deduplicated copy) if NULL; otherwise copied into, unless it is shared
+   deduplicated memory in which case new memory is allocated.
+   @param[in] src CPU array of nx*ny elements. Must not be NULL.
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @param[in] stream Stream to copy in.
+*/
 template<typename M, typename N>
 void cp2gpu_dedup(M** dest, const N* src, long nx, long ny, cudaStream_t stream=0){
 	if(!src){
@@ -172,6 +210,16 @@ void cp2gpu_dedup(M** dest, const N* src, long nx, long ny, cudaStream_t stream=
 	}
 }
 
+/**
+   Convert and copy CPU array to GPU. dest is allocated (with deduplication)
+   if empty, otherwise its size must match.
+
+   @param[in,out] dest GPU array. Allocated if empty, otherwise copied into.
+   @param[in] src CPU array of nx*ny elements. Nothing is done if NULL.
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @param[in] stream Stream to copy in.
+*/
 template<typename M, typename N> static inline void
 cp2gpu(NumArray<M, Gpu>& dest, const N* src, long nx, long ny, cudaStream_t stream=0){
 	if(!src||!nx||!ny) return;
@@ -186,6 +234,13 @@ cp2gpu(NumArray<M, Gpu>& dest, const N* src, long nx, long ny, cudaStream_t stre
 		dest=NumArray<M, Gpu>(nx, ny, tmp, 1);
 	}
 }
+/**
+   dmat version of cp2gpu_dedup.
+
+   @param[in,out] dest Pointer to GPU memory. See cp2gpu_dedup().
+   @param[in] src CPU matrix. Nothing is done if NULL.
+   @param[in] stream Stream to copy in.
+*/
 static inline void cp2gpu_dedup(Real** dest, const dmat* src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu_dedup(dest, src->p, src->nx, src->ny, stream);
@@ -197,6 +252,15 @@ void cp2gpu(cuspcell& dest, const dspcell* src, int tocsr);
 //void cp2gpu(curmat& dest, const loc_t* src);
 void cp2gpu(curmat &dest, const_anyarray src_, cudaStream_t stream=0);
 void cp2gpu(cucmat &dest, const_anyarray src_, cudaStream_t stream=0);
+/**
+   Convert and copy CPU cell array to GPU. dest is allocated with the same
+   layout if empty, otherwise its dimension must match. If src is NULL, dest is
+   zeroed.
+
+   @param[in,out] dest GPU cell array. Allocated if empty, otherwise copied into.
+   @param[in] src_ CPU cell array.
+   @param[in] stream Stream to copy in.
+*/
 template <typename T>
 void cp2gpu(NumCell<T, Gpu>& dest, const_anycell src_, cudaStream_t stream=0){
 	const cell* src=src_.c;

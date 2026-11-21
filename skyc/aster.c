@@ -28,7 +28,14 @@
  */
 /**
    Create combination of stars to form asterism. It has the option to put TTF
-   always on the brightest for testing purpose.  */
+   always on the brightest for testing purpose.
+
+   @param[out] naster Number of asterisms.
+   @param[in] star Array of stars. The asterisms keep references to the star data.
+   @param[in] nstar Number of stars.
+   @param[in] parms Simulation parameters.
+   @return Array of naster asterisms, or NULL if there is no star. Newly allocated; free with free_aster().
+*/
 aster_s* setup_aster_comb(int* naster, const star_s* star, int nstar, const parms_s* parms){
 	if(!star || !nstar){
 		*naster=0;
@@ -83,13 +90,14 @@ aster_s* setup_aster_comb(int* naster, const star_s* star, int nstar, const parm
 	return aster;
 }
 /**
- * @brief Mask modes that are not controlled by the loop.
- * 
- * @param parms supplies indps, indastig, indfocus information
- * @param nttf 	number of ttf wfs
- * @param ntt 	number of tt wfs
- * @return lmat* 
- */
+   Mask modes that are not controlled by the fast loop. An entry is set to 1 if the mode is directly controlled by the
+   slow loop.
+
+   @param[in,out] pmdirect Mode mask. Allocated if NULL; otherwise entries are set to 1 in place.
+   @param[in] parms Supplies indps, indastig, indfocus information.
+   @param[in] nttf Number of TTF WFS in the fast loop.
+   @param[in] ntt Number of TT WFS in the fast loop.
+*/
 static void mode_mask(lmat**pmdirect, const parms_s *parms, int nttf, int ntt){
 	if(!pmdirect){
 		warning("pmdirect shall be set\n");
@@ -126,7 +134,12 @@ static void mode_mask(lmat**pmdirect, const parms_s *parms, int nttf, int ntt){
 }
 /**
    Compute Modal to gradient operator by copying from the stars. Using average
-gradients. Similar to Z tilt since the mode is low order */
+gradients. Similar to Z tilt since the mode is low order
+
+   @param[in,out] aster The asterism. The g, ngrad, and tsa fields are set.
+   @param[in] star Array of stars.
+   @param[in] parms Simulation parameters.
+*/
 static void setup_aster_g(aster_s* aster, star_s* star, const parms_s* parms){
 	aster->g=dcellnew(aster->nwfs, 1);
 	aster->ngrad=mycalloc(aster->nwfs, long);
@@ -145,6 +158,9 @@ static void setup_aster_g(aster_s* aster, star_s* star, const parms_s* parms){
 
 /**
    Copy time history of complex pupil function from star_s to aster_s.
+
+   @param[in,out] aster The asterism. The wvfout field of each WFS references the star data.
+   @param[in] star Array of stars.
  */
 void setup_aster_wvf(aster_s* aster, star_s* star){
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -154,7 +170,10 @@ void setup_aster_wvf(aster_s* aster, star_s* star){
 	}
 }
 /**
-   Copy time history of complex pupil function from star_s to aster_s.
+   Copy time history of ztilt gradients and gradient offsets from star_s to aster_s.
+
+   @param[in,out] aster The asterism. The ztiltout and goff fields of each WFS reference the star data.
+   @param[in] star Array of stars.
  */
 void setup_aster_ztilt(aster_s* aster, star_s* star){
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -170,11 +189,13 @@ void setup_aster_ztilt(aster_s* aster, star_s* star){
   Estimate wavefront error propagated from measurement error. 
   pgm is the reconstructor. neam is the error covariance.
   trace(Mcc*(pgm*neam*pgm'))
+
+  @param[in] pgm The reconstructor.
+  @param[in] neam Diagonal of the measurement error covariance matrix.
+  @param[in] mcc NGS mode covariance matrix.
+  @return Vector of nmod+1: the error of each mode followed by the total. Newly allocated; the caller frees it.
 */
-static dmat* calc_recon_error(const dmat* pgm,   /**<[in] the reconstructor*/
-	const dmat* neam,/**<[in] the measurement error covariance matrix*/
-	const dmat* mcc   /**<[in] NGS mode covariance matrix.*/
-){
+static dmat* calc_recon_error(const dmat* pgm, const dmat* neam, const dmat* mcc){
 	dmat* psp=NULL;
 	dmat* tmp=NULL;
 	dmat* var=NULL;
@@ -201,7 +222,12 @@ static dmat* calc_recon_error(const dmat* pgm,   /**<[in] the reconstructor*/
 }
 
 /**
-   Interpolate simu->gain based on noise.
+   Interpolate simu->gain based on noise. The nearest lower precomputed entry is used without interpolation.
+
+   @param[out] out Selected gains.
+   @param[in] gain Precomputed gains for each noise level in gainx.
+   @param[in] gainx Noise levels (m^2), logarithmically spaced.
+   @param[in] sigma2 Noise level (m^2).
 */
 static void interp_gain(real* out, const dcell* gain, const dmat* gainx,
 	real sigma2){
@@ -219,6 +245,12 @@ static void interp_gain(real* out, const dcell* gain, const dmat* gainx,
 	}
 	memcpy(out, P(P(gain,ig)), sizeof(real)*P(gain,ig)->nx);
 }
+/**
+   Zero the columns of the gradient interaction matrix for modes that are marked in mblind.
+
+   @param[in,out] ggm Gradient interaction matrix.
+   @param[in] mblind Mode mask. Nothing is done if NULL.
+*/
 static void mask_gm(dmat *ggm, const lmat *mblind){
 	if(!mblind) return;
 	for(int imod=0; imod<NY(ggm); imod++){
@@ -228,13 +260,16 @@ static void mask_gm(dmat *ggm, const lmat *mblind){
 	}
 }
 /**
- * Select GM using WFS mask. Also compute direct mode mask (mblind) if mblind is set.
- * direct mode are modes that are only sensed by the slower loop and therefore directly fed into the integrator.
- * @param mblind	Modes blind to the current set of WFS
- * @param gm_in		Gradient interaction matrix for each WFS
- * @param mask		Masking out WFS if element is set to 0.
- * @return	dmat	Contatenated Gradient interaction matrix with masked WFS zeroed.
- * */
+   Select GM using WFS mask. Also compute direct mode mask (mblind) if mblind is set.
+   Direct modes are modes that are only sensed by the slower loop and therefore directly fed into the integrator.
+
+   @param[in,out] mblind Modes blind to the current set of WFS. Allocated if *mblind is NULL. May be NULL.
+   @param[in] parms Simulation parameters.
+   @param[in] gm_in Gradient interaction matrix for each WFS.
+   @param[in] mask Masking out WFS if element is set to 0. May be NULL.
+   @return Concatenated gradient interaction matrix with masked WFS zeroed, or NULL if gm_in is empty. Newly
+   allocated; the caller frees it.
+*/
 static dmat* setup_aster_gm_mask(lmat** mblind, const parms_s* parms, const dcell* gm_in, const lmat* mask){
 	if(!gm_in||gm_in->nx==0) return NULL;
 	dcell* gm=dcellnew(gm_in->nx, 1);
@@ -259,7 +294,11 @@ static dmat* setup_aster_gm_mask(lmat** mblind, const parms_s* parms, const dcel
 	}
 	return ggm;
 }
-//Remove WFS that is marked unused.
+/**
+   Remove WFS that is marked unused.
+
+   @param[in,out] aster The asterism. Its wfs array is compacted and nwfs updated.
+*/
 static void aster_remove_wfs(aster_s *aster){
 	int iwfs=0;
 	for(int jwfs=0; jwfs<aster->nwfs; jwfs++){
@@ -384,12 +423,13 @@ setup_aster_multirate(aster_s* aster, const parms_s* parms){
 	aster->idtratmax=idtrat_fast2+1;
 }
 /**
- * @brief Compute reconstructor that is insensitive to mblind modes
- * 
- * @param gm 
- * @param nea 
- * @param mblind 
- */
+   Compute reconstructor that is insensitive to mblind modes
+
+   @param[in] gm Gradient interaction matrix.
+   @param[in] nea Measurement noise used as the weighting in the pseudo inverse.
+   @param[in] mblind Mode mask. Columns of gm for marked modes are zeroed. May be NULL.
+   @return The reconstructor. Newly allocated; the caller frees it.
+*/
 static dmat* recon_mblind(const dmat* gm, const dmat* nea, const lmat *mblind){
 	//old method:
 	dmat *gmzero;
@@ -419,6 +459,10 @@ static dmat* recon_mblind(const dmat* gm, const dmat* nea, const lmat *mblind){
    The gain is optimized to minimize
    \f[ \sigma^2=\int \textrm{PSD}_{ngs,ws}H_{rej}\textrm{d}\nu +
    \int_0^{\nu_{nyquist}} \textrm{PSF}\textrm{d}\nu \f]
+
+   @param[in] simu Simulation data.
+   @param[in,out] aster The asterism. The pgm, sigman, gain, res_ws, and res_ngs fields are computed.
+   @param[in] parms Simulation parameters.
 */
 static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms){
 	const int multirate=parms->skyc.multirate;
@@ -700,7 +744,12 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 	dfree(gmfull);
 	dfree(gmfast);
 }
-/**Place sanea**2 to diagonal of neam */
+/**
+   Place sanea**2 to diagonal of neam
+
+   @param[in,out] pneam The square matrix. Allocated if NULL, otherwise zeroed and reused.
+   @param[in] sanea Noise equivalent angle vector.
+*/
 static void set_diag_pow2(dmat **pneam, dmat *sanea){
 	long ng=PN(sanea);
 	dinit(pneam, ng, ng);
@@ -709,6 +758,13 @@ static void set_diag_pow2(dmat **pneam, dmat *sanea){
 	}
 }
 
+/**
+   Setup the Kalman filter for each sampling rate (or the multirate configuration) and record the estimated error.
+
+   @param[in] simu Simulation data.
+   @param[in,out] aster The asterism. The kalman and res_ngs fields are set. use is set to 0 if the filter fails.
+   @param[in] parms Simulation parameters.
+*/
 static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms){
 	int ndtrat=parms->skyc.multirate?1:parms->skyc.ndtrat;
 	if(!aster->res_ngs){
@@ -759,6 +815,13 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 		//aster->minest=P(aster->res_ngs,0,0);
 	}
 }
+/**
+   Find the sampling rate with the minimum estimated error and the range of rates within a threshold of it.
+
+   @param[in,out] aster The asterism. The idtratest, minest, idtratmin, and idtratmax fields are set.
+   @param[in] maxdtrat If greater than 1, evaluate a range of rates. Otherwise only the best rate.
+   @param[in] maxerror Maximum acceptable error (m^2).
+*/
 static void select_aster_dtrat(aster_s* aster, int maxdtrat, real maxerror){
 	const real wvfmargin=6400e-18; //Allow asterism that is worse by this much to be evaluated.
 	aster->idtratest=-1;//idtrat at astermin
@@ -799,6 +862,16 @@ static void select_aster_dtrat(aster_s* aster, int maxdtrat, real maxerror){
 		}
 	}
 }
+/**
+   Setup the gradient operator, multirate configuration, and servo (integrator
+   or kalman) controllers for asterism aster. If the asterism is not usable, set
+   aster->minest to the open loop error and return.
+
+   @param[in] simu Simulation data.
+   @param[in,out] aster The asterism.
+   @param[in] star Array of stars.
+   @param[in] parms Simulation parameters.
+*/
 void setup_aster_controller(sim_s* simu, aster_s* aster, star_s *star, const parms_s* parms){
 	if(parms->skyc.multirate){
 		setup_aster_multirate(aster, parms);//this may alter the number of wfs.
@@ -820,6 +893,10 @@ void setup_aster_controller(sim_s* simu, aster_s* aster, star_s *star, const par
 }
 /**
    for sort incrementally.
+
+   @param[in] pa First element.
+   @param[in] pb Second element.
+   @return -1, 0, or 1 if a[0] is less than, equal to, or greater than b[0].
  */
 static int sortdbl(const void *pa, const void *pb){
 	const real *a=(const real *)pa;
@@ -827,7 +904,16 @@ static int sortdbl(const void *pa, const void *pb){
 	return (a[0]>b[0])-(a[0]<b[0]);
 }
 /**
-   Select a few asterisms that have decent performance (less than maxerror) */
+   Select a few asterisms that have decent performance (less than maxerror)
+
+   @param[out] result Minimum error of the field (m^2), index of the best asterism, and its sampling frequency (Hz).
+   @param[in,out] aster Array of asterisms. Selected ones get use=2.
+   @param[in] naster Number of asterisms.
+   @param[in,out] star Array of stars. Stars in the selected asterisms are marked as used.
+   @param[in] maxerror Maximum acceptable error (m^2).
+   @param[in] parms Simulation parameters.
+   @return Number of asterisms selected.
+*/
 int setup_aster_select(real* result, aster_s* aster, int naster, star_s* star,
 	real maxerror, const parms_s* parms){
 	dmat* imin=dnew(2, naster);//record best performance of each asterism.
@@ -895,6 +981,10 @@ int setup_aster_select(real* result, aster_s* aster, int naster, star_s* star,
 }
 /**
    Free the aster_s array.
+
+   @param[in] aster Array of asterisms.
+   @param[in] naster Number of asterisms.
+   @param[in] parms Simulation parameters.
  */
 void free_aster(aster_s* aster, int naster, const parms_s* parms){
 	for(int iaster=0; iaster<naster; iaster++){

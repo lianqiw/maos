@@ -23,7 +23,7 @@
    \file draw.h
    Contains functions for data visualization.
 */
-extern int draw_id;/*number to use for drawdaemon, usually PID. */
+extern int draw_id;
 extern int draw_direct;
 extern int draw_disabled;
 extern int draw_single;

@@ -22,12 +22,24 @@
 #include "recon.h" /*for  debugging */
 
 
-/* dest = a/dest Do not use restric because dest and b maybe the same*/
+/**
+   dest = a/dest. Set to 0 if the result is not finite. Do not use restrict
+   because the pointers may alias.
+
+   @param[in,out] dest Device scalar, divisor on input and result on output.
+   @param[in] a Device scalar, dividend.
+*/
 __global__ static void div_do(Real* dest, const Real* a){
 	dest[0]=a[0]/dest[0];
 	if(!isfinite(dest[0])) dest[0]=0;
 }
-/* dest = a/b;then b=a*/
+/**
+   dest = a/b; then b=a. dest is set to 0 if the result is not finite.
+
+   @param[out] dest Device scalar result.
+   @param[in] a Device scalar, dividend.
+   @param[in,out] b Device scalar, divisor on input and set to a on output.
+*/
 __global__ static void div_assign_do(Real* dest, const Real* a, Real* b){
 	dest[0]=a[0]/b[0];
 	b[0]=a[0];
@@ -36,7 +48,13 @@ __global__ static void div_assign_do(Real* dest, const Real* a, Real* b){
 
 
 /**
-   res points to a scalar in device memory. **The caller has to zero it**
+   Accumulate the inner product of two cell arrays: res+=A'*B. **The caller
+   has to zero res**.
+
+   @param[in,out] res Scalar in device memory to accumulate into.
+   @param[in] A First cell array.
+   @param[in] B Second cell array, same layout as A.
+   @param[in] stream CUDA stream.
 */
 void curcellinn_add(Real* restrict res, const curcell& A, const curcell& B, cudaStream_t stream){
 	//cudaMemsetAsync(res, 0,sizeof(Real), stream);
@@ -52,13 +70,28 @@ void curcellinn_add(Real* restrict res, const curcell& A, const curcell& B, cuda
 	}
 }
 
-/* dest = sqrt(a/b); */
+/**
+   dest = sqrt(a/b);
+
+   @param[out] dest Device scalar result. May alias a.
+   @param[in] a Device scalar, dividend.
+   @param[in] b Device scalar, divisor.
+*/
 __global__ static void div_sqrt_do(Real* dest, const Real* a, const Real* b){
 	dest[0]=sqrt(a[0]/b[0]);
 }
-/**Only use kernels to avoid synchronization*/
-static inline void pcg_residual(Real* r0r0, Real* rkzk, Real* rr0, curcell& r0,
-	int precond, cudaStream_t stream){
+/**
+   Compute the normalized CG residual sqrt(r0'*r0/rr0), or sqrt(rkzk/rr0) if
+   not preconditioned. Only use kernels to avoid synchronization.
+
+   @param[in,out] r0r0 Device scalar for the result. Must be zero on entry if precond is set.
+   @param[in] rkzk Device scalar r0'*z0. Not used if precond is set.
+   @param[in] rr0 Device scalar b'*b for normalization.
+   @param[in] r0 Residual vector.
+   @param[in] precond Whether preconditioner is used.
+   @param[in] stream CUDA stream.
+*/
+static inline void pcg_residual(Real* r0r0, Real* rkzk, Real* rr0, curcell& r0, int precond, cudaStream_t stream){
 	if(precond){
 	/*r0r0=r0'*r0; */
 		curcellinn_add(r0r0, r0, r0, stream);
@@ -78,9 +111,21 @@ int pcg_save=0;
    curcellinn implemented with blas takes 0.457 ms each call.
    curcellinn implemented with kernel takes 0.193 ms each call with 256x32 split. 0.158 with 128x16 split. 0.137 with 64x64 split.
    curcelladd takes 0.048 ms per call.
-   return non-zero during unconvergence.
 
    TODO: With Compute Capability of 4.0, all operations can be done in one big kernel, which launches other kernels.
+
+   @param[in,out] x0 Solution. Allocated if empty. Used as initial guess if warm
+   is set, otherwise zeroed first.
+   @param[in] Amul Left hand side operator A.
+   @param[in] Mmul Preconditioner. NULL to disable.
+   @param[in] b Right hand side.
+   @param[in,out] cg_data Work space, allocated as needed.
+   @param[in] warm Whether to use x0 as initial guess.
+   @param[in] maxiter Maximum number of iterations.
+   @param[in] stream CUDA stream.
+   @param[in] cgthres If positive, continue iterating beyond maxiter (up to
+   three times) until the residual is below it.
+   @return Normalized residual after the last iteration.
 */
 Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 	const curcell& b, cgtmp_t& cg_data, int warm, int maxiter,

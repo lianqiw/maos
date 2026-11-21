@@ -23,6 +23,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "gpu_test.h"
+/**
+   Start the GPU MVM daemon listening on the port given as the only argument.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments: program name and port number.
+   @return Exit status. Does not return normally while the daemon runs.
+*/
 int main(int argc, char* argv[]){
 	enum{
 		P_EXE,

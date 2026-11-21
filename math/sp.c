@@ -24,8 +24,13 @@
 #include "suitesparse.c"
 #define assert_sp(A) assert(!A || A->id==M_SPT)
 /**
-   Create a nx*ny sparse matrix with memory for nmax max
+   Create a nx*ny sparse matrix with memory for nzmax max
    elements allocated.
+
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @param[in] nzmax Number of nonzero elements to allocate.
+   @return Newly allocated sparse matrix; the caller frees it.
 */
 X(sp)* X(spnew)(long nx, long ny, long nzmax){
 	if(nx<0) nx=0;
@@ -46,6 +51,13 @@ X(sp)* X(spnew)(long nx, long ny, long nzmax){
 	sp->nref[0]=1;	
 	return sp;
 }
+/**
+   Free the content of a sparse matrix (but not the struct itself) when the
+   reference count reaches zero. If the matrix is bound to a file, it is
+   written first.
+
+   @param[in,out] sp Sparse matrix.
+*/
 static void X(spfree_content)(X(sp)* sp){
 	if(!sp) return;
 	assert(issp(sp));
@@ -63,7 +75,10 @@ static void X(spfree_content)(X(sp)* sp){
 	}
 }
 /**
- * free a sparse matrix*/
+   free a sparse matrix
+
+   @param[in] sp Sparse matrix to free. May be NULL.
+*/
 void X(spfree_do)(X(sp)* sp){
 	if(sp){
 		X(spfree_content)(sp);
@@ -73,6 +88,9 @@ void X(spfree_do)(X(sp)* sp){
 
 /**
    reference a sparse object.
+
+   @param[in] A Sparse matrix. Its reference count is incremented.
+   @return New header sharing the data of A, or NULL if A is NULL; the caller frees it.
 */
 X(sp)* X(spref)(const X(sp)* A){
 	if(!A) return NULL;
@@ -87,7 +105,11 @@ X(sp)* X(spref)(const X(sp)* A){
 	return out;
 }
 /**
-   move the matrix from res to A without change value of A itself.
+   move the matrix from res to A without change value of A itself. The old
+   content of A is freed and res is zeroed.
+
+   @param[in,out] A Destination sparse matrix.
+   @param[in,out] res Source sparse matrix. Emptied on return; the caller still frees the struct.
 */
 void X(spmove)(X(sp)* A, X(sp)* res){
 	if(res&&A){
@@ -104,6 +126,9 @@ void X(spmove)(X(sp)* A, X(sp)* res){
 
 /**
    copy a sparse matrix to another.
+
+   @param[in] A Sparse matrix.
+   @return Newly allocated deep copy, or NULL if A is NULL; the caller frees it.
 */
 X(sp)* X(spdup)(const X(sp)* A){
 	if(!A) return NULL;
@@ -121,6 +146,10 @@ X(sp)* X(spdup)(const X(sp)* A){
 
 /**
    Create a new sparse matrix of the same size as A.
+
+   @param[in] A Sparse matrix.
+   @return Newly allocated sparse matrix with the same dimension and capacity as A
+   (content uninitialized), or NULL if A is NULL; the caller frees it.
 */
 X(sp)* X(spnew2)(const X(sp)* A){
 	if(!A) return NULL;
@@ -130,6 +159,13 @@ X(sp)* X(spnew2)(const X(sp)* A){
 /**
    Create a new sparse matrix and fill in uniform random
    numbers with filling factor of 'fill'
+
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @param[in] mean Scaling of the uniform random values.
+   @param[in] fill Filling factor between 0 and 1.
+   @param[in,out] rstat Random number generator state.
+   @return Newly allocated sparse matrix; the caller frees it.
 */
 X(sp)* X(spnewrandu)(long nx, long ny, const T mean, R fill, rand_t* rstat){
 	if(fill>1) fill=1.;
@@ -168,12 +204,18 @@ X(sp)* X(spnewrandu)(long nx, long ny, const T mean, R fill, rand_t* rstat){
 }
 /**
    Cast a pointer to sparse array.
- */
+
+   @param[in] A Array object.
+   @return A as sparse matrix if it is a nonempty sparse matrix, otherwise NULL. Not a copy.
+*/
 X(sp)* X(sp_cast)(const cell* A){
 	return (A&&A->nx&&A->ny&&issp(A))?(X(sp)*)A:NULL;
 }
 /**
    resize a sparse matrix
+
+   @param[in,out] sp Sparse matrix.
+   @param[in] nzmax New number of nonzero elements to allocate.
 */
 void X(spsetnzmax)(X(sp)* sp, long nzmax){
 	if(!sp) return;
@@ -189,7 +231,10 @@ void X(spsetnzmax)(X(sp)* sp, long nzmax){
 }
 
 /**
- * Display a sparse array*/
+   Display a sparse array
+
+   @param[in] sp Sparse matrix.
+*/
 void X(spdisp)(const X(sp)* sp){
 	long ic, ir;
 	long imax;
@@ -217,8 +262,11 @@ void X(spdisp)(const X(sp)* sp){
 	}
 }
 /**
- * Check a sparse array for wrong orders. Return 1 if is lower triangle, 2 if
- * upper triangle, and 3 if diagonal.*/
+   Check a sparse array for wrong orders.
+
+   @param[in] sp Sparse matrix.
+   @return 1 if is lower triangle, 2 if upper triangle, 3 if diagonal, and 0 otherwise.
+*/
 int X(spcheck)(const X(sp)* sp){
 	assert(!sp||issp(sp));
 	int not_lower=0;
@@ -251,7 +299,11 @@ int X(spcheck)(const X(sp)* sp){
 	return (not_lower?0:1)|(not_upper?0:2);
 }
 /**
- * inplace scale sparse matrix elements.*/
+   inplace scale sparse matrix elements.
+
+   @param[in,out] A Sparse matrix.
+   @param[in] beta Scaling factor.
+*/
 void X(spscale)(X(sp)* A, const T beta){
 	if(!A) return;
 	assert_sp(A);
@@ -264,7 +316,11 @@ void X(spscale)(X(sp)* A, const T beta){
 }
 
 /**
- * inplace scale sparse matrix elements.*/
+   inplace scale sparse matrix rows: A(i,j)*=xs(i).
+
+   @param[in,out] A Sparse matrix.
+   @param[in] xs Vector of length A->nx.
+*/
 void X(spscalex)(X(sp)* A, const X(mat)* xs){
 	if(!A) return;
 	assert_sp(A);
@@ -282,7 +338,11 @@ void X(spscalex)(X(sp)* A, const X(mat)* xs){
 }
 
 /**
- * inplace scale sparse matrix elements.*/
+   inplace scale sparse matrix columns: A(i,j)*=ys(j).
+
+   @param[in,out] A Sparse matrix.
+   @param[in] ys Vector of length A->ny.
+*/
 void X(spscaley)(X(sp)* A, const X(mat)* ys){
 	if(!A) return;
 	assert_sp(A);
@@ -299,7 +359,10 @@ void X(spscaley)(X(sp)* A, const X(mat)* ys){
 }
 /**
    Reference a spcell array.
- */
+
+   @param[in] A Sparse cell array.
+   @return Newly allocated cell array whose elements reference those of A; the caller frees it.
+*/
 X(spcell)* X(spcellref)(const X(spcell)* A){
 	if(!A) return NULL;
 	X(spcell)* out=(X(spcell*))cellnew(A->nx, A->ny);
@@ -310,7 +373,10 @@ X(spcell)* X(spcellref)(const X(spcell)* A){
 }
 /**
    cast a cell object to X(spcell) after checking
- */
+
+   @param[in] A Cell array.
+   @return A cast to sparse cell if all its elements are sparse or NULL, otherwise NULL. Not a copy.
+*/
 X(spcell)* X(spcell_cast)(const cell* A){
 	if(!A) return NULL;
 	for(long iy=0; iy<NY(A); iy++){
@@ -324,14 +390,24 @@ X(spcell)* X(spcell_cast)(const cell* A){
 	return (X(spcell)*)A;
 }
 /**
- * inplace scale a X(dspcell) object*/
+   inplace scale a sparse cell array
+
+   @param[in,out] A Sparse cell array.
+   @param[in] beta Scaling factor.
+*/
 void X(spcellscale)(X(spcell)* A, const T beta){
 	for(int i=0; i<A->nx*A->ny; i++){
 		X(spscale)(P(A,i), beta);
 	}
 }
 /**
- * Create a new sparse matrix with diagonal elements set to vec*alpha*/
+   Create a new sparse matrix with diagonal elements set to vec*alpha
+
+   @param[in] N Dimension of the square matrix.
+   @param[in] vec Diagonal values of length N. If NULL, all are 1.
+   @param[in] alpha Scaling factor.
+   @return Newly allocated sparse matrix; the caller frees it.
+*/
 X(sp)* X(spnewdiag)(long N, T* vec, T alpha){
 	X(sp)* out=X(spnew)(N, N, N);
 	spint* pp=out->pp;
@@ -358,6 +434,9 @@ X(sp)* X(spnewdiag)(long N, T* vec, T alpha){
 }
 /**
    Extract diagonal element of A and return
+
+   @param[in] A Square sparse matrix.
+   @return Newly allocated column vector of the diagonal, or NULL if A is NULL; the caller frees it.
 */
 X(mat)* X(spdiag)(const X(sp)* A){
 	if(!A) return NULL;
@@ -384,6 +463,10 @@ X(mat)* X(spdiag)(const X(sp)* A){
    A=A*W*alpha;
    W is a diagonal sparse matrix. diag(W) is w
    multiply w[i] to all numbers in column[i]
+
+   @param[in,out] A Sparse matrix.
+   @param[in] w Diagonal weights of length A->ny.
+   @param[in] alpha Scaling factor.
 */
 void X(spmuldiag)(X(sp)* restrict A, const T* w, T alpha){
 	if(A&&w){
@@ -398,7 +481,13 @@ void X(spmuldiag)(X(sp)* restrict A, const T* w, T alpha){
 }
 
 /**
- * Multiply two vectors with weighting by sparse matrix.  return y'*(A*x)*/
+   Multiply two vectors with weighting by sparse matrix.
+
+   @param[in] y Left vector.
+   @param[in] A Sparse weighting matrix. If NULL, identity is used.
+   @param[in] x Right vector.
+   @return y'*(A*x).
+*/
 T X(spwdot)(const X(mat)* y, const X(sp)* A, const X(mat)* x){
 	/*X(sp) weighted ddot. */
 	/*computes y'*(A*x). x,y are vectors */
@@ -421,7 +510,13 @@ T X(spwdot)(const X(mat)* y, const X(sp)* A, const X(mat)* x){
 	return res;
 }
 /**
- * Multiply two cell arrays with weighting by sparse matrix*/
+   Multiply two cell arrays with weighting by sparse matrix
+
+   @param[in] y Left cell vector.
+   @param[in] A Sparse cell weighting matrix. If NULL, identity is used.
+   @param[in] x Right cell vector.
+   @return y'*(A*x).
+*/
 T X(spcellwdot)(const X(cell)* y, const X(spcell)* A, const X(cell)* x){
 	/*computes y'*(A*x) */
 	T res=0;
@@ -444,8 +539,14 @@ T X(spcellwdot)(const X(cell)* y, const X(spcell)* A, const X(cell)* x){
 }
 
 /**
- * Convert sparse matrix into dense matrix and add to output:
- * out0=out0+full(A)*alpha*/
+   Convert sparse matrix into dense matrix and add to output:
+   out0=out0+op(full(A))*alpha. A may also be a dense matrix.
+
+   @param[in,out] out0 Output dense matrix, allocated if NULL, otherwise accumulated into.
+   @param[in] A Sparse (or dense) matrix.
+   @param[in] trans 'n' for A, 't' for A'.
+   @param[in] alpha Scaling factor.
+*/
 void X(spfull)(X(mat)** out0, const X(sp)* A, const char trans, const T alpha){
 	if(!A) return;
 		/**
@@ -509,7 +610,11 @@ void X(spfull)(X(mat)** out0, const X(sp)* A, const char trans, const T alpha){
 }
 /**
    Convert dense matrix A to sparse matrix with threshold.
- */
+
+   @param[in] A Dense matrix.
+   @param[in] thres Elements with absolute value not above thres are dropped.
+   @return Newly allocated sparse matrix, or NULL if A is NULL; the caller frees it.
+*/
 X(sp)* X(2sp)(X(mat)* A, R thres){
 	if(!A) return 0;
 	assert(ismat(A));
@@ -532,7 +637,14 @@ X(sp)* X(2sp)(X(mat)* A, R thres){
 }
 
 /**
- * Added two sparse matrices: return A*a+B*b*/
+   Added two sparse matrices: return A*a+B*b
+
+   @param[in] A First sparse matrix.
+   @param[in] a Scaling of A.
+   @param[in] B Second sparse matrix, same size as A.
+   @param[in] b Scaling of B.
+   @return Newly allocated sparse matrix; the caller frees it.
+*/
 X(sp)* X(spadd2)(const X(sp)* A, T a, const X(sp)* B, T b){
 	assert(issp(A)&&issp(B));
 	if(A->nx!=B->nx||A->ny!=B->ny){
@@ -548,7 +660,13 @@ X(sp)* X(spadd2)(const X(sp)* A, T a, const X(sp)* B, T b){
 	return C;
 }
 /**
- * Add a sparse matrix to another: A0=A0+B*/
+   Add a sparse matrix to another: A0=A0*alpha+B*beta
+
+   @param[in,out] A0 Sparse matrix, allocated as B*beta if NULL (alpha is then ignored).
+   @param[in] alpha Scaling of A0.
+   @param[in] B Sparse matrix to add. Nothing is done if NULL.
+   @param[in] beta Scaling of B.
+*/
 void X(spadd)(X(sp)** A0, T alpha, const X(sp)* B, T beta){
 	/*add B to A. */
 	if(B){
@@ -568,6 +686,10 @@ void X(spadd)(X(sp)** A0, T alpha, const X(sp)* B, T beta){
 /**
    Add alpha times identity to a sparse matrix.
    If X(sp) is not symmetric, only add diagonal to first nm*nm block for nm=min(nx,ny)
+
+   @param[in] A Sparse matrix.
+   @param[in] alpha Value to add to the diagonal.
+   @return Newly allocated sparse matrix, or NULL if A is NULL; the caller frees it.
 */
 X(sp)* X(spaddI)(const X(sp)* A, T alpha){
 	if(!A) return NULL;
@@ -633,7 +755,11 @@ X(sp)* X(spaddI)(const X(sp)* A, T alpha){
 	return out;
 }
 /**
- * Transpose a sparse array*/
+   Transpose a sparse array (conjugate transpose for complex).
+
+   @param[in] A Sparse matrix.
+   @return Newly allocated transpose, or NULL if A is NULL; the caller frees it.
+*/
 X(sp)* X(sptrans)(const X(sp)* A){
 	if(!A) return NULL;
 	assert_sp(A);
@@ -642,8 +768,10 @@ X(sp)* X(sptrans)(const X(sp)* A){
 	return res;
 }
 /**
-   Take conjugation elementwise.
- */
+   Take conjugation elementwise in place. No-op for real types.
+
+   @param[in,out] A Sparse matrix.
+*/
 void X(spconj)(X(sp)* A){
 #ifdef COMP_COMPLEX
 	const long nzmax=A->pp[A->ny];
@@ -655,8 +783,13 @@ void X(spconj)(X(sp)* A){
 #endif
 }
 /**
-   Expand sparse matrix cell to dense matrix cell.
- */
+   Expand sparse matrix cell to dense matrix cell: out0=out0+op(full(A))*alpha.
+
+   @param[in,out] out0 Output dense cell array, allocated if NULL, otherwise accumulated into.
+   @param[in] A Sparse cell array.
+   @param[in] trans 'n' for A, 't' for A'.
+   @param[in] alpha Scaling factor.
+*/
 void X(spcellfull)(X(cell)** out0, const X(spcell)* A, const char trans, const T alpha){
 	if(!A) return;
 	if(!*out0){
@@ -680,7 +813,11 @@ void X(spcellfull)(X(cell)** out0, const X(spcell)* A, const char trans, const T
 	}
 }
 /**
- * Transpose a sparse cell*/
+   Transpose a sparse cell
+
+   @param[in] spc Sparse cell array.
+   @return Newly allocated transposed cell array, or NULL if spc is NULL; the caller frees it.
+*/
 X(spcell)* X(spcelltrans)(const X(spcell)* spc){
 	if(!spc) return NULL;
 	long nx, ny;
@@ -697,7 +834,14 @@ X(spcell)* X(spcelltrans)(const X(spcell)* spc){
 }
 
 /**
- * Concatenate two sparse array along dim dimension*/
+   Concatenate two sparse array along dim dimension. Only dim==1 (side by
+   side) is implemented.
+
+   @param[in] A First sparse matrix.
+   @param[in] B Second sparse matrix.
+   @param[in] dim Dimension to concatenate along.
+   @return Newly allocated sparse matrix, or NULL if both are empty; the caller frees it.
+*/
 X(sp)* X(spcat)(const X(sp)* A, const X(sp)* B, int dim){
 	X(sp)* C=NULL;
 	if(!B){
@@ -737,7 +881,12 @@ X(sp)* X(spcat)(const X(sp)* A, const X(sp)* B, int dim){
 	return C;
 }
 /**
- * Concatenate a dspcell to sparse array*/
+   Concatenate a sparse cell array to sparse array. Dense blocks in A are
+   converted to sparse temporarily; A is not modified.
+
+   @param[in] A Sparse cell array.
+   @return Newly allocated sparse matrix (a reference if A has a single sparse cell); the caller frees it. NULL if A is NULL.
+*/
 X(sp)* X(spcell2sp)(const X(spcell)* A){
 	/*convert X(spcell) to sparse. */
 	if(!A) return NULL;
@@ -838,7 +987,12 @@ X(sp)* X(spcell2sp)(const X(spcell)* A){
 }
 
 /**
- * Sum elements of sparse array along dimension dim*/
+   Sum elements of sparse array along dimension dim
+
+   @param[in] A Sparse matrix.
+   @param[in] dim 1: sum each column into a 1*ny vector. 2: sum each row into a nx*1 vector.
+   @return Newly allocated vector, or NULL if A is NULL; the caller frees it.
+*/
 X(mat)* X(spsum)(const X(sp)* A, int dim){
 	if(!A) return 0;
 	/*Sum sparse matrix along col or row to form a vector */
@@ -870,7 +1024,12 @@ X(mat)* X(spsum)(const X(sp)* A, int dim){
 	return v;
 }
 /**
- * Sum abs of elements of sparse array along dimension dim*/
+   Sum abs of elements of sparse array along dimension axis
+
+   @param[in] A Sparse matrix.
+   @param[in] axis 1: sum each column into a 1*ny vector. 2: sum each row into a nx*1 vector.
+   @return Newly allocated vector, or NULL if A is NULL; the caller frees it.
+*/
 X(mat)* X(spsumabs)(const X(sp)* A, int axis){
 	if(!A) return 0;
 	assert_sp(A);
@@ -901,9 +1060,13 @@ X(mat)* X(spsumabs)(const X(sp)* A, int axis){
 	return v;
 }
 /**
- * @brief Compute the sum of diagonal items (trace) with power.
- * 
- */
+   Compute the sum of diagonal items (trace) with power. For complex types,
+   the magnitude is used.
+
+   @param[in] A Sparse matrix.
+   @param[in] power Power applied to each nonzero diagonal element.
+   @return sum(diag(A).^power).
+*/
 R X(sptrace)(const X(sp)*A, R power){
 	if(!A) return 0;
 	assert_sp(A);
@@ -922,7 +1085,10 @@ R X(sptrace)(const X(sp)*A, R power){
 	return sum;
 }
 /**
-   Clean up a sparse array by dropping zeros*/
+   Clean up a sparse array by dropping zeros
+
+   @param[in,out] A Sparse matrix.
+*/
 void X(spclean)(X(sp)* A){
 	if(!A) return;
 	assert_sp(A);
@@ -930,7 +1096,10 @@ void X(spclean)(X(sp)* A){
 }
 
 /**
-   Drop elements that are EPS times the largest value.
+   Drop elements that are not above thres times the largest absolute value.
+
+   @param[in,out] A Sparse matrix.
+   @param[in] thres Relative threshold. At least EPS.
 */
 void X(spdroptol)(X(sp)* A, R thres){
 	if(!A) return;
@@ -940,7 +1109,10 @@ void X(spdroptol)(X(sp)* A, R thres){
 	X(ss_droptol)(A, maxv*thres);
 }
 /**
-   Drop elements that are EPS times the largest value.
+   Drop elements that are not above thres times the largest value of each block.
+
+   @param[in,out] A Sparse cell array.
+   @param[in] thres Relative threshold. At least EPS.
 */
 void X(spcelldroptol)(X(spcell)* A, R thres){
 	for(int i=0; i<A->nx*A->ny; i++){
@@ -948,7 +1120,11 @@ void X(spcelldroptol)(X(spcell)* A, R thres){
 	}
 }
 /**
- * Drop empty columns
+   Drop empty columns in place. Returns a lmat that maps the new column index to
+   the original column index.
+
+   @param[in,out] A Sparse matrix.
+   @return Newly allocated column index map, or NULL if A is NULL; the caller frees it.
 */
 lmat *X(spdropemptycol)(X(sp)*A){
 	if (!A) return NULL;
@@ -987,7 +1163,10 @@ static int spelemcmp(const void *pA, const void *pB){
 }
 /**
    Make sure the elements are sorted correctly. Does not change the location of
-data. can be done without harm. */
+   data. can be done without harm.
+
+   @param[in,out] A Sparse matrix. Row indices in each column are sorted in place.
+*/
 void X(spsort)(X(sp)* A){
 	if(!A||A->ny==0||A->nx==0) return;
 	assert_sp(A);
@@ -1015,6 +1194,8 @@ void X(spsort)(X(sp)* A){
 }
 /**
    Make sure the elements are sorted correctly.
+
+   @param[in,out] A Sparse cell array.
 */
 void X(spcellsort)(X(spcell)* A){
 	for(int i=0; i<A->nx*A->ny; i++){
@@ -1024,6 +1205,8 @@ void X(spcellsort)(X(spcell)* A){
 /**
    symmetricize a sparse matrix and drop values below a
    threshold.
+
+   @param[in,out] A Sparse matrix, replaced by (A+A')/2.
 */
 void X(spsym)(X(sp)** A){
 	X(sp)* B=X(sptrans)(*A);
@@ -1036,6 +1219,8 @@ void X(spsym)(X(sp)** A){
 /**
    symmetricize a sparse cell and drop values below a
    threshold.
+
+   @param[in,out] A Sparse cell array, replaced by (A+A')/2.
 */
 void X(spcellsym)(X(spcell)** A){
 	X(spcell)* B=X(spcelltrans)(*A);
@@ -1050,6 +1235,10 @@ void X(spcellsym)(X(spcell)** A){
    Create a sparse convolution operator C with
    C(i,j)=A(i-j);
    A must be very sparse with only a view non-zero value otherwise C will be too full.
+   Indices wrap around periodically.
+
+   @param[in] A Dense convolution kernel.
+   @return Newly allocated sparse matrix of size (nx*ny)*(nx*ny); the caller frees it.
 */
 X(sp)* X(spconvolvop)(X(mat)* A){
 	/*First collect statistics on A. */
@@ -1115,6 +1304,11 @@ X(sp)* X(spconvolvop)(X(mat)* A){
    B(:,i)=A(p,i); or B(pi,i)=A(:,i)
    if reverse is 1
    B(p,i)=A(:,i); or B(:,i)=A(pi,i);
+
+   @param[in] A Sparse matrix.
+   @param[in] reverse Direction of permutation.
+   @param[in] p Permutation vector of length A->nx. If NULL, A is copied.
+   @return Newly allocated sparse matrix; the caller frees it.
 */
 static X(sp)* X(sppermcol)(const X(sp)* A, int reverse, long* p){
 	if(!p) return X(spdup)(A);
@@ -1141,7 +1335,13 @@ static X(sp)* X(sppermcol)(const X(sp)* A, int reverse, long* p){
 	return B;
 }
 /**
-   Permute rows and columns of sparse matrix A;
+   Permute rows and columns of sparse matrix A; See X(sppermcol) for the meaning of reverse.
+
+   @param[in] A Sparse matrix.
+   @param[in] reverse Direction of permutation.
+   @param[in] pcol Permutation applied by X(sppermcol) to A. May be NULL.
+   @param[in] prow Permutation applied by X(sppermcol) to the transpose. May be NULL.
+   @return Newly allocated (or referenced) sparse matrix, or NULL if A is NULL; the caller frees it.
 */
 X(sp)* X(spperm)(X(sp)* A, int reverse, long* pcol, long* prow){
 	if(!A) return 0;
@@ -1166,6 +1366,10 @@ X(sp)* X(spperm)(X(sp)* A, int reverse, long* pcol, long* prow){
 /**
    Invert a SPD sparse matrix that is block diagonal with
    block sizes of bs.
+
+   @param[in] A Square block diagonal sparse matrix.
+   @param[in] bs Block size.
+   @return Newly allocated sparse inverse, or NULL if A is NULL; the caller frees it.
 */
 X(sp)* X(spinvbdiag)(const X(sp)* A, long bs){
 	if(!A) return 0;
@@ -1207,7 +1411,11 @@ X(sp)* X(spinvbdiag)(const X(sp)* A, long bs){
 	return B;
 }
 /**
-   Extrat the diagonal blocks of size bs into cell arrays.
+   Extract the diagonal blocks of size bs into cell arrays.
+
+   @param[in] A Square block diagonal sparse matrix.
+   @param[in] bs Block size.
+   @return Newly allocated cell array of nx/bs dense blocks, or NULL if A is NULL; the caller frees it.
 */
 X(cell)* X(spblockextract)(const X(sp)* A, long bs){
 	if(!A) return 0;

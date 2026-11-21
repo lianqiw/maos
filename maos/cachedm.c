@@ -33,6 +33,8 @@
    matches the WFS and science OPD. For the upper DM, we need to two planes, one
    at 1/64m for the LGS WFS and science OPD, and another one at 1/64 m
    *(1-11.2/90) for the LGS due to cone effect. The square grid are on axis.
+
+   @param[in,out] simu Simulation data. The DM cache grid and ray tracing threads are created.
 */
 void prep_cachedm(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -79,6 +81,8 @@ void prep_cachedm(sim_t* simu){
 /**
    Partition the ray tracing by DM/Destination combinations, as well as
    segments in each combination to maximum efficiency.
+
+   @param[in,out] simu Simulation data. The DM cache is updated from the current DM commands.
 */
 void calc_cachedm(sim_t* simu){
 	if(simu->cachedm){

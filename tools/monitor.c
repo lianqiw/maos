@@ -46,7 +46,8 @@ static int notify_daemon=1;
 #ifndef GTK_WIDGET_VISIBLE
 #define GTK_WIDGET_VISIBLE gtk_widget_get_visible
 #endif
-int sock_main[2]={0,0}; /*Write by GUI thread. Read by listen_host*/
+/**Write by GUI thread. Read by listen_host. Listens command from main.*/
+int sock_main[2]={0,0};
 GdkPixbuf* icon_main=NULL;
 GdkPixbuf *icon_draw=NULL;
 GdkPixbuf* icon_finished=NULL;
@@ -90,7 +91,8 @@ GtkWidget* toolbar;
 #endif
 #define MAX_HOST 20
 const char *mailto=NULL;
-int headless=0;//set to 1 when GTK cannot create window
+/**set to 1 when GTK cannot create window*/
+int headless=0;
 gint cur_ihost=-1;
 /*
 #define DIALOG_MSG(A...) {				\
@@ -105,6 +107,15 @@ gint cur_ihost=-1;
     }
 	*/
 
+/**
+   Ask the listen_host() thread (via sock_main) to send scheduler command
+   command (CMD_*) for job pid to host ihost. Does not wait for the result to
+   avoid blocking the GUI.
+
+   @param[in] ihost Host index.
+   @param[in] pid Process ID of the job.
+   @param[in] command The command (CMD_*).
+*/
 void scheduler_cmd_wrap(int ihost, int pid, int command){
 	int cmd[4]={MON_CMD, ihost, pid, command};
 	stwriteintarr(sock_main[1], cmd, 4);
@@ -113,18 +124,39 @@ void scheduler_cmd_wrap(int ihost, int pid, int command){
 	//streadint(sock_main[1], &ans);
 	//return ans;
 }
+/**
+   Ask the listen_host() thread (via sock_main) to connect to host ihost.
+
+   @param[in] ihost Host index. -1 just wakes up the thread; -2 asks it to quit.
+*/
 void add_host_wrap(int ihost){
 	int cmd[3]={MON_ADDHOST, ihost, 0};
 	stwriteintarr(sock_main[1], cmd, 3);
 }
+/**
+   Ask the listen_host() thread to remove jobs on host ihost from the list.
+
+   @param[in] ihost Host index.
+   @param[in] flag The pid of the job to remove, or -1 (finished), -2 (skipped), -3 (crashed), -4 (all not running or pending) to select by status.
+*/
 void clear_job_wrap(int ihost, int flag){
 	int cmd[3]={MON_CLEARJOB, ihost, flag};
 	stwriteintarr(sock_main[1], cmd, 3);
 }
+/**
+   Ask the listen_host() thread to kill job pid on host ihost, or all running
+   and pending jobs on that host.
+
+   @param[in] ihost Host index.
+   @param[in] pid Process ID of the job, or 0 for all running and pending jobs.
+*/
 void kill_job_wrap(int ihost, int pid){
 	int cmd[3]={MON_KILLJOB, ihost, pid};
 	stwriteintarr(sock_main[1], cmd, 3);
 }
+/**
+   Ask the listen_host() thread to save the list of all jobs to a file in ~/.
+*/
 void save_job_wrap(){
 	int cmd[3]={MON_SAVEJOB, 0, 0};
 	stwriteintarr(sock_main[1], cmd, 3);
@@ -172,6 +204,12 @@ static const gchar* rc_string_entry=
 "class \"GtkEntry\" style \"entry\" \n"
 };
 #endif
+/**
+   Update the CPU usage progress bar of a host. Usage below 0.15 is shown as 0.
+
+   @param[in] ihost Host index. A warning is printed if out of range.
+   @param[in] frac CPU usage in [0, 1] to set. Out of range values keep the current usage_cpu[ihost].
+*/
 static void update_progress_host(int ihost, double frac){
 	if(ihost>=0 && ihost<nhost){
 		if(frac>=0 && frac<=1){
@@ -200,7 +238,11 @@ static void update_progress_host(int ihost, double frac){
 	}
 }
 /**
-   Enables the notebook page for a host*/
+   Enables the notebook page for a host. Called through g_idle_add().
+
+   @param[in] data Host index, as GINT_TO_POINTER().
+   @return 0 so that it runs only once.
+*/
 gboolean host_up(gpointer data){
 	int ihost=GPOINTER_TO_INT(data);
 	//gtk_widget_set_sensitive(cmdconnect[ihost], 0);
@@ -210,7 +252,11 @@ gboolean host_up(gpointer data){
 	return 0;
 }
 /**
-   Disables the notebook page for a host*/
+   Disables the notebook page for a host. Called through g_idle_add().
+
+   @param[in] data Host index, as GINT_TO_POINTER().
+   @return 0 so that it runs only once.
+*/
 gboolean host_down(gpointer data){
 	int ihost=GPOINTER_TO_INT(data);
 	char status[100];
@@ -226,7 +272,10 @@ gboolean host_down(gpointer data){
 	return 0;
 }
 /**
-* determine host index from name
+   Determine host index from name.
+
+   @param[in] hostn Short host name.
+   @return The host index, or -1 if not found.
 */
 int host2i(const char *hostn){
 	for(int ihost=0; ihost<nhost; ihost++){
@@ -237,7 +286,7 @@ int host2i(const char *hostn){
 	warning("host %s is not found\n", hostn);
 	return -1;
 }
-/**
+/*
    modifies the color of progress bar*/
    /*
 static void modify_bg(GtkWidget* widget, int type){
@@ -283,13 +332,24 @@ static void modify_bg(GtkWidget* widget, int type){
 #endif
 }*/
 /**
-   updates the progress bar for a job*/
+   Updates the CPU usage progress bar of a host from usage_cpu. Called through
+   g_idle_add().
+
+   @param[in] input Host index, as GINT_TO_POINTER().
+   @return FALSE so that it runs only once.
+*/
 gboolean update_progress(gpointer input){
 	int ihost=GPOINTER_TO_INT(input);
 	update_progress_host(ihost, -1);
 	return FALSE;
 }
 
+/**
+   Show a desktop notification when the status of job p changes to started,
+   finished, crashed or killed. Does nothing without libnotify support.
+
+   @param[in,out] p The job. p->oldinfo is updated to the current status.
+*/
 void notify_user(proc_t* p){
 	if(p->status.info==p->oldinfo || p->status.done) return;
 	p->oldinfo=p->status.info;
@@ -349,7 +409,10 @@ void notify_user(proc_t* p){
 #endif
 }
 /**
-   quite the program
+   Quit the program. Asks listen_host() to quit and exits.
+
+   @param[in] widget Unused.
+   @param[in] data Unused.
 */
 static void quitmonitor(GtkWidget* widget, gpointer data){
 	(void)widget;
@@ -365,7 +428,11 @@ static void quitmonitor(GtkWidget* widget, gpointer data){
 	exit(0);
 }
 /**
-   update the job count
+   Update the page title of a host with the number of pending and total jobs.
+   Called through g_idle_add().
+
+   @param[in] data Packed as GSIZE_TO_POINTER(hid | nproc<<8 | npending<<20). hid equal to nhost is the "All" page.
+   @return 0 so that it runs only once.
 */
 gboolean update_title(gpointer data){
 	size_t tmp=GPOINTER_TO_SIZE(data);
@@ -386,7 +453,7 @@ gboolean update_title(gpointer data){
 	gtk_label_set_text(GTK_LABEL(titles[hid]), tit);
 	return 0;//always return 0 to avoid repeat itself when use g_idle_add
 }
-/**
+/*
    respond to the kill job event
 */
 /*
@@ -419,6 +486,11 @@ void kill_job(int hid, int pid){
 	break;
 	}
 }*/
+/**
+   Kill all jobs on host this_host, or on all hosts if this_host equals nhost.
+
+   @param[in] this_host Host index, or nhost for all hosts.
+*/
 void kill_all_jobs_do(const int this_host){
 	for(int ihost=0; ihost<nhost; ihost++){
 		if(this_host!=nhost&&ihost!=this_host){
@@ -459,6 +531,13 @@ static void kill_all_job_callback(GtkDialog *dialog, int result, gpointer data){
 	}
 }
 #endif
+/**
+   Handler of the "Kill all jobs" toolbar button. Asks for confirmation and then
+   kills all jobs on the current host page (all hosts on the "All" page).
+
+   @param[in] btn Unused.
+   @param[in] data Unused.
+*/
 void kill_all_jobs(GtkWidget* btn, gpointer data){
 	(void)btn;
 	(void)data;
@@ -492,6 +571,12 @@ void kill_all_jobs(GtkWidget* btn, gpointer data){
 #endif
 }
 #if GTK_MAJOR_VERSION < 3
+/**
+   Toggle the visibility of the main window, remembering its size and position.
+
+   @param[in] widget Unused.
+   @param[in] data Show the window regardless of its visibility if GPOINTER_TO_INT(data) is nonzero.
+*/
 static void status_icon_on_click(void* widget,
 	gpointer data){
 	(void)widget;
@@ -512,6 +597,15 @@ static void status_icon_on_click(void* widget,
 		//gtk_window_deiconify(GTK_WINDOW(window));
 	}
 }
+/**
+   Handler of the "popup-menu" signal of the status icon (GTK2). Toggles the
+   main window.
+
+   @param[in] status_icon0 Unused.
+   @param[in] button Unused.
+   @param[in] activate_time Unused.
+   @param[in] user_data Passed to status_icon_on_click() as data.
+*/
 static void status_icon_on_popup(GtkStatusIcon* status_icon0, guint button,
 	guint32 activate_time, gpointer user_data){
 	(void)status_icon0;
@@ -523,6 +617,9 @@ static void status_icon_on_popup(GtkStatusIcon* status_icon0, guint button,
 	status_icon_on_click(NULL, user_data);
 }
 #endif
+/**
+   Create the system tray status icon (GTK2 only).
+*/
 static void create_status_icon(){
 #if GTK_MAJOR_VERSION < 3
 	status_icon=gtk_status_icon_new_from_pixbuf(icon_main);
@@ -571,6 +668,13 @@ window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
 	return TRUE;
 	}*/
 
+/**
+   Handler of the clear jobs toolbar buttons. Removes jobs from the current host
+   page, or from all hosts on the "All" page.
+
+   @param[in] btn Unused.
+   @param[in] flag Job selection passed to clear_job_wrap(), as GINT_TO_POINTER().
+*/
 void clear_jobs(GtkWidget* btn, gpointer flag){
 	(void)btn;
 	//int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
@@ -583,11 +687,23 @@ void clear_jobs(GtkWidget* btn, gpointer flag){
 	}
 }
 
+/**
+   Handler of the "Save jobs to file" toolbar button.
+
+   @param[in] btn Unused.
+   @param[in] data Unused.
+*/
 void save_all_jobs(GtkWidget* btn, gpointer data){
 	(void) btn;
 	(void) data;
 	save_job_wrap();
 }
+/**
+   Create a read only, frameless, centered text entry used to display job
+   progress.
+
+   @return The new entry widget.
+*/
 GtkWidget* monitor_new_entry_progress(void){
 	GtkWidget* prog=gtk_entry_new();
 	gtk_editable_set_editable(GTK_EDITABLE(prog), FALSE);
@@ -612,12 +728,27 @@ GtkWidget* monitor_new_entry_progress(void){
 	gtk_entry_set_alignment(GTK_ENTRY(prog), 0.5);//since 2.4
 	return prog;
 }
+/**
+   Handler of the toolbar buttons that act on the selected jobs.
+
+   @param[in] btn Unused.
+   @param[in] user_data Index of the action in menudata, as GINT_TO_POINTER(), passed to handle_job_action().
+*/
 void handle_job_button(GtkWidget *btn, gpointer user_data){
 	(void) btn;
 	//cur_ihost=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
 	int imenu=GPOINTER_TO_INT(user_data);
 	handle_job_action(imenu);
 }
+/**
+   Handler of the "switch-page" signal of the notebook. Records the current page
+   in cur_ihost.
+
+   @param[in] self Unused.
+   @param[in] page Unused.
+   @param[in] page_num Index of the new page.
+   @param[in] user_data Unused.
+*/
 static void switch_page_cb(GtkNotebook *self,
     GtkWidget *page, guint page_num, gpointer user_data){
 	(void)self;
@@ -625,6 +756,14 @@ static void switch_page_cb(GtkNotebook *self,
 	(void)user_data;
 	cur_ihost=page_num;
 }
+/**
+   Create a progress bar of the given length in pixels. A vertical bar fills
+   from bottom to top and shows no text.
+
+   @param[in] vertical Create a vertical bar if nonzero.
+   @param[in] length Length of the bar in pixels.
+   @return The new progress bar.
+*/
 GtkWidget* monitor_new_progress(int vertical, int length){
 	GtkWidget* prog=gtk_progress_bar_new();
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog), 0);
@@ -645,9 +784,12 @@ GtkWidget* monitor_new_progress(int vertical, int length){
 	}
 	return prog;
 }
-/*
-  Try to connect to hosts in response to button click.
- */
+/**
+   Try to connect to hosts in response to button click.
+
+   @param[in] button Unused.
+   @param[in] data Host index, as GINT_TO_POINTER(). Out of range to connect to all hosts.
+*/
 static void add_host_event(GtkWidget* button, gpointer data){
 	(void)button;
 	int ihost=GPOINTER_TO_INT(data);
@@ -660,6 +802,14 @@ static void add_host_event(GtkWidget* button, gpointer data){
 	}
 }
 #if USE_TITLEBAR
+/**
+   Handler of the host toggle buttons in the title bar. Switches the notebook to
+   the host page and deactivates the other buttons (GTK3 and before). Keeps the
+   button of the current page active.
+
+   @param[in] button The toggle button.
+   @param[in] data Host index, as GINT_TO_POINTER().
+*/
 static void switch_page(GtkWidget* button, gpointer data){
 	int ihost=GPOINTER_TO_INT(data);
 	int ihost_old=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
@@ -679,11 +829,21 @@ static void switch_page(GtkWidget* button, gpointer data){
 	}
 }
 #endif
+/**
+   Idle callback that wakes up the listen_host() thread after a host is added.
+
+   @param[in] data Unused.
+   @return FALSE so that it runs only once.
+*/
 gboolean host_added_wrap(gpointer data){
 	(void) data;
 	add_host_wrap(-1);//just wakeup respond() with noop.
 	return FALSE;//just run once.
 }
+/**
+   Load the icons used by monitor from the compiled in resources (and colors for
+   GTK2).
+*/
 void parse_icons(){
 #if GDK_MAJOR_VERSION < 3
 	gdk_color_parse("#EE0000", &red);
@@ -706,6 +866,10 @@ void parse_icons(){
 	icon_clear=gdk_pixbuf_new_from_resource("/maos/icon-clear.png", NULL);
 	icon_connect=gdk_pixbuf_new_from_resource("/maos/icon-connect.png", NULL);
 }
+/**
+   Load the monitor CSS style (rc strings for GTK2) for the default display.
+   Requires window to be created.
+*/
 void parse_provider(){
 
 #if GTK_MAJOR_VERSION<3
@@ -733,6 +897,13 @@ void parse_provider(){
 #endif
 }
 
+/**
+   Create the main monitor window with the toolbar and one notebook page per host
+   plus an "All" page, and ask listen_host() to connect to all hosts.
+
+   @param[in] app The application (only with USE_APPLICATION).
+   @param[in] user_data Unused (only with USE_APPLICATION).
+*/
 void create_window(
 #if USE_APPLICATION
 	GtkApplication* app,
@@ -987,6 +1158,11 @@ void create_window(
 	//gtk_widget_hide(textscroll);
 }
 
+/**
+   Print the command line usage of monitor.
+
+   @param[in] cmd Name of the executable.
+*/
 void print_help(const char *cmd){
 	fprintf(stderr, "%s [options] [port] [host1] [host2]\n"
 	"\nOptions:\n\t\t--mailto someone@somehost.com (requires sendmail)\n"
@@ -997,6 +1173,14 @@ void print_help(const char *cmd){
 	);
 }
 int plot_enabled=1;
+/**
+   Parse monitor command line arguments: --mailto address, --disable-plot
+   (--disable-draw), --help, a port number, or host names. Then create the
+   sock_main socket pair and start the listen_host() thread.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments.
+*/
 void handle_args(int argc, char *argv[]){
 	if(argc==1 && nhost==1){
 		print_help(argv[0]);
@@ -1055,6 +1239,14 @@ void handle_args(int argc, char *argv[]){
 	thread_new(listen_host, GINT_TO_POINTER(sock_main[0]));//must be after parse_host
 }
 #if USE_APPLICATION
+/**
+   Handler of the "command-line" signal of the application. Parses the
+   arguments with handle_args() and activates the application.
+
+   @param[in] application The application.
+   @param[in] cmdline The command line.
+   @return 0.
+*/
 static int
 command_line(GApplication *application,
 			  GApplicationCommandLine *cmdline){
@@ -1066,6 +1258,15 @@ command_line(GApplication *application,
 	return 0;
 }
 #endif
+/**
+   Monitor: GUI to monitor and manage jobs running on the local and remote hosts
+   through their scheduler. Runs headless if no display is available.
+   Usage: monitor [options] [port] [host1] [host2] ...
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments.
+   @return 0, or the exit status of the GtkApplication.
+*/
 int main(int argc, char* argv[]){
 	if(0){
 		char* fnlog=stradd(TEMP, "/monitor.log", NULL);

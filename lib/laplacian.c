@@ -20,7 +20,13 @@
 #include "laplacian.h"
 
 /**
-   compute the factor for the laplacian*/
+   compute the factor for the laplacian for points with all 4 neighbors.
+
+   @param[in] r0 Fried parameter (m).
+   @param[in] weight Weight (fraction of Cn2) of this layer.
+   @param[in] dx Grid spacing (m).
+   @return The scaling factor of the laplacian.
+*/
 real laplacian_coef(real r0, real weight, real dx){
 	real cf;
 	cf=(2.*M_PI/0.5e-6)*sqrt(pow(r0/dx, 5./3.)/3.44/weight)
@@ -28,16 +34,30 @@ real laplacian_coef(real r0, real weight, real dx){
 		/*Fixme: need to study why is this.*/
 	return cf;
 }
+/**
+   compute the factor for the laplacian for points with 3 neighbors.
+
+   @param[in] r0 Fried parameter (m).
+   @param[in] weight Weight (fraction of Cn2) of this layer.
+   @param[in] dx Grid spacing (m).
+   @return The scaling factor of the laplacian.
+*/
 static real laplacian_coef4(real r0, real weight, real dx){
-	/*compute the factor for the laplacian*/
 	real cf;
 	cf=(2.*M_PI/0.5e-6)*sqrt(pow(r0/dx, 5./3.)/3.44/weight)
 		*pow(2.-pow(2, -4./3.)-pow(2, -1./6.), -1./2.);
 		/*Fixme: need to study why is this.*/
 	return cf;
 }
+/**
+   compute the factor for the laplacian for points with 2 neighbors.
+
+   @param[in] r0 Fried parameter (m).
+   @param[in] weight Weight (fraction of Cn2) of this layer.
+   @param[in] dx Grid spacing (m).
+   @return The scaling factor of the laplacian.
+*/
 static real laplacian_coef3(real r0, real weight, real dx){
-	/*compute the factor for the laplacian*/
 	real cf;
 	cf=(2.*M_PI/0.5e-6)*sqrt(pow(r0/dx, 5./3.)/3.44/weight)
 		*pow(2.-pow(2, -1./6.), -1./2.);
@@ -45,7 +65,14 @@ static real laplacian_coef3(real r0, real weight, real dx){
 	return cf;
 }
 /**
-   Apply L2 directly to map with periodic condition.*/
+   Apply L2 directly to map with periodic condition.
+
+   @param[out] opdout Output, the laplacian of opd. Must be preallocated with the same size as opd.
+   @param[in] opd Input OPD on a square grid.
+   @param[in] dx Grid spacing (m).
+   @param[in] r0 Fried parameter (m).
+   @param[in] weight Weight (fraction of Cn2) of this layer.
+*/
 void apply_laplacian_map(dmat* opdout, const dmat* opd, real dx, real r0, real weight){
 	const long nx=NX(opd);
 	const long ny=NY(opd);
@@ -66,7 +93,15 @@ void apply_laplacian_map(dmat* opdout, const dmat* opd, real dx, real r0, real w
 	}
 }
 /**
-   build laplacian on square map using periodic conditions*/
+   build laplacian on square map using periodic conditions
+
+   @param[in] nx Number of points along x.
+   @param[in] ny Number of points along y.
+   @param[in] dx Grid spacing (m).
+   @param[in] r0 Fried parameter (m).
+   @param[in] weight Weight (fraction of Cn2) of this layer.
+   @return Newly allocated (nx*ny)*(nx*ny) sparse laplacian. The caller frees it.
+*/
 dsp* mklaplacian_map(long nx, long ny, real dx, real r0, real weight){
 	dsp* L2=dspnew(nx*ny, nx*ny, nx*ny*5);
 	long iy, ix;
@@ -97,7 +132,12 @@ dsp* mklaplacian_map(long nx, long ny, real dx, real r0, real weight){
 }
 /**
    Generate laplacian on loc_t
- */
+
+   @param[in] loc Grid coordinates. Its map is created if not yet.
+   @param[in] r0 Fried parameter (m).
+   @param[in] weight Weight (fraction of Cn2) of this layer.
+   @return Newly allocated nloc*nloc sparse laplacian. The caller frees it.
+*/
 dsp* mklaplacian_loc(loc_t* loc, real r0, real weight){
 	/*
 	  The laplacian here is l=delta^2(u)/4;

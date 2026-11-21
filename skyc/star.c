@@ -27,7 +27,13 @@
 #include "photon.h"
 #include "mtch.h"
 /**
-   Create "star" data array from star information.
+   Create "star" data array from star information. Stars outside of minrad or too close to a brighter star are
+   dropped.
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] coord Star coordinates (rad) and magnitudes, one column per star. Its ny is reduced to the number of
+   kept stars.
+   @return Array of coord->ny stars, or NULL if there is no star. Newly allocated; free with free_star().
 */
 static star_s* setup_star_create(const parms_s* parms, dmat* coord){
 	if(!coord || coord->ny==0){
@@ -104,6 +110,11 @@ static star_s* setup_star_create(const parms_s* parms, dmat* coord){
 
 /**
    Read in pistat information, used to compute matched filter, and SANEA.
+
+   @param[in] simu Simulation data.
+   @param[in,out] star Array of stars. The pistat field is allocated and filled.
+   @param[in] nstar Number of stars.
+   @param[in] seed Seed of the maos simulation.
 */
 static void setup_star_read_pistat(sim_s* simu, star_s* star, int nstar, int seed){
 	const parms_s* parms=simu->parms;
@@ -220,6 +231,10 @@ static void setup_star_read_pistat(sim_s* simu, star_s* star, int nstar, int see
 
 /**
    Compute Signal level
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] star Array of stars. The siglev, siglevtot, and bkgrnd fields are allocated and filled.
+   @param[in] nstar Number of stars.
 */
 static void setup_star_siglev(const parms_s* parms, star_s* star, int nstar){
 	const long npowfs=parms->maos.npowfs;
@@ -256,6 +271,12 @@ static void setup_star_siglev(const parms_s* parms, star_s* star, int nstar){
 
 /**
    Setup matched filter for stars.
+
+   @param[in] parms Simulation parameters.
+   @param[in] powfs Array of WFS types.
+   @param[in,out] star Array of stars. The pistat, minidtrat, and use fields are updated.
+   @param[in] nstar Number of stars.
+   @param[in] nonlin WFS nonlinearity for each powfs from wfs_nonlinearity(). May be NULL.
  */
 static void setup_star_mtch(const parms_s* parms, powfs_s* powfs, star_s* star, int nstar, dccell* nonlin){
 	const long nwvl=parms->maos.nwvl;
@@ -381,6 +402,11 @@ static void setup_star_mtch(const parms_s* parms, powfs_s* powfs, star_s* star, 
 /**
    Compute Modal to gradient operator using average gradients. Similar to Z tilt
    since the mode is low order
+
+   @param[in] parms Simulation parameters.
+   @param[in] powfs Array of WFS types.
+   @param[in,out] star Array of stars. The g field is allocated and filled.
+   @param[in] nstar Number of stars.
  */
 static void setup_star_gm(const parms_s* parms, powfs_s* powfs, star_s* star, int nstar){
 	const long npowfs=parms->maos.npowfs;
@@ -401,6 +427,17 @@ static void setup_star_gm(const parms_s* parms, powfs_s* powfs, star_s* star, in
 		}
 	}
 }
+/**
+   Read the time series of tip/tilt (ztiltout or physical optics gradients) and
+   gradient offset for each star by bilinear interpolation of maos output saved on the
+   NGS grid for the given seed.
+
+   @param[in,out] star Array of stars. The ztiltout, goff, and nstep fields are filled.
+   @param[in] nstar Number of stars.
+   @param[in] parms Simulation parameters.
+   @param[in] seed Seed of the maos simulation.
+   @return Number of time steps of the last file read.
+*/
 long setup_star_read_ztilt(star_s* star, int nstar, const parms_s* parms, int seed){
 	const real ngsgrid=parms->maos.ngsgrid;
 	long nstep=0;
@@ -517,7 +554,14 @@ long setup_star_read_ztilt(star_s* star, int nstar, const parms_s* parms, int se
 }
 PNEW(mutex_wvf);
 /**
-   Read in asterism WFS wvf.*/
+   Read in asterism WFS wvf.
+
+   @param[in,out] star Array of stars. The wvfout and nstep fields are filled.
+   @param[in] nstar Number of stars.
+   @param[in] parms Simulation parameters.
+   @param[in] seed Seed of the maos simulation.
+   @return Number of time steps of the last file read.
+*/
 long setup_star_read_wvf(star_s* star, int nstar, const parms_s* parms, int seed){
 	const real ngsgrid=parms->maos.ngsgrid;
 	const int nwvl=parms->maos.nwvl;
@@ -643,6 +687,13 @@ long setup_star_read_wvf(star_s* star, int nstar, const parms_s* parms, int seed
 	real s2=P(p2->pistat[0].snr, ix);
 	return s1<s2?1:-1; //-1: keep order. 1: reverse order
 }*/
+/**
+   Print the location, magnitude, and SNR at the fastest usable rate of each star.
+
+   @param[in] star Array of stars.
+   @param[in] nstar Number of stars.
+   @param[in] dtrats Candidate sampling rates (in simulation steps).
+*/
 static void print_stars(const star_s *star, int nstar, const dmat *dtrats){
 	if(!nstar) return;
 	int npowfs=(int)NX(star[0].minidtrat);
@@ -667,6 +718,13 @@ static void print_stars(const star_s *star, int nstar, const dmat *dtrats){
    setup "star" data array from star information and read in average pixel
    intensitys.  Check for star PSF size. If it is larger than 5, we don't use
    the star because the PSF is too broad.
+
+   @param[out] nstarout Number of usable stars.
+   @param[in] simu Simulation data.
+   @param[in,out] stars Star coordinates (rad) and magnitudes, one column per star. Its ny may be reduced.
+   @param[in] seed Seed of the maos simulation.
+   @return Array of usable stars, or NULL if stars is NULL (*nstarout is not set). Newly allocated; free with
+   free_star().
 */
 star_s* setup_star(int* nstarout, sim_s* simu, dmat* stars, int seed){
 	const parms_s* parms=simu->parms;
@@ -711,6 +769,12 @@ star_s* setup_star(int* nstarout, sim_s* simu, dmat* stars, int seed){
 	}
 	return star;
 }
+/**
+   Free the data in a single star_s (but not the struct itself).
+
+   @param[in,out] star The star. Its data is freed but the pointers are not reset.
+   @param[in] parms Simulation parameters.
+*/
 void free_istar(star_s* star, const parms_s* parms){
 	const int npowfs=parms->maos.npowfs;
 	free_pistat(star->pistat, npowfs, parms);
@@ -737,6 +801,10 @@ void free_istar(star_s* star, const parms_s* parms){
 }
 /**
    Free array of star_s.
+
+   @param[in] stars Array of stars.
+   @param[in] nstar Number of stars.
+   @param[in] parms Simulation parameters.
  */
 void free_star(star_s* stars, int nstar, const parms_s* parms){
 	for(int istar=0; istar<nstar; istar++){
@@ -746,6 +814,10 @@ void free_star(star_s* stars, int nstar, const parms_s* parms){
 }
 /**
    Free pixel intensities.
+
+   @param[in] pistat Array of pistat.
+   @param[in] npistat Number of entries in pistat.
+   @param[in] parms Simulation parameters.
  */
 void free_pistat(pistat_s* pistat, int npistat, const parms_s* parms){
 	if(!pistat) return;

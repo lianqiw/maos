@@ -35,11 +35,15 @@
 static proc_t** pproc;
 static int* nproc;
 static int* npending;
-static int* hsock;   //socket of each host
-static int* hsock_new;//newly established sock. 
-static time_t* htime;//last time having signal from each host.
-static time_t* hnotify;//last time notification for this server.
-extern int sock_main[2]; /*listens command from main*/
+/**socket of each host*/
+static int* hsock;
+/**newly established sock.*/
+static int* hsock_new;
+/**last time having signal from each host.*/
+static time_t* htime;
+/**last time notification for this server.*/
+static time_t* hnotify;
+extern int sock_main[2];
 static fd_set active_fd_set;
 //int pipe_addhost[2]={0,0};
 extern double* usage_cpu;
@@ -59,6 +63,13 @@ static proc_t *proc_add(int id,int pid){
 	return iproc;
 }
 */
+/**
+   Send an email with the formatted message to mailto using sendmail. Does
+   nothing if mailto is not set. The message should start with the Subject:
+   header.
+
+   @param[in] format printf style format of the message.
+*/
 CHECK_ARG(1)
 static void sendmail(const char*format,...){
 	format2fn;
@@ -76,9 +87,22 @@ static void sendmail(const char*format,...){
 	}
 
 }
+/**
+   Schedule update_title() in the GUI thread with the number of jobs and pending
+   jobs of host id. Does nothing in headless mode.
+
+   @param[in] id Host index.
+*/
 static void delayed_update_title(int id){
 	if(!headless) g_idle_add((GSourceFunc)update_title, GSIZE_TO_POINTER(((size_t)id|nproc[id]<<8|npending[id]<<20)));
 }
+/**
+   Find the job pid of host id, creating a new entry if not found.
+
+   @param[in] id Host index. Exits if invalid.
+   @param[in] pid Process ID of the job.
+   @return The job entry. Owned by the host list; do not free.
+*/
 static proc_t* proc_get(int id, int pid){
 	proc_t* iproc;
 	if(id<0||id>=nhost){
@@ -104,6 +128,11 @@ static proc_t* proc_get(int id, int pid){
 }
 
 
+/**
+   Remove all job entries of host id and schedule the removal of their GUI rows.
+
+   @param[in] id Host index.
+*/
 static void proc_remove_all(int id){
 	proc_t* iproc, * jproc=NULL;
 	for(iproc=pproc[id]; iproc; iproc=jproc){
@@ -117,6 +146,12 @@ static void proc_remove_all(int id){
 	delayed_update_title(id);
 }
 
+/**
+   Remove the job entry pid of host id and schedule the removal of its GUI row.
+
+   @param[in] id Host index.
+   @param[in] pid Process ID of the job.
+*/
 static void proc_remove(int id, int pid){
 	proc_t* iproc, * jproc=NULL;
 	for(iproc=pproc[id]; iproc; jproc=iproc, iproc=iproc->next){
@@ -139,6 +174,12 @@ static void proc_remove(int id, int pid){
 	}
 }
 
+/**
+   Find the host that is connected with socket sock.
+
+   @param[in] sock The socket.
+   @return The host index, or -1 if not found.
+*/
 static int host_from_sock(int sock){
 	if(sock<0) return -1;
 	for(int ihost=0; ihost<nhost; ihost++){
@@ -149,7 +190,12 @@ static int host_from_sock(int sock){
 	return -1;
 }
 
-/* Record the host after connection is established*/
+/**
+   Record the host after connection is established
+
+   @param[in] ihost Host index.
+   @param[in] sock The connected socket. Only the job list is cleared if negative.
+*/
 static void host_added(int ihost, int sock){
 	htime[ihost]=myclocki();
 	proc_remove_all(ihost);/*remove all entries. */
@@ -162,7 +208,12 @@ static void host_added(int ihost, int sock){
 	}
 }
 
-/*remove the host upon disconnection*/
+/**
+   remove the host upon disconnection
+
+   @param[in] sock The socket to close.
+   @param[in] notify Send an email notification (at most once per day per host) if nonzero.
+*/
 static void host_removed(int sock, int notify){
 	if(sock>-1){
 		shutdown(sock, SHUT_WR);
@@ -186,6 +237,9 @@ static void host_removed(int sock, int notify){
 }
 /** 
 	connect to scheduler(host). It runs in a new thread launched by the thread running listen_host().
+
+   @param[in] phost Host index, as GINT_TO_POINTER().
+   @return The newly connected socket (hsock_new[ihost]) as GINT_TO_POINTER(), or -1 if not connected.
 */
 void* add_host_thread(void* phost){
 	int ihost=GPOINTER_TO_INT(phost);
@@ -223,6 +277,13 @@ void* add_host_thread(void* phost){
 	return GINT_TO_POINTER(hsock_new[ihost]);
 }
 
+/**
+   Test whether job p matches the category flag.
+
+   @param[in] p The job.
+   @param[in] flag -1: finished, -2: skipped (finished with frac==0), -3: crashed or killed, -4: not running or pending.
+   @return 1 if the job matches, 0 otherwise.
+*/
 static int test_jobs(proc_t *p, int flag){
 	int status=p->status.info;
 	switch(flag){
@@ -242,6 +303,11 @@ static int test_jobs(proc_t *p, int flag){
 		return 0;
 	}
 }
+/**
+   Save the command lines of all jobs of each host to
+   HOME/maos_HOST_TIME.done (finished jobs) and HOME/maos_HOST_TIME.wait (other
+   jobs), with a cd command whenever the folder changes.
+*/
 static void save_all_jobs(){
 	char* tm=strtime_pid();
 	for(int ihost=0; ihost<nhost; ihost++){
@@ -301,6 +367,13 @@ const char *status_msg[]={
 	"to be killed",//13
 	"removed",	"killed",//15
 	};
+/**
+   Handle a message received on sock, which is either from a scheduler or from
+   the monitor main thread (via sock_main).
+
+   @param[in] sock The socket with data available.
+   @return 0 on success, -1 on error (connection closed with notification), -2 to quit, -3 on shutdown request from the server (connection closed without notification).
+*/
 static int respond(int sock){
 	int ihost=host_from_sock(sock);
 	int cmd[3];
@@ -484,7 +557,11 @@ static int respond(int sock){
    2) listening to connected servers for maos status event and update the display
    3) monitor connected servers for activity. Disable pages when server is disconnected.
 
-   write to sock_main[1] will be caught by select in listen_host(). This wakes it up.*/
+   write to sock_main[1] will be caught by select in listen_host(). This wakes it up.
+
+   @param[in] pmsock Socket to the monitor main thread, as GINT_TO_POINTER().
+   @return NULL.
+*/
 void* listen_host(void* pmsock){
 	int msock=GPOINTER_TO_INT(pmsock);
 	pproc=mycalloc(nhost+1, proc_t*);
@@ -572,6 +649,10 @@ void* listen_host(void* pmsock){
 }
 /**
    called by monitor to let a MAOS job remotely draw on this computer
+
+   @param[in] ihost Host index.
+   @param[in] pid Job process ID. Positive if called by monitor, negative or 0 if called by scheduler.
+   @return 0 if drawdaemon is launched, 1 otherwise.
 */
 static int scheduler_display(int ihost, int pid){
 	int ans=1;
@@ -602,6 +683,11 @@ static int scheduler_display(int ihost, int pid){
 }
 /**
    called by monitor to talk to scheduler.
+
+   @param[in] ihost Host index. Nothing is done if negative.
+   @param[in] pid Job process ID.
+   @param[in] command The command (CMD_*). CMD_DRAWSER is handled by scheduler_display().
+   @return 0 on success (or if ihost is negative), nonzero on failure.
 */
 static int scheduler_cmd(int ihost, int pid, int command){
 	if(ihost<0) return 0;

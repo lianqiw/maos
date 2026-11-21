@@ -29,6 +29,9 @@
 
 /**
    Regularization terms for tomography. Can be called multiple times for Cn2 update.
+
+   @param[in,out] recon The reconstruction struct. recon->L2, invpsd, or fractal, and ZZT are set; recon->wt is clipped and normalized.
+   @param[in] parms The parameter struct.
 */
 void
 setup_recon_tomo_reg(recon_t* recon, const parms_t* parms){
@@ -181,6 +184,8 @@ setup_recon_tomo_reg(recon_t* recon, const parms_t* parms){
 
    For details see www.opticsinfobase.org/abstract.cfm?URI=josaa-19-9-1803
 
+   @param[in,out] recon The reconstruction struct. recon->RR and recon->RL are set.
+   @param[in] parms The parameter struct.
 */
 void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 	/*if not cg or forced, build explicitly the tomography matrix. */
@@ -396,6 +401,9 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 
    MOAO is handled in setup_recon_moao().
 
+   @param[in,out] recon The reconstruction struct.
+   @param[in] parms The parameter struct.
+   @param[in] powfs The powfs struct array.
 */
 void setup_recon_tomo(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	TIC;tic;
@@ -487,6 +495,9 @@ typedef struct Tomo_T{
    to each WFS to facilitate threading.
 
    gg  = GP * HXW * xin
+
+   @param[in,out] pdata The shared data. data->gg is accumulated into. data->iwfs is the atomic WFS counter.
+   @return NULL.
 */
 static void* Tomo_prop_do(void *pdata){
 	Tomo_T *data=(Tomo_T *)pdata;
@@ -546,6 +557,9 @@ static void* Tomo_prop_do(void *pdata){
 }
 /**
    Wrapper of Tomo_prop_do
+
+   @param[in,out] data The shared data.
+   @param[in] nthread Number of threads. Currently ignored and 1 is used.
 */
 static void Tomo_prop(Tomo_T* data, int nthread){
 	//thread_t info[nthread];
@@ -560,6 +574,9 @@ static void Tomo_prop(Tomo_T* data, int nthread){
    each WFS to facilitate threading.
 
    gg = GP' * NEAI * gg;
+
+   @param[in,out] pdata The shared data. data->gg is replaced. data->alpha is applied.
+   @return NULL.
 */
 static void* Tomo_nea_gpt_do(void *pdata){
 	Tomo_T *data=(Tomo_T *)pdata;
@@ -615,9 +632,12 @@ static void* Tomo_nea_do(void *pdata){
 }
 
 /**
- * Apply NEA weighting with optional Gp'
- * gg = GP' * NEAI * gg;
- */
+   Apply NEA weighting with optional GP': gg = GP' * NEAI * gg, or gg = NEAI * gg.
+
+   @param[in,out] data The shared data. data->gg is replaced.
+   @param[in] nthread Number of threads. Currently ignored and 1 is used.
+   @param[in] gpt Whether to apply GP'.
+*/
 void Tomo_nea_gpt(Tomo_T* data, int nthread, int gpt){
 	
 	data->iwfs=0;
@@ -634,6 +654,9 @@ void Tomo_nea_gpt(Tomo_T* data, int nthread, int gpt){
    each WFS to facilitate threading. gg->xout.
 
    xout = Cxx^-1 * xin + HXW' * gg;
+
+   @param[in,out] pdata The shared data. data->xout is accumulated into. data->ips is the atomic layer counter.
+   @return NULL.
 */
 static void* Tomo_iprop_do(void *pdata){
 	Tomo_T *data=(Tomo_T *)pdata;
@@ -700,7 +723,10 @@ static void* Tomo_iprop_do(void *pdata){
 }
 /**
    Wrapper of Tomo_iprop_do
- */
+
+   @param[in,out] data The shared data.
+   @param[in] nthread Number of threads. Currently ignored and 1 is used.
+*/
 static void Tomo_iprop(Tomo_T* data, int nthread){
 	data->ips=0;
 	nthread=1;
@@ -736,8 +762,13 @@ void TomoR(dcell** xout, const void* A,
 }
 
 /**
-   Transpose operation of TomoRt. From xout -> gin
- */
+   Transpose operation of TomoR. From xin to gout: gout=NEAI*(1-TTF*PTTF)*GP*HXW*xin.
+
+   @param[in,out] gout The output gradients. Allocated if NULL; alpha*RR'*xin is accumulated into it.
+   @param[in] A The recon_t struct.
+   @param[in] xin The input on xloc.
+   @param[in] alpha Scaling factor.
+*/
 void TomoRt(dcell** gout, const void* A,
 	const dcell* xin, const real alpha){
 	const recon_t* recon=(const recon_t*)A;

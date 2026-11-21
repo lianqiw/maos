@@ -37,17 +37,17 @@
 #include "bin.h"
 #include "scheduler_client.h"
 /**
- * strscpy - Copy a C-string into a sized buffer
- * @dest: Where to copy the string to
- * @src: Where to copy the string from
- * @count: Size of destination buffer
- *
- * Copy the source string to a maximum of count bytes of the destination buffer.
- * The destination buffer is guaranteed to be NUL-terminated if count is > 0.
- *
- * Return: The number of characters copied (not including the trailing NUL).
- * Return -E2BIG if the count is 0 or if the source string was truncated.
- */
+   Copy a C-string into a sized buffer.
+
+   Copy the source string to a maximum of count bytes of the destination buffer.
+   The destination buffer is guaranteed to be NUL-terminated if count is > 0.
+
+   @param[out] dest Where to copy the string to.
+   @param[in] src Where to copy the string from.
+   @param[in] count Size of destination buffer.
+   @return The number of characters copied (not including the trailing NUL), or
+   -E2BIG (-27) if the count is 0 or if the source string was truncated.
+*/
 ssize_t strscpy(char *dest, const char *src, size_t count) {
     // A 0-sized destination buffer is invalid and cannot hold a NUL terminator
     if (count == 0) {
@@ -70,6 +70,9 @@ ssize_t strscpy(char *dest, const char *src, size_t count) {
 }
 /**
    Obtain the dirname of a path. See mybasename().
+
+   @param[in] fn The path. A trailing / is ignored.
+   @return Newly allocated directory name ("." if fn has no /, "/" for a file in or the root directory), or NULL if fn is NULL, empty, or too long; the caller frees it.
 */
 char* mydirname(const char* fn){
 	if(!fn||fn[0]==0) return NULL;
@@ -93,6 +96,10 @@ char* mydirname(const char* fn){
 }
 /**
    Copy a file from file stream src to dest.
+
+   @param[in,out] src Source file stream, read until EOF.
+   @param[in,out] dest Destination file stream.
+   @return 0 on success, -1 if a write failed.
 */
 static int copyfile_fp(FILE* src, FILE* dest){
 	int ans=0;
@@ -109,6 +116,10 @@ static int copyfile_fp(FILE* src, FILE* dest){
 }
 /**
    Copy a file from src to dest
+
+   @param[in] src Source file name.
+   @param[in] dest Destination file name.
+   @return 0 on success, -1 if a write failed, 1 if a file cannot be opened.
 */
 int copyfile(const char* src, const char* dest){
 	int ans=0;
@@ -133,6 +144,10 @@ int copyfile(const char* src, const char* dest){
 
 /**
    Check the suffix of a file.
+
+   @param[in] fn File name.
+   @param[in] suffix Suffix to check.
+   @return 1 if fn ends with suffix, 0 otherwise or if either is NULL.
 */
 int check_suffix(const char* fn, const char* suffix){
 	if(!fn||!suffix) return 0;
@@ -147,6 +162,11 @@ int check_suffix(const char* fn, const char* suffix){
 }
 /**
    Convert argc, argv to a single string, prefixed by the current directory.
+
+   @param[in] argc Number of arguments.
+   @param[in] argv Arguments. Only the basename of argv[0] is used.
+   @param[in] delim Delimiter between arguments. Defaults to " " if NULL.
+   @return Newly allocated string ending with a single delimiter, or NULL if argc is 0; the caller frees it.
 */
 char* argv2str(int argc, const char* argv[], const char* delim){
 	if(!argc) return NULL;
@@ -181,6 +201,8 @@ char* argv2str(int argc, const char* argv[], const char* delim){
 }
 /**
    Print the content of a file.
+
+   @param[in] fnin File name, searched with search_file().
 */
 void print_file(const char* fnin){
 	char* fn=search_file(fnin, 1);
@@ -202,6 +224,8 @@ void print_file(const char* fnin){
 
 /**
    Get current time in seconds as an integer.
+
+   @return Current time in seconds since the epoch.
 */
 time_t myclocki(){
 	time_t a;
@@ -210,7 +234,11 @@ time_t myclocki(){
 /**
    Get current time in ascii string for easy print. The string
    contains spaces and is not suitable to use in filename. The
-   returned string should not be modified.  */
+   returned string should not be modified.
+
+   @param[in] at Time in seconds since the epoch. Uses current time if 0.
+   @return Pointer to a static buffer; do not free. Not thread safe.
+*/
 const char* myasctime(time_t at){
 	static char st[20];
 	if(!at) at=time(NULL);
@@ -221,9 +249,11 @@ const char* myasctime(time_t at){
 	return st;
 }
 /**
-   Get furrent time in ascii string that doesn't contain
-   spaces. Suitable for use in filenames. The returnned string
-   must be freed. */
+   Get current time in ascii string that doesn't contain
+   spaces, followed by the PID. Suitable for use in filenames.
+
+   @return Newly allocated string; the caller frees it.
+*/
 char* strtime_pid(void){
 	char str[64];
 	time_t t=myclocki();
@@ -238,6 +268,8 @@ char* strtime_pid(void){
 
 /**
    Get current time in nano-second resolution.
+
+   @return Monotonic time in seconds, relative to the first call.
 */
 double myclockd(void){
 	static time_t t0=0;//to avoid precision error when cast to float
@@ -254,7 +286,10 @@ double myclockd(void){
 #endif
 }
 /**
-Translate a path into absolute path. The caller shall free the returned string.
+   Translate a path into absolute path. Handles ~/, ./, and leading ../.
+
+   @param[in] path The path. Returns the current directory if NULL.
+   @return Newly allocated absolute path; the caller frees it.
 */
 char *myabspath(const char *path){
 	if(!path) return getcwd(NULL, 0);
@@ -296,8 +331,12 @@ char *myabspath(const char *path){
 	return strdup(path2);
 }
 /**
- * Create symbolic link
- * */
+   Create symbolic link dest pointing to source, replacing dest if it exists.
+
+   @param[in] source Existing file to link to.
+   @param[in] dest Name of the link.
+   @return 0 on success, nonzero on failure.
+*/
 int mysymlink(const char* source, const char* dest){
 	int ans=0;
 	if(!exist(source)) ans=-1;
@@ -307,8 +346,13 @@ int mysymlink(const char* source, const char* dest){
 	return ans;
 }
 /**
- * Create hard link
- * */
+   Create hard link dest to source, replacing dest if it exists. Falls back to
+   copying the file if linking fails.
+
+   @param[in] source Existing file to link to.
+   @param[in] dest Name of the link.
+   @return 0 on success, nonzero on failure.
+*/
 int mylink(const char* source, const char* dest){
 	int ans=0;
 	if(!exist(source)) ans=-1;
@@ -322,14 +366,19 @@ int mylink(const char* source, const char* dest){
 }
 /**
    Test whether a file exists.
+
+   @param[in] fn File name. May be NULL.
+   @return 1 if it exists (including broken symbolic links), 0 otherwise.
 */
 int exist(const char* fn){
 	if(!fn) return 0;
 	struct stat buf;
 	return !lstat(fn, &buf);
 }
-/*
+/**
 	Update the modification time of a file and create it if not exist.
+
+	@param[in] format printf-style format of the file name, followed by its arguments.
 */
 void touch(const char *format, ...){
 	format2fn;
@@ -341,6 +390,9 @@ void touch(const char *format, ...){
 }
 /**
    Test whether fn is directory
+
+   @param[in] fn File name. May be NULL.
+   @return 1 if fn is a directory, 0 otherwise.
 */
 int isdir(const char* fn){
 	if(!fn) return 0;
@@ -350,6 +402,9 @@ int isdir(const char* fn){
 
 /**
    Test whether fn is ordinary file
+
+   @param[in] fn File name. May be NULL.
+   @return 1 if fn is a regular file, 0 otherwise.
 */
 int isfile(const char* fn){
 	if(!fn) return 0;
@@ -359,6 +414,9 @@ int isfile(const char* fn){
 
 /**
    Test whether fn is a symbolic link
+
+   @param[in] fn File name. May be NULL.
+   @return 1 if fn is a symbolic link, 0 otherwise.
 */
 int islink(const char* fn){
 	if(!fn) return 0;
@@ -367,6 +425,9 @@ int islink(const char* fn){
 }
 /**
    Test whether fd is a socket
+
+   @param[in] fd File descriptor.
+   @return 1 if fd is a socket, 0 otherwise.
 */
 int issock(int fd){
 	if(fd==-1) return 0;
@@ -374,8 +435,11 @@ int issock(int fd){
 	return !fstat(fd, &buf)&&S_ISSOCK(buf.st_mode);
 }
 /**
- * Compute length of file in Bytes
- */
+   Compute length of file in Bytes
+
+   @param[in] fn File name. May be NULL.
+   @return File size in bytes, or 0 if it does not exist.
+*/
 size_t flen(const char* fn){
 	if(!fn) return 0;
 	struct stat buf;
@@ -383,7 +447,10 @@ size_t flen(const char* fn){
 }
 /**
    Return the modification time of the file
- */
+
+   @param[in] fn File name. May be NULL.
+   @return Modification time in seconds since the epoch, or 0 if it does not exist.
+*/
 time_t fmtime(const char* fn){
 	struct stat buf;
 	if(!fn||stat(fn, &buf)) return 0;
@@ -391,6 +458,9 @@ time_t fmtime(const char* fn){
 }
 /**
    Concatenate many strings. Argument list must end with NULL.
+
+   @param[in] a First string. May be NULL.
+   @return Newly allocated string; the caller frees it.
 */
 char* stradd(const char* a, ...){
 	char* out;
@@ -417,6 +487,11 @@ char* stradd(const char* a, ...){
 }
 /**
    Concatenate many strings, like stradd, but arguments are an array of char*
+
+   @param[in] argc Number of strings.
+   @param[in] argv Strings. Empty or NULL entries are skipped.
+   @param[in] delim Delimiter appended after each string.
+   @return Newly allocated string, or NULL if argc is 0; the caller frees it.
 */
 char* strnadd(int argc, const char* argv[], const char* delim){
 	if(!argc) return NULL;
@@ -439,7 +514,10 @@ char* strnadd(int argc, const char* argv[], const char* delim){
 	return scmd;
 }
 /**
-   translate a filename into absolute file name that starts with /
+   Expand a leading ~ in a file name to the home directory.
+
+   @param[in] fn File name.
+   @return Newly allocated file name; the caller frees it.
 */
 char* expand_filename(const char* fn){
 	char* out;
@@ -452,7 +530,11 @@ char* expand_filename(const char* fn){
 }
 /**
    Duplicate a string. Check for NULL.  Do not call strndup to avoid recursive deadlock.
- */
+
+   @param[in] A String to duplicate.
+   @param[in] len Maximum number of characters to copy.
+   @return Newly allocated string, or NULL if A is NULL or len or the string length is 0; the caller frees it.
+*/
 char* mystrndup(const char* A, size_t len){
 	if(!A||!len) return NULL;
 	size_t len2=strlen(A);
@@ -466,7 +548,11 @@ char* mystrndup(const char* A, size_t len){
 
 /**
    declare strdup so my memory mangement mem.c is happy when DEBUG=1. Handles
-NULL pointer correctly.  Do not call strdup to avoid recursive deadlock. */
+   NULL pointer correctly.  Do not call strdup to avoid recursive deadlock.
+
+   @param[in] A String to duplicate. May be NULL.
+   @return Newly allocated string, or NULL if A is NULL; the caller frees it.
+*/
 char* mystrdup(const char* A){
 	if(!A){
 		return NULL;
@@ -478,9 +564,13 @@ char* mystrdup(const char* A){
 	}
 }
 /**
- * @brief replaces snprintf to check for return and print a warning if there is truncation.
- * 
- */
+   Replaces snprintf to check for return and print a warning if there is truncation.
+
+   @param[out] str Output buffer.
+   @param[in] size Size of the output buffer.
+   @param[in] format printf-style format, followed by its arguments.
+   @return Return value of vsnprintf().
+*/
 int mysnprintf(char* restrict str, size_t size, const char *restrict format, ...){
 	va_list ap;
 	va_start(ap, format);
@@ -496,7 +586,11 @@ int mysnprintf(char* restrict str, size_t size, const char *restrict format, ...
 
 /**
    Remove files that are older than sec seconds in folder fndir. If sec==0,
-   remove everything.
+   remove everything. Only files with .bin or .lock suffix are removed.
+
+   @param[in] fndir Directory name.
+   @param[in] level Levels of subdirectories to recurse into; negative means unlimited.
+   @param[in] sec Age threshold in seconds, based on access time.
 */
 void remove_file_older(const char* fndir, int level, long sec){
 	DIR* dir=opendir(fndir);
@@ -529,6 +623,8 @@ void remove_file_older(const char* fndir, int level, long sec){
 
 /**
    Make dirs recursively. like mkdir -p in bash
+
+   @param[in] format printf-style format of the directory name, followed by its arguments.
 */
 void mymkdir(const char* format, ...){
 	format2fn;
@@ -552,9 +648,12 @@ void mymkdir(const char* format, ...){
 	}
 }
 /**
-   Compare two strings upto the length of b. if length of a is less than b,
-   return false. 1 means not equal.
- */
+   Compare two strings upto the length of b, i.e., test whether a starts with b.
+
+   @param[in] a String to test.
+   @param[in] b Prefix.
+   @return 0 if a starts with b. Nonzero if not, or if either is NULL or empty, or a is shorter than b.
+*/
 int mystrcmp(const char* a, const char* b){
 	if(!a||!b) return 1;
 	size_t la=strlen(a);
@@ -568,6 +667,8 @@ int mystrcmp(const char* a, const char* b){
 
 /**
    Make the fd close on exec.
+
+   @param[in] fd File descriptor.
 */
 void cloexec(int fd){
 	int oldflag=fcntl(fd, F_GETFD, 0);
@@ -577,7 +678,9 @@ void cloexec(int fd){
 	}
 }
 /**
-   wrap of nanosleep
+   Sleep for sec seconds, which can be fractional. Wraps nanosleep.
+
+   @param[in] sec Time to sleep in seconds.
 */
 void mysleep(double sec){
 	struct timespec ts;
@@ -586,11 +689,13 @@ void mysleep(double sec){
 	nanosleep(&ts, NULL);
 }
 /**
-* 	Pause execution and listen input from fd1 and/or fd2 for continuation. Returns new pause flag.
- */
-int mypause(int fd1,/**<first file no, usually 0 for stdin*/
-			int fd2 /**<second file no, usually created from a pipe t*/
-){
+   Pause execution and listen input from fd1 and/or fd2 for continuation.
+
+   @param[in] fd1 First file no, usually 0 for stdin (ignored if detached).
+   @param[in] fd2 Second file no, usually created from a pipe.
+   @return New pause flag: 0 if 'c' is entered to resume, the digit value if a digit is entered, otherwise 1.
+*/
+int mypause(int fd1, int fd2){
 	int ans=1;
 	errno=0;
 	info2("Press enter to step, c to resume:");
@@ -634,6 +739,9 @@ int mypause(int fd1,/**<first file no, usually 0 for stdin*/
 }
 /**
    Return available space of mounted file system in bytes.
+
+   @param[in] path A path in the file system.
+   @return Available space in bytes, or 0 on failure.
 */
 long available_space(const char* path){
 	struct statvfs buf;
@@ -646,7 +754,12 @@ long available_space(const char* path){
 }
 /**
    Extract a string constant from the command line, and output the position
-   where the string terminates.*/
+   where the string terminates. The extracted part of the input is replaced by spaces.
+
+   @param[in,out] start Start of the string, optionally quoted.
+   @param[out] end2 Position after the end of the string.
+   @return Newly allocated string; the caller frees it.
+*/
 static char* cmd_string(char* start, char** end2){
 	char* input=start;
 	char* end;
@@ -678,13 +791,17 @@ static char* cmd_string(char* start, char** end2){
 	}
 	return out;
 }
-/** 
-	swap content.  
-	1) if pdest < begin: swap content from begin to end (exclusive) with pdest 
+/**
+	swap content.
+	1) if pdest < begin: swap content from begin to end (exclusive) with pdest
 	|pdest   |begin.   |end -->|begin |pdest |end
-	2) if pdest > end: remove content from begin to end	
+	2) if pdest > end: remove content from begin to end
 	|begin   |end      |pdest --> |end |pdest
- */
+
+	@param[in,out] pdest Destination pointer, advanced by end-begin in case 1, moved back by end-begin in case 2.
+	@param[in,out] begin Beginning of the content.
+	@param[in] end End of the content (exclusive).
+*/
 void str_swap(char**pdest, char *begin, char *end){
 	long n=end-begin;
 	if(*pdest==begin){
@@ -707,6 +824,9 @@ void str_swap(char**pdest, char *begin, char *end){
 /**
    Parse command line arguments. The remaining string contains whatever is not yet parsed.
    This is more relaxed than the built in getopd
+
+   @param[in,out] cmds Command line string. Parsed options are removed and key=value entries are separated by newline.
+   @param[in,out] options NULL terminated option table. Parsed values are stored to or passed to their val.
 */
 void parse_argopt(char* cmds, argopt_t* options){
 	if(!cmds) return;
@@ -923,6 +1043,9 @@ void parse_argopt(char* cmds, argopt_t* options){
 
 /**
    Set scheduling priorities for the process to enable real time behavior.
+
+   @param[in] icpu Unused.
+   @param[in] niceness Unused.
 */
 void set_realtime(int icpu, int niceness){
 	(void)icpu;
@@ -961,6 +1084,12 @@ void set_realtime(int icpu, int niceness){
 		warning("Please run program as setsid or as root to lift priority\n");
 	}
 }
+/**
+   Free an array of n strings and the array itself.
+
+   @param[in] str Array of strings. May be NULL.
+   @param[in] n Number of strings.
+*/
 void free_strarr(char **str, int n){
 	if(str){
 		for(int i=0; i<n; i++){
@@ -982,6 +1111,10 @@ const int default_color_table[]={0x0000FF,
 			   0x000000,
 			   0x666666,
 };
+/**
+   Print the source and build information, launch time, host and PID, and the
+   job monitor address.
+*/
 void print_version(void){
 	extern const char *GIT_VERSION;
 	info2("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
@@ -1017,6 +1150,14 @@ void print_version(void){
 	info("The browser based job monitor and drawdaemon can be accessed at http://localhost:%d\n", PORT);
 #endif	
 }
+/**
+   Replace prefix at the beginning of str with substitute in place. Does nothing
+   if str does not start with prefix or substitute is longer than prefix.
+
+   @param[in,out] str String to modify.
+   @param[in] prefix Prefix to replace.
+   @param[in] substitute Replacement.
+*/
 void mystrrep(char *str, const char *prefix, const char *substitute){
 	if(!str || !prefix || !substitute) return;
 	size_t nsub=strlen(substitute);
@@ -1031,12 +1172,13 @@ void mystrrep(char *str, const char *prefix, const char *substitute){
 	}
 }
 /**
- * @brief Convert time in seconds to string representation with minimal length
- * 
- * @param tmp 	target memory
- * @param stmp 	length of target memory
- * @param sec 	time in seconds
- */
+   Convert time in seconds to string representation with minimal length
+
+   @param[out] tmp target memory
+   @param[in] stmp length of target memory
+   @param[in] sec time in seconds
+   @return Number of characters written (as returned by snprintf), or 0 if stmp<0.
+*/
 int sec2str(char*tmp, long stmp, double sec){
 	if(stmp<0) return 0;
 	if(sec<0) sec=0; //ignore negative
@@ -1059,14 +1201,15 @@ int sec2str(char*tmp, long stmp, double sec){
 	return offset;
 }
 /**
- * @brief Rename prefix_host_pid.suffix to prefix_done.suffix. 
- * If already exists and count_in>=0 increment the counter and use prefix_done.counter.suffix as filename
- * 
- * @param prefix 
- * @param suffix 
- * @param count_in if >=0, do not increase
- * @return int the counter
- */
+   Rename prefix_host_pid.suffix to prefix_done.suffix and link prefix_recent.suffix to it.
+   An existing prefix_done.suffix is renamed to prefix_done.counter.suffix if counter>0.
+   If count_in<0, the counter is increased from 0 until prefix_done.counter.suffix does not exist.
+
+   @param[in] prefix File name prefix.
+   @param[in] suffix File name suffix.
+   @param[in] count_in if >=0, use it as the counter and do not increase
+   @return the counter, or -1 if prefix_host_pid.suffix does not exist.
+*/
 static int rename_done(const char *prefix, const char *suffix, int count_in){
 	char fn[PATH_MAX];
 	char fn1[PATH_MAX];
@@ -1099,6 +1242,15 @@ static int rename_done(const char *prefix, const char *suffix, int count_in){
 	}
 	return count;
 }
+/**
+   Rename the log file of the current process upon exit. If sig is 0 (success),
+   rename run_host_pid.log and exe_host_pid.conf to *_done.*. Otherwise rename
+   the log to run_host_pid.err and link run_recent.log to it.
+
+   @param[in] sig Signal number, 0 for success.
+   @param[in] exe Prefix of the conf file, usually the executable name.
+*/
+
 void rename_log(int sig, const char *exe){
 	if(sig==0){//success
 		int count=rename_done("run", "log", -1);

@@ -27,19 +27,27 @@
   Sets up maos simulation.
 */
 
-global_t* global=NULL;//record for convenient access. It enables calling maos from matlab
+/**record for convenient access. It enables calling maos from matlab*/
+global_t* global=NULL;
 int use_cuda=0;
 const char *dirskysim=NULL;
 
-/** begin variable overridable by environment variable MAOS_ .  These are for
+/* begin variable overridable by environment variable MAOS_ .  These are for
  debugging maos itself. Not pertinent to a particular simulation*/
-real TOMOSCALE=1e-12;//Without this, NEA inverse overflows in float point number mode.
-int PARALLEL=1; //DO wfs, evl, and recon in parallel
-int KEEP_MEM=0; //keep allocated memory during steps.
+/**Without this, NEA inverse overflows in float point number mode.*/
+real TOMOSCALE=1e-12;
+/**DO wfs, evl, and recon in parallel*/
+int PARALLEL=1;
+/**keep allocated memory during steps.*/
+int KEEP_MEM=0;
 int NO_WFS=0;
 int NO_EVL=0;
 int NO_RECON=0;
-/** end*/
+/* end*/
+/**
+   Read simulation flags TOMOSCALE, PARALLEL, NO_WFS, NO_EVL, NO_RECON, and
+   KEEP_MEM from environment variables.
+*/
 static void read_sim_env(){
 	READ_ENV_DBL(TOMOSCALE, 0, INFINITY);
 	READ_ENV_INT(PARALLEL, 0, 2);
@@ -51,10 +59,12 @@ static void read_sim_env(){
 }
 
 /**
-   Setup system before entering simulation.
+   Setup system before entering simulation. Also used by mex.
 
    \callgraph
- */
+
+   @param[in] parms The parameter struct. Kept in global->parms.
+*/
 void maos_setup(const parms_t* parms){
 	TIC;tic;
 	global=mycalloc(1, global_t);

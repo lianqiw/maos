@@ -73,16 +73,19 @@ static mt_u32bit_t	matrix_decider[2]=
 {0x0, MATRIX_A};
 /**
    Mark state as initialized.
- */
-static void mts_mark_initialized(mt_state* state /**< State vector to mark initialized */
-){
+
+   @param[out] state State vector to mark initialized.
+*/
+static void mts_mark_initialized(mt_state* state){
 	state->initialized=1;
 }
 /**
-   Refresh the state for next set of random numbers.
- */
-void mts_refresh(mt_state* state /**< State for the PRNG */
-){
+   Refresh the state for next set of random numbers. Seeds the state with the default seed if it is not
+   initialized.
+
+   @param[in,out] state State for the PRNG.
+*/
+void mts_refresh(mt_state* state){
 	int	i;		/* Index into the state */
 	mt_u32bit_t* state_ptr;	/* Next place to get from state */
 	mt_u32bit_t value1;		/* Scratch val picked up from state */
@@ -146,12 +149,12 @@ void mts_refresh(mt_state* state /**< State for the PRNG */
 }
 
 /**
-   See the state vector.
- */
-void mts_seed32(
-	mt_state* state,		/* State vector to initialize */
-	unsigned long	seed)		/* 32-bit seed to start from */
-{
+   Seed the state vector.
+
+   @param[out] state State vector to initialize.
+   @param[in] seed 32-bit seed to start from.
+*/
+void mts_seed32(mt_state* state, unsigned long	seed){
 	seed=~seed;/*added by lianqiw. */
 	int			i;		/* Loop index */
 
@@ -181,7 +184,11 @@ void mts_seed32(
 }
 
 /**
-   Get a poisson random number.
+   Get a poisson random number. Uses a gaussian approximation if xm>200.
+
+   @param[in,out] rstat The random stream.
+   @param[in] xm The mean of the poisson distribution.
+   @return The poisson random number.
 */
 long randp(rand_t* rstat, double xm){
 	double g, t;
@@ -222,17 +229,28 @@ static  double  x1, x11;
 static  double  v;
 
 /**
-   the target density */
+   The target density (unnormalized gaussian).
+
+   @param[in] xr The abscissa.
+   @return exp(-xr*xr/2).
+*/
 static inline double ff(double xr){
 	return  exp(-xr*xr*0.5);
 }
 /**
-   the inverse of the target density */
+   The inverse of the target density.
+
+   @param[in] y The density value in (0,1].
+   @return sqrt(-2*log(y)).
+*/
 static inline double f_inv(double y){
 	return  sqrt(-2.*log(y));
 }
 /**
-   try_r_value
+   Fill the ziggurat level boundaries xx and the area v for a trial tail start r.
+
+   @param[in] r Trial value of the tail starting point.
+   @return Ratio of the computed top layer area to v. Used to bisect r until it is 1.
 */
 static double try_r_value(double r){
 	int  i;
@@ -245,7 +263,7 @@ static double try_r_value(double r){
 }
 /**
    Initialize the data to do norm distribution.
- */
+*/
 static __attribute__((constructor)) void initialize(){
 	double  a, b, aa, bb, r;
 	double  q;
@@ -282,7 +300,10 @@ static __attribute__((constructor)) void initialize(){
 	wtab[LEVELS-1]=v*RANGE_R/ff(x1);
 }
 /**
-   Get normal distributed random number.
+   Get normal distributed random number with unit standard deviation.
+
+   @param[in,out] rstat The random stream.
+   @return The normal random number.
 */
 double randn(rand_t* rstat){
 	double x=0;

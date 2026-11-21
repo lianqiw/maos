@@ -19,16 +19,23 @@
 #undef _GNU_SOURCE /*avoid compiling problem*/
 #endif
 
-static const int skip_unicell=0; //strip single cells: a{1}->a
+/**strip single cells: a{1}->a*/
+static const int skip_unicell=0;
 
 #include "io.h"
 mxArray* SKIPPED=(mxArray*)(1);
+/**
+   if start!=0 || howmany!=0 and data is cell, will only read cell from start to start+howmany
+   if data is not cell and start==-1, will skip the data.
+   Only the first call to readdata will possibly have howmany!=0
+
+   @param[in,out] fp File handle. fp->eof is set at end of file.
+   @param[out] header If not NULL, receives the header as a Matlab string (or cell of strings).
+   @param[in] start First cell index to read (0 based), or -1 to skip the data.
+   @param[in] howmany Number of cells to read, or 0 for all.
+   @return Newly created Matlab array, SKIPPED if the data was skipped, or NULL at end of file.
+*/
 static mxArray* readdata(file_t* fp, mxArray** header, int start, int howmany){
-	/*
-	  if start!=0 || howmany!=0 and data is cell, will only read cell from start to start+howmany
-	  if data is not cell and start==-1, will skip the data.
-	  Only the first call to readdata will possibly have howmany!=0
-	*/
 	if(fp->eof) return NULL;
 	header_t header2={0,0,0,0,0};
 	if(read_header2(&header2, fp)){
@@ -312,15 +319,33 @@ static mxArray* readdata(file_t* fp, mxArray** header, int start, int howmany){
 	free(header2.str); header2.str=NULL;
 	return out;
 }
+/**
+   Convert a Matlab string to a C string.
+
+   @param[in] A Matlab char array.
+   @return Newly allocated C string. The caller frees it.
+*/
 static char* mx2str(const mxArray* A){
 	int nlen=mxGetNumberOfElements(A)+1;
 	char* fn=(char*)malloc(nlen);
 	mxGetString(A, fn, nlen);
 	return fn;
 }
+/**
+   Print usage and abort the mex call.
+*/
 void usage(){
 	mexErrMsgTxt("Usage: [var, [header]]=read('filename' [,howmany] [, start]). [] means optional\n");
 }
+/**
+   Matlab entry point to read bin or fits files:
+   [var, [header]]=read('filename' [,howmany] [, start]).
+
+   @param[in] nlhs Number of output arguments.
+   @param[out] plhs Output arguments: data and optional header.
+   @param[in] nrhs Number of input arguments.
+   @param[in] prhs Input arguments: file name, optional number of cells to read, and optional starting cell (1 based).
+*/
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 	file_t* fp;
 	char* fn=NULL;

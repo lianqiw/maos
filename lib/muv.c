@@ -32,7 +32,13 @@
 
 /**
    Apply the sparse plus low rank compuation to xin with scaling of alpha:
-   \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.  */
+   \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.
+
+   @param[in,out] xout The output, accumulated into. Allocated if NULL.
+   @param[in] A_ The muv_t operator. Declared void for use as a pcg callback.
+   @param[in] xin The input vector.
+   @param[in] alpha Scaling factor.
+*/
 void muv(dcell** xout, const void* A_, const dcell* xin, const real alpha){
 	const muv_t* A=(const muv_t*)A_;//A_ is declared void for cg to use without casting.
 	if(A->M&&xin){
@@ -53,7 +59,13 @@ void muv(dcell** xout, const void* A_, const dcell* xin, const real alpha){
 /**
    Apply the transpose of operation muv(); Apply the sparse plug low rand
    compuation to xin with scaling of alpha: \f$xout=(A.M-A.V*A.U')*xin*alpha\f$;
-   U,V are low rank.  */
+   U,V are low rank.
+
+   @param[in,out] xout The output, accumulated into. Allocated if NULL.
+   @param[in] A_ The muv_t operator. Declared void for use as a pcg callback.
+   @param[in] xin The input vector. Nothing is done if NULL and A->M is set.
+   @param[in] alpha Scaling factor.
+*/
 void muv_trans(dcell** xout, const void* A_, const dcell* xin, const real alpha){
 	const muv_t* A=(const muv_t*)A_;
 	if(A->M){
@@ -85,7 +97,13 @@ typedef struct{
 }MUV_IB_T;
 /**
    Apply the sparse plus low rand compuation to xin with scaling of alpha for block (xb, yb):
-   \f$xout_x=(A.M_xy-A.U_xi*A.V_yi')*xin_y*alpha\f$; U,V are low rank. */
+   \f$xout_x=(A.M_xy-A.U_xi*A.V_yi')*xin_y*alpha\f$; U,V are low rank.
+
+   @param[in,out] xout The output, block xb is accumulated into. Allocated if NULL.
+   @param[in] B Pointer to MUV_IB_T containing the muv_t operator and block indices. If xb or yb is -1, the full muv() is applied.
+   @param[in] xin The input vector (one column).
+   @param[in] alpha Scaling factor.
+*/
 void muv_ib(dcell** xout, const void* B, const dcell* xin, const real alpha){
 	const MUV_IB_T* C=(const MUV_IB_T*)B;
 	int xb=C->xb;
@@ -127,9 +145,16 @@ void muv_ib(dcell** xout, const void* B, const dcell* xin, const real alpha){
    Prepare the low rank terms:
    \f[
    Up=M^{-1}*U,
-   Vp=M^{-1}*[V*(I-Up'*V)^{-1}]
+   Vp=-M^{-1}*[V*(I-Up'*V)^{-1}]
    \f]
    Where M^{-1} is either using MI (svd) or C (CBS)
+
+   @param[out] Up The output Up. Allocated if NULL.
+   @param[out] Vp The output Vp. Allocated if NULL.
+   @param[in] C The Cholesky factor of M. Used if MI is NULL.
+   @param[in] MI The inverse of M (svd). Can be NULL.
+   @param[in] U The low rank term U.
+   @param[in] V The low rank term V.
 */
 static void muv_direct_prep_lowrank(dmat** Up, dmat** Vp, spchol* C, dmat* MI, dmat* U, dmat* V){
 	if(MI){
@@ -164,9 +189,11 @@ static void muv_direct_prep_lowrank(dmat** Up, dmat** Vp, spchol* C, dmat* MI, d
    When there are low rank terms,
    \f[
 	   Up=M^{-1}*U,
-	   Vp=M^{-1}*[V*(I-Up'*V)^{-1}]
+	   Vp=-M^{-1}*[V*(I-Up'*V)^{-1}]
 	\f]
 
+   @param[in,out] A The muv_t struct. The factorization (C or MI, Up, Vp) is stored into it. With svd, U and V are absorbed into MI and freed.
+   @param[in] svd 0: Cholesky factorization. Otherwise use SVD; if |svd|<1 it is the SVD inversion threshold.
 */
 void muv_direct_prep(muv_t* A, real svd){
 	int use_svd=fabs(svd)>0;
@@ -218,9 +245,12 @@ void muv_direct_prep(muv_t* A, real svd){
   When there are low rank terms,
 	  \f[
 	  Up=M^{-1}U,
-	  Vp=M^{-1}[V*(I-Up'*V)^{-1}]
+	  Vp=-M^{-1}[V*(I-Up'*V)^{-1}]
 	  \f]
   For each diagonal block.
+
+   @param[in,out] A The muv_t struct. The factorization (CB or MIB, UpB, VpB) is stored into it. U and V are reduced to column block vectors.
+   @param[in] svd 0: Cholesky factorization. Otherwise use SVD; if svd<1 it is the SVD inversion threshold.
 */
 void muv_direct_diag_prep(muv_t* A, real svd){
 	int use_svd=fabs(svd)>0;
@@ -310,7 +340,11 @@ void muv_direct_solve_mat(dmat** xout, const muv_t* A, dmat* xin){
    Apply CBS or SVD multiply to square sparse matrix.
 	   xout = A^-1 * xin * (A^-1)^T.
    The output is dmat if using SVD, and dsp if using CBS.
- */
+
+   @param[in] A The muv_t struct prepared by muv_direct_prep().
+   @param[in] xin The square sparse input matrix.
+   @return Newly allocated dmat (SVD) or dsp (CBS); the caller frees it.
+*/
 void* muv_direct_spsolve(const muv_t* A, const dsp* xin){
 	void* xout=NULL;
 	if(A->MI){
@@ -362,7 +396,12 @@ void muv_direct_diag_solve(dmat** xout, const muv_t* A, dmat* xin, int ib){
 	}
 }
 /**
-   convert the data from dcell to dmat and apply muv_direct_solve() . May be done in place.*/
+   convert the data from dcell to dmat and apply muv_direct_solve_mat(). May be done in place.
+
+   @param[out] xout The output. Allocated if NULL.
+   @param[in] A The muv_t struct prepared by muv_direct_prep().
+   @param[in] xin The input. Nothing is done if NULL.
+*/
 void muv_direct_solve(dcell** xout, const muv_t* A, dcell* xin){
 	if(!xin) return;
 	if(NX(xin)*NY(xin)==1){/*there is only one cell. */
@@ -377,11 +416,13 @@ void muv_direct_solve(dcell** xout, const muv_t* A, dcell* xin){
 }
 /**
    solve A*x=b using the Block Gauss Seidel algorithm. The matrix is always
-   assembled. We use routines from muv. to do the computation.  */
-void muv_bgs_solve(dcell** px,    /**<[in,out] The output vector. input for warm restart.*/
-	const muv_t* A,/**<[in] Contain info about the The left hand side matrix A*/
-	const dcell* b /**<[in] The right hand side vector to solve*/
-){
+   assembled. We use routines from muv. to do the computation.
+
+   @param[in,out] px The output vector. Input for warm restart. Allocated if NULL.
+   @param[in] A Contain info about the left hand side matrix A.
+   @param[in] b The right hand side vector to solve. Nothing is done if NULL.
+*/
+void muv_bgs_solve(dcell** px, const muv_t* A, const dcell* b){
 	if(!b) return;
 	int nb=(int)NX(b);
 	assert(NY(b)==1);
@@ -432,12 +473,14 @@ void muv_bgs_solve(dcell** px,    /**<[in,out] The output vector. input for warm
 }
 /**
    solve x=A^-1*B*b using algorithms depend on algorithm, wrapper.
+
+   @param[in,out] px The output vector. Input for warm restart. Allocated if NULL.
+   @param[in] L Contain info about the left hand side matrix A.
+   @param[in] R Contain info about the right hand side matrix B. If NULL, b is used as the right hand side directly.
+   @param[in] b The right hand side vector to solve. NULL is special case.
+   @return The residual from pcg() for CG; 0 otherwise.
 */
-real muv_solve(dcell** px,    /**<[in,out] The output vector. input for warm restart.*/
-	const muv_t* L,/**<[in] Contain info about the left hand side matrix A*/
-	const muv_t* R,/**<[in] Contain info about the right hand side matrix B*/
-	dcell* b       /**<[in] The right hand side vector to solve. null is special case*/
-){
+real muv_solve(dcell** px, const muv_t* L, const muv_t* R, dcell* b){
 	dcell* rhs=NULL;
 	real res=0;
 	if(R){
@@ -466,7 +509,9 @@ real muv_solve(dcell** px,    /**<[in,out] The output vector. input for warm res
 
 /**
    Free cholesky decompositions or SVD.
- */
+
+   @param[in,out] A The muv_t struct whose C, MI, Up, Vp are freed.
+*/
 void muv_direct_free(muv_t* A){
 	if(A->C){
 		chol_free(A->C);
@@ -479,8 +524,10 @@ void muv_direct_free(muv_t* A){
 	dfree(A->Vp);
 }
 /**
-   Free cholesky decompositions or SVD.
- */
+   Free cholesky decompositions or SVD of the diagonal blocks.
+
+   @param[in,out] A The muv_t struct whose CB, MIB, UpB, VpB are freed.
+*/
 void muv_direct_diag_free(muv_t* A){
 	if(A->CB){
 		for(int i=0; i<A->nb; i++){
@@ -495,7 +542,9 @@ void muv_direct_diag_free(muv_t* A){
 	dcellfree(A->VpB);
 }
 /**
-   Free muv_t struct
+   Free the content of muv_t struct and zero it. The struct itself is not freed.
+
+   @param[in,out] A The muv_t struct.
 */
 void muv_free(muv_t* A){
 	cellfree(A->M);

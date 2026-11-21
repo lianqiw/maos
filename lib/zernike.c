@@ -22,7 +22,12 @@
 #include "mkh.h"
 /**
    Generating Zernike Rnm for radial order ir, azimuthal or im.  used by zernike().
-   */
+
+   @param[in] locr Normalized radius of each point (1 at the edge of the pupil).
+   @param[in] ir Radial order.
+   @param[in] im Azimuthal order. ir-im must be even and im<=ir.
+   @return Newly allocated Rnm evaluated at locr. The caller frees it.
+*/
 static dmat* zernike_Rnm(const dmat* locr, int ir, int im){
 	if(ir<0||im < 0||im>ir||(ir-im)%2!=0)
 		error("Invalid ir, im (%d, %d)\n", ir, im);
@@ -52,11 +57,19 @@ OMP_FOR(NTHREAD)
    r=0 is piston
    r=1 is tip/tilt
    r=2 is quadratic modes
-   if nopiston is set, skip piston mode.
    if flag is >0, only radial mode is used.
    if flag is  0, all modes between rmin and rmax.
    if flag is <0, only generate mode -flag. rmin and rmax is irrelevant
    set D to -|D| to avoid clipping points outside of D.
+
+   @param[in] loc The location grid.
+   @param[in] D Pupil diameter (m). 0 or larger than the loc diameter means the loc diameter. Negative to avoid clipping
+   points outside of D.
+   @param[in] rmin Minimum radial order (inclusive). Use 1 to skip piston.
+   @param[in] rmax Maximum radial order (inclusive). Reduced if it exceeds what loc supports.
+   @param[in] flag Mode selection as described above.
+   @return Newly allocated modal matrix with one column per mode, normalized to unit RMS, or NULL if loc is NULL or
+   rmin>rmax. The caller frees it.
 */
 dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 	if(!loc) return NULL;
@@ -169,7 +182,11 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 /**
    return zernike index of radial mode ir, and azimuthal mode im. Maximum radial
    order is nr (inclusive)
- */
+
+   @param[in] nr Maximum radial order (inclusive).
+   @return Newly allocated (nr+1)x(nr+1) index array, indexed by (im, ir), with -1 for invalid combinations, or NULL
+   if nr<0. The caller frees it.
+*/
 static lmat* zernike_index(int nr){
 	if(nr<0) return 0;
 	lmat* out=lnew(nr+1, nr+1);
@@ -201,6 +218,10 @@ static lmat* zernike_index(int nr){
 
    2015-06-05: This is not longer being used. It is inaccurate for annular
    pupil. Analytic calculation using the power spectrum is used instead.
+
+   @param[in] nr Maximum radial order (inclusive).
+   @return Newly allocated covariance matrix of all zernike modes up to radial order nr. Piston terms are zero. The
+   caller frees it.
 */
 dmat* zernike_cov_kolmogorov(int nr){
 	int nmod=(nr+1)*(nr+2)/2;
@@ -253,10 +274,6 @@ dmat* zernike_cov_kolmogorov(int nr){
 
 /**
    Compute covariance matrix of modes in von Karman turbulence.
-   @param loc   The location grid
-   @param modz  The modal matrix (zernike or zonal)
-   @param L0    The outer scale
-   @returns     The mode coefficient covariance matrix
 
    The turbulence OPD y can be expressed as \f$y=M*x\f$ where \f$x\f$ is the
    modal coefficient and \f$M\f$ is the modal matrix (parameter modz). The OPD
@@ -272,6 +289,12 @@ dmat* zernike_cov_kolmogorov(int nr){
 
    For modes \f$M\f$ defined on the DM, its influence function should be
    includes. \f$<yy'>=H*M*<xx'>*M'H'\f$. 
+
+   @param[in] loc The location grid.
+   @param[in] modz The modal matrix (zernike or zonal) defined on loc.
+   @param[in] L0 The outer scale (m).
+   @return Newly allocated mode coefficient covariance matrix, computed for r0=0.2 m, or NULL if loc or modz is NULL.
+   The caller frees it.
 */
 dmat* cov_vonkarman(const loc_t* loc, const dmat* modz,	real L0){
 	if(!loc|| !modz) return NULL;
@@ -323,11 +346,14 @@ dmat* cov_vonkarman(const loc_t* loc, const dmat* modz,	real L0){
 	The covariance of the coefficient x can be decomposed with svd: cov=U*S*V'. So we have
 	<yy'>=mod*<x*x'>*mod=mod*U*S*v'*mod'; Refine the bases with KL=mod*U, we have
 	<yy'>=KL*S*KL' where the covariance of coefficient is diagonal S.
-	returns the diagnolized mode and the covariance of each modal coefficient.
+	Modes after a sudden drop in strength of over 100x are dropped.
+
+   @param[in] mod Input mode.
+   @param[in] cov Covariance of modes.
+   @return Newly allocated dcell with the diagnolized mode in the first cell and the covariance (variance) of each modal
+   coefficient in the second, or NULL if mod or cov is NULL. The caller frees it.
 */
-dcell* cov_diagnolize(const dmat* mod, /**<Input mode*/
-	const dmat* cov  /**<Covariance of modes*/
-){
+dcell* cov_diagnolize(const dmat* mod, const dmat* cov){
 	if(!mod || !cov) return NULL;
 	dmat* U=0, * Vt=0, * S=0;
 	dsvd(&U, &S, &Vt, cov);
@@ -356,8 +382,15 @@ dcell* cov_diagnolize(const dmat* mod, /**<Input mode*/
 }
 
 /**
-   see KL_vonkarman()
- */
+   Compute KL modes from zonal modes. See KL_vonkarman_full().
+
+   @param[in] loc The location grid.
+   @param[in] ttr Whether to remove piston, tip, and tilt from the modes.
+   @param[in] iac Inter-actuator coupling of the cubic influence function. Linear influence function is used if <=0.
+   @param[in] L0 The outer scale (m).
+   @return Newly allocated dcell with KL modes in the first cell and their variance in the second, or NULL if loc is
+   NULL. The caller frees it.
+*/
 static dcell* KL_vonkarman_do(const loc_t* loc, int ttr, real iac, real L0){
 	if(!loc) return NULL;
 	dcell *kl=NULL;
@@ -421,6 +454,15 @@ static dcell* KL_vonkarman_do(const loc_t* loc, int ttr, real iac, real L0){
    In theory, the KL modes computes should be independent on the starting mode,
    as long as the modes are independent and span the whole vector space for the
    coordinate.
+
+   The result is cached on disk if loc has 500 or more points.
+
+   @param[in] loc The location grid.
+   @param[in] ttr Whether to remove piston, tip, and tilt from the modes.
+   @param[in] iac Inter-actuator coupling of the cubic influence function. Linear influence function is used if <=0.
+   @param[in] L0 The outer scale (m).
+   @return Newly allocated dcell with KL modes in the first cell and their variance in the second, or NULL if loc is
+   NULL. The caller frees it.
 */
 dcell *KL_vonkarman_full(const loc_t *loc, int ttr, real iac, real L0){
 	if(!loc) return 0;
@@ -435,7 +477,14 @@ dcell *KL_vonkarman_full(const loc_t *loc, int ttr, real iac, real L0){
 	}
 	return res;
 }
-/*A convenient wrapper for simplified useage.*/
+/**
+   A convenient wrapper of KL_vonkarman_full() for simplified useage.
+
+   @param[in] loc The location grid.
+   @param[in] ttr Whether to remove piston, tip, and tilt from the modes.
+   @param[in] L0 The outer scale (m).
+   @return Newly allocated KL modal matrix, or NULL if loc is NULL. The caller frees it.
+*/
 dmat *KL_vonkarman(const loc_t *loc, int ttr, real L0){
 	if(!loc) return NULL;
 	//Note 2025-01-06: KL modal matrix with cubic influenction function needs further
@@ -448,7 +497,13 @@ dmat *KL_vonkarman(const loc_t *loc, int ttr, real L0){
 }
 /**
    Generate FFT mode with period.
- */
+
+   @param[in] loc The location grid.
+   @param[in] D Diameter (m) over which the periods are counted.
+   @param[in] px Number of periods across D along x.
+   @param[in] py Number of periods across D along y.
+   @return Newly allocated OPD cos(2*pi*px*x/D)*cos(2*pi*py*y/D) on loc, or NULL if loc is NULL. The caller frees it.
+*/
 dmat* fft_mode(const loc_t* loc, real D, real px, real py){
 	if(!loc) return NULL;
 	dmat* opd=dnew(loc->nloc, 1);

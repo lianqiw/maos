@@ -23,8 +23,13 @@ typedef struct mm_t{
 	long ax, az;
 	long bz, by;
 }mm_t;
-/*
+/**
   determine parameters to perform for loop based on trans
+
+   @param[in] A_ Left array (matrix or cell).
+   @param[in] B_ Right array (matrix or cell).
+   @param[in] trans Operation on A and B: 'n' for none, 't' or 'c' for transpose.
+   @return Loop dimensions and strides.
 */
 static mm_t parse_trans(const_anyarray A_, const_anyarray B_, const char trans[2]){
 	const cell *A=A_.c;
@@ -79,7 +84,7 @@ static mm_t parse_trans(const_anyarray A_, const_anyarray B_, const char trans[2
 	mm_t out={nx, ny, nz, ax, az, bz, by};
 	return out;
 }
-/*
+/**
   Handling multiplication between sparse and dense matrix/vector.
 */
 typedef struct sp_thread_t{
@@ -92,8 +97,13 @@ typedef struct sp_thread_t{
 }sp_thread_t;
 
 /**
- * Multiply a sparse matrix with the real part of a complex vector: y=y+A*creal(x)*alpha
- */
+   Multiply a sparse matrix with the real part of a complex vector: y=y+A*creal(x)*alpha
+
+   @param[in,out] y Output vector, accumulated into.
+   @param[in] A Sparse matrix.
+   @param[in] x Complex input vector.
+   @param[in] alpha Scaling factor.
+*/
 void X(spmulcreal)(T* restrict y, const X(sp)* A, const RC* restrict x, R alpha){
 	if(A&&x&&y){
 		for(long icol=0; icol<A->ny; icol++){
@@ -106,10 +116,16 @@ void X(spmulcreal)(T* restrict y, const X(sp)* A, const RC* restrict x, R alpha)
 }
 
 /**
- * sparse matrix multiply with a vector: y=y+op(A)*x*alpha
- op(A)=A  if trans=='n'
- op(A)=A' if trans=='t'
- op(A)=conj(A') if trans=='c'
+   sparse matrix multiply with a vector: y=y+op(A)*x*alpha
+   op(A)=A  if trans=='n'
+   op(A)=A' if trans=='t'
+   op(A)=conj(A') if trans=='c'
+
+   @param[in,out] y Output vector, accumulated into. Must be preallocated.
+   @param[in] A Sparse matrix.
+   @param[in] x Input vector.
+   @param[in] trans Operation on A: 'n', 't', or 'c'.
+   @param[in] alpha Scaling factor.
 */
 void X(spmv)(X(mat)* y, const X(sp)* A, const X(mat)* restrict x, char trans, T alpha){
 	if(A&&x&&y){
@@ -166,6 +182,14 @@ OMP_FOR(4)
    op(A)=A  if trans=='n'
    op(A)=A' if trans=='t'
    op(A)=conj(A') if trans=='c'
+   'N' means conjugate without transpose.
+
+   @param[in,out] yout Output matrix, allocated if NULL, otherwise accumulated into.
+   @param[in] A Sparse matrix.
+   @param[in] x Dense matrix.
+   @param[in] trans Operation on A and x respectively: 'n', 'N', 't', or 'c'.
+   @param[in] transy If nonzero, the result is accumulated into the transpose of y.
+   @param[in] alpha Scaling factor.
 */
 static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const char trans[2], const int transy, const T alpha){
 	if(!A||!x||!PN(A) ||!PN(x)) return;
@@ -300,11 +324,23 @@ static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const cha
 	}
 }
 /**
-   sparse matrix multiply with dense matrix
+   sparse matrix multiply with dense matrix: y=y+op(A)*op(x)*alpha
+
+   @param[in,out] yout Output matrix, allocated if NULL, otherwise accumulated into.
+   @param[in] A Sparse matrix.
+   @param[in] x Dense matrix.
+   @param[in] trans Operation on A and x respectively: 'n', 't', or 'c'.
+   @param[in] alpha Scaling factor.
 */
 void X(spmm)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const char trans[2], const T alpha){
 	X(spmm_do)(yout, A, x, trans, 0, alpha);
 }
+/**
+   Return the trans character for the transposed operand.
+
+   @param[in] in Original trans character: 'n', 't', or 'c'.
+   @return 't' for 'n', 'n' for 't', and 'N' (conjugate only) for 'c'.
+*/
 static char reverse_trans(char in){
 	switch(in){
 	case 'n':
@@ -321,7 +357,14 @@ static char reverse_trans(char in){
 /**
    dense matrix multiply with sparse matrix, implemented by transpose all:
    y=x*A-->y'=A'*x'; conjugation is handled carefully.
- */
+   y=y+op(x)*op(A)*alpha
+
+   @param[in,out] yout Output matrix, allocated if NULL, otherwise accumulated into.
+   @param[in] x Dense matrix.
+   @param[in] A Sparse matrix.
+   @param[in] trans Operation on x and A respectively: 'n', 't', or 'c'.
+   @param[in] alpha Scaling factor.
+*/
 void X(mulsp)(X(mat)** yout, const X(mat)* x, const X(sp)* A, const char trans[2], const T alpha){
 	char trans2[2];
 	trans2[1]=reverse_trans(trans[0]);
@@ -331,12 +374,19 @@ void X(mulsp)(X(mat)** yout, const X(mat)* x, const X(sp)* A, const char trans[2
 
 /**
    Multiply two sparse arrays and add to the third: C0=C0+op(A)*op(B)*scale
+
+   @param[in,out] C0 Output sparse matrix, allocated if NULL, otherwise accumulated into.
+   @param[in] A Left sparse matrix.
+   @param[in] B Right sparse matrix.
+   @param[in] trans Operation on A and B respectively: 'n', 't', or 'c'.
+   @param[in] scale Scaling factor.
 */
 void X(spmulsp2)(X(sp)** C0, const X(sp)* A, const X(sp)* B, const char trans[2], const T scale){
 	/*return C=C+ alpha*(A*B) */
 	if(!A||!B) return;
 	X(sp)* At=0;
 	X(sp)* Bt=0;
+	/*X(sptrans) is the conjugate transpose for complex, so conjugate back for 't'.*/
 	if(trans[0]=='t'||trans[0]=='c'){
 		At=X(sptrans)(A);
 		if(trans[0]=='t'){
@@ -366,6 +416,11 @@ void X(spmulsp2)(X(sp)** C0, const X(sp)* A, const X(sp)* B, const char trans[2]
 }
 /**
    Multiply two sparse arrays and return the result op(A)*op(B)
+
+   @param[in] A Left sparse matrix.
+   @param[in] B Right sparse matrix.
+   @param[in] trans Operation on A and B respectively: 'n', 't', or 'c'.
+   @return Newly allocated sparse matrix; the caller frees it.
 */
 X(sp)* X(spmulsp)(const X(sp)* A, const X(sp)* B, const char trans[2]){
 	X(sp)* res=0;
@@ -391,6 +446,12 @@ X(sp)* X(spmulsp)(const X(sp)* A, const X(sp)* B, const char trans[2]){
    2009-11-09: There was initially a beta parameter It was implemented wrongly
    for beta!=1 because for every call to dmm, the already accumulated ones are
    scaled.  removed beta.
+
+   @param[in,out] C0_ Output array, allocated if NULL, otherwise accumulated into.
+   @param[in] A_ Left operand: dense, sparse, or cell array of them.
+   @param[in] B_ Right operand: dense, sparse, or cell array of them.
+   @param[in] trans Operation on A and B respectively: 'n', 't', or 'c'.
+   @param[in] alpha Scaling factor.
 */
 void X(cellmm)(panyarray C0_, const_anyarray A_, const_anyarray B_, const char trans[2], const R alpha){
 	cell **C0=C0_.c;
@@ -459,6 +520,16 @@ OMP_FOR_COLLAPSE(2, 8)
 		}
 	}
 }
+/**
+   C0=C0+op(A)*op(B)*alpha where A is a cell (often sparse) and B, C0 are
+   matrices. Typed wrapper of X(cellmm).
+
+   @param[in,out] C0 Output matrix, allocated if NULL, otherwise accumulated into.
+   @param[in] A Left operand.
+   @param[in] B Right matrix.
+   @param[in] trans Operation on A and B respectively: 'n', 't', or 'c'.
+   @param[in] alpha Scaling factor.
+*/
 void X(mm_cell)(X(mat)** C0, const cell* A, const X(mat)* B, const char trans[2], const R alpha){
 	if(!A||!B||!C0) return;
 	X(cellmm)((cell**)C0, A, B, trans, alpha);
@@ -468,8 +539,13 @@ void X(mm_cell)(X(mat)** C0, const cell* A, const X(mat)* B, const char trans[2]
 	X(cellmm)((cell**)C0, A, B, trans, alpha);
 }*/
 /**
-   a different interface for multiplying cells.
- */
+   a different interface for multiplying cells: returns op(A)*op(B).
+
+   @param[in] A Left cell array.
+   @param[in] B Right cell array.
+   @param[in] trans Operation on A and B respectively: 'n', 't', or 'c'.
+   @return Newly allocated cell array; the caller frees it.
+*/
 X(cell)* X(cellmm2)(const X(cell)* A, const X(cell)* B, const char trans[2]){
 	X(cell)* res=0;
 	X(cellmm)(&res, A, B, trans, 1);
@@ -477,8 +553,12 @@ X(cell)* X(cellmm2)(const X(cell)* A, const X(cell)* B, const char trans[2]){
 }
 
 /**
-   Add alpha to diagnonal elements of A_. A_ can be matrix or sparse matrix.
- */
+   Add alpha to diagonal elements of A_. A_ is a square cell array whose
+   diagonal blocks can be matrix or sparse matrix.
+
+   @param[in,out] A_ Cell array, modified in place.
+   @param[in] alpha Value to add to the diagonal.
+*/
 void X(celladdI)(anyarray A_, T alpha){
 	cell* A=A_.c;
 	if(!A) return;
@@ -502,7 +582,12 @@ OMP_FOR(8)
    Calculate A_=A_*ac+B_*bc;
 
    Takes parameters of matrix, sparse matrix, or cell array of them.
- */
+
+   @param[in,out] pA_ Array A, allocated if NULL (except for sparse B).
+   @param[in] ac Scaling of A.
+   @param[in] B_ Array B. If NULL, only A is scaled.
+   @param[in] bc Scaling of B.
+*/
 void X(celladd)(panyarray pA_, R ac, const_anyarray B_, R bc){
 	const cell* B=B_.c;
 	cell** pA=pA_.c;
@@ -558,7 +643,10 @@ OMP_FOR(8)
    Copy B to A.
 
    Takes parameters of matrix, sparse matrix, or cell array of them.
- */
+
+   @param[in,out] A_ Destination, allocated if NULL. Zeroed if B_ is NULL.
+   @param[in] B_ Source.
+*/
 void X(cellcp)(X(cell)** A_, const X(cell)* B_){
 	if(!B_){
 		if(A_ && *A_) X(cellzero)(*A_);
@@ -569,6 +657,9 @@ void X(cellcp)(X(cell)** A_, const X(cell)* B_){
 
 /**
    scale each element of A.
+
+   @param[in,out] A_ Matrix, sparse matrix, or cell array of them, scaled in place.
+   @param[in] w Scaling factor.
 */
 void X(cellscale)(anyarray A_, R w){
 	cell* A=A_.c;
@@ -592,6 +683,8 @@ OMP_FOR(8)
 
 /**
    Setting all elements of a cell to zero.
+
+   @param[in,out] dc Cell array to zero.
 */
 void X(cellzero)(X(cell)* dc){
 	if(dc) X(cellscale)(dc, 0);
@@ -599,6 +692,9 @@ void X(cellzero)(X(cell)* dc){
 
 /**
    Convert dense or sparse matrix cell to matrix.
+
+   @param[in] A_ Cell array of dense or sparse matrices.
+   @return Newly allocated matrix, or NULL if A_ is NULL; the caller frees it.
 */
 X(mat)* X(cell2m)(const_anyarray A_){
 	const cell* A=A_.c;
@@ -637,8 +733,11 @@ X(mat)* X(cell2m)(const_anyarray A_){
 }
 
 /**
- * Rotate a or multiple 2d array ccw by angle
- * */
+   Rotate a or multiple 2d array ccw by angle
+
+   @param[in,out] A_ Matrix or cell array of matrices, rotated in place.
+   @param[in] theta Rotation angle (radian).
+*/
 void X(maprot)(anyarray A_, real theta){
 	const cell* A=A_.c; 
 	if(!A|| !theta) return;

@@ -28,6 +28,13 @@
 #include <limits.h>
 #include "../sys/sys.h"
 pid_t matlab_pid;
+/**
+   Signal handler that terminates the matlab process, first with SIGTERM and
+   then with SIGKILL if it is still alive after 10 seconds.
+
+   @param[in] sig The signal received. Nothing is done if 0.
+   @return 0.
+*/
 static int kill_matlab(int sig){
     if(sig!=0){
 	kill(matlab_pid,SIGTERM);
@@ -38,6 +45,15 @@ static int kill_matlab(int sig){
     }
     return 0;
 }
+/**
+   Launch a matlab script in the background under control of the scheduler.
+   Usage: load script.m. The script runs with matlab -nojvm -nodesktop, output
+   goes to load_script_pid.log, and the exit status is reported to the scheduler.
+
+   @param[in] argc Number of command line arguments. Must be 2.
+   @param[in,out] argv Command line arguments. The .m suffix of argv[1] is removed in place.
+   @return Does not return; the processes exit or exec matlab.
+*/
 int main(int argc, char **argv){
     if(argc!=2){
 	error("Usage:load script.m or load script\n");

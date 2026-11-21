@@ -29,7 +29,13 @@ struct zfarr{
 
 /**
    Initializing an zfarray object that contains arrays of dmat, cmat, dcell or ccell
- */
+
+   @param[in] nx Number of rows of the cell array. 0 if unknown.
+   @param[in] ny Number of columns of the cell array. 0 if unknown.
+   @param[in] keywords Keywords written to the header. May be NULL.
+   @param[in] format printf style format of the file name.
+   @return Newly allocated zfarr, or NULL if the file name is empty; close it with zfarr_close().
+*/
 zfarr* zfarr_init2(long nx, long ny, const char *keywords, const char* format, ...){
 	format2fn;
 	if(!fn) return NULL;
@@ -46,13 +52,25 @@ zfarr* zfarr_init2(long nx, long ny, const char *keywords, const char* format, .
 	return ca;
 }
 /**
- * */
+   Same as zfarr_init2() without keywords.
+
+   @param[in] nx Number of rows of the cell array. 0 if unknown.
+   @param[in] ny Number of columns of the cell array. 0 if unknown.
+   @param[in] format printf style format of the file name.
+   @return Newly allocated zfarr, or NULL if the file name is empty; close it with zfarr_close().
+*/
 zfarr *zfarr_init(long nx, long ny, const char *format, ...){
 	format2fn;
 	return zfarr_init2(nx, ny, NULL, "%s", fn);
 }
 /**
-   Append a A of type type into the zfarr ca, at location i. Append if i==0.
+   Write A into the zfarr ca at location i. Skipped locations are filled with
+   empty data if the total size is known. Append at the current location if
+   i<=0.
+
+   @param[in,out] ca The zfarr object.
+   @param[in] i Location to write to, or <=0 to append.
+   @param[in] A_ Array to write. May be NULL.
 */
 void zfarr_push(zfarr* ca, long i, const_anyarray A_){
 	const cell* A=A_.c;
@@ -91,7 +109,10 @@ void zfarr_push(zfarr* ca, long i, const_anyarray A_){
 }
 
 /**
-   Close the zfarr.
+   Close the zfarr. Fills unwritten elements with empty data if the total size
+   was specified, or updates the header with the actual count otherwise. Frees ca.
+
+   @param[in,out] ca The zfarr object. Freed on return.
 */
 void zfarr_close(zfarr* ca){
 	if(!ca) return;
@@ -112,7 +133,10 @@ void zfarr_close(zfarr* ca){
 	free(ca);
 }
 /**
-   Close an array of zfarr
+   Close an array of zfarr and free the array.
+
+   @param[in,out] ca Array of zfarr objects. Each and the array itself are freed.
+   @param[in] nc Number of elements in ca.
 */
 void zfarr_close_n(zfarr** ca, int nc){
 	if(!ca) return;

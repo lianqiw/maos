@@ -36,11 +36,16 @@ PNEW(lock);//protect the list and TCP socket from race condition
 #define WRITECMDSTR(sock, cmd, str) (WRITECMD(sock, cmd, sizeof(int)+strlen(str)+1)||stwritestr(sock, str))
 #define WRITECMDARR(sock, cmd, p, len) (WRITECMD(sock, cmd, len)||stwrite(sock, p, len))
 #define WRITECMDINT(sock, cmd, val) (WRITECMD(sock, cmd, sizeof(int))||stwriteint(sock, val))
-int draw_id=DRAW_ID_MAOS;      //Client identification. Same draw_id reuses drawdaemon.
-int draw_direct=0;  //Directly launch drawdaemon without forking a draw_helper
-int draw_disabled=0; //if set, draw will be disabled
-int draw_single=0;  //if ==1, only draw active frame and skip if line is busy. if ==-1, disable draw_single altogether. otherwise draw all frames.
-static int sock_helper=-1;//socket of draw_helper
+/**Client identification, usually PID. Same draw_id reuses drawdaemon.*/
+int draw_id=DRAW_ID_MAOS;
+/**Directly launch drawdaemon without forking a draw_helper*/
+int draw_direct=0;
+/**if set, draw will be disabled*/
+int draw_disabled=0;
+/**if ==1, only draw active frame and skip if line is busy. if ==-1, disable draw_single altogether. otherwise draw all frames.*/
+int draw_single=0;
+/**socket of draw_helper*/
+static int sock_helper=-1;
 
 /*If not null, only draw those that match draw_fig and draw_fn*/
 /**
@@ -65,7 +70,9 @@ static int sock_helper=-1;//socket of draw_helper
 
 */
 
-/* List of list*/
+/**
+   List of list
+*/
 typedef struct list_t{
 	char* key;
 	struct list_t* next;
@@ -83,11 +90,24 @@ typedef struct sockinfo_t{
 }sockinfo_t;
 sockinfo_t *sock_draws=NULL;
 int use_udp=0;
+/**
+   Write an int to a buffer stream.
+
+   @param[in] fbuf Buffer stream.
+   @param[in] A Value to write.
+   @return 0 on success, -1 on failure.
+*/
 static inline int fwriteint(FILE* fbuf, int A){
 	if(fwrite(&A, sizeof(int), 1, fbuf)<1) return -1;
 	return 0;
 }
-//write str length and str itself (with tailing NULL)
+/**
+   write str length and str itself (with tailing NULL)
+
+   @param[in] fbuf Buffer stream.
+   @param[in] str String to write. NULL is written as an empty string.
+   @return 0 on success, -1 on failure.
+*/
 static inline int fwritestr(FILE* fbuf, const char* str){
 	if(!str) str="";
 	uint32_t nlen=(uint32_t)(strlen(str)+1);
@@ -117,6 +137,10 @@ static inline int fwritestr(FILE* fbuf, const char* str){
 int plot_empty(sockinfo_t *ps, const char *fig, const char *fn);
 /**
    Listen to drawdaemon for update of fig, fn. The hold values are stored in figfn.
+   Also handles pause, resume, and draw_single toggling. Runs in a separate thread.
+
+   @param[in,out] psock_data Drawdaemon connection; figfn, pause, and draw_single are updated.
+   @return NULL.
 */
 static void* listen_drawdaemon(void *psock_data){
 	sockinfo_t *sock_data=(sockinfo_t *)psock_data;
@@ -191,6 +215,15 @@ static void* listen_drawdaemon(void *psock_data){
 	return NULL;
 }
 
+/**
+   Search for key in a linked list, optionally adding it to the head if not found.
+
+   @param[in,out] head Head of the list. Updated if a node is added.
+   @param[out] node If not NULL, set to the found or added node (NULL if not found and not added).
+   @param[in] key Key to search for.
+   @param[in] add Whether to add the key if not found.
+   @return 1 if key is found, 0 otherwise (even if it is added).
+*/
 static int list_search(list_t** head, list_t** node, const char* key, int add){
 	list_t* p=0;
     int ans=0;
@@ -209,6 +242,11 @@ static int list_search(list_t** head, list_t** node, const char* key, int add){
 	if(node) *node=p;
 	return ans;
 }
+/**
+   Free a linked list and its children recursively.
+
+   @param[in,out] head Head of the list. Set to NULL.
+*/
 static void list_destroy(list_t** head){
 	list_t* p;
 	for(p=*head; p; p=*head){
@@ -220,7 +258,13 @@ static void list_destroy(list_t** head){
 		free(p);
 	}
 }
-/**Add fd to list of drawing socks. lock is already locked*/
+/**
+   Add fd to list of drawing socks. lock is already locked. Sends client
+   information to drawdaemon and starts a thread listening to it.
+
+   @param[in] sock Socket connected to drawdaemon. Closed if writing to it fails.
+   @return 0 on success, -1 on failure.
+*/
 int draw_add(int sock){
 	//Check that the drawdaemon is live.
 	if(sock==-1) return -1;
@@ -264,6 +308,12 @@ end2:
 	pthread_create(&p->thread, NULL, listen_drawdaemon, p);
 	return 0;
 }
+/**
+   Close a drawdaemon connection and stop the listening thread. The struct itself is kept.
+
+   @param[in,out] p Drawdaemon connection. fd is set to -1 and lists are freed.
+   @param[in] reuse Whether to send the socket to the scheduler for reuse.
+*/
 static void sockinfo_close(sockinfo_t *p, int reuse){
 	if(reuse && p->fd!=-1){
 		if(!WRITECMD(p->fd, DRAW_FINAL, 0)){
@@ -287,6 +337,11 @@ static void sockinfo_close(sockinfo_t *p, int reuse){
 	FREE(p->figfn[1]);
 }
 
+/**
+   Launch drawdaemon with one end of a socket pair. Sets draw_disabled if the socket pair cannot be created.
+
+   @return The other end of the socket pair, or -1 on failure.
+*/
 static int launch_drawdaemon(){
 	int sv2[2];//socket pair for communication.
 	/*one end of sv2 will be passed back to call, the other end of sv2 will be passed to drawdaemon.*/
@@ -356,6 +411,9 @@ void draw_helper(void){
 }
 /**
    Open a connection to drawdaemon. sock_draw may be set externally, in which case helper=-1.
+   Tries to reuse an idle drawdaemon via the scheduler, then to launch one. Sets draw_disabled on failure.
+
+   @return 0 if a drawdaemon is connected, nonzero otherwise.
 */
 static int get_drawdaemon(){
 	signal(SIGPIPE, SIG_IGN);
@@ -424,6 +482,8 @@ static int get_drawdaemon(){
 }
 /**
    Tell drawdaemon that this client will no long use the socket. Send the socket to scheduler for future reuse.
+
+   @param[in] reuse Whether to send the sockets to the scheduler for reuse.
 */
 void draw_final(int reuse){
 	//called from other threads, need to lock
@@ -444,17 +504,17 @@ void draw_final(int reuse){
 	}
 }
 
-/*
+/**
    Check whether we need to draw current page. True if
-   1) not yet exist in the list. it is inserted into the list if add is valid and set as current page.
-   2) is current page.
-   3) when draw_single is not set.
-   4) pause must not be set set.
+   1) is current page.
+   2) when draw_single is not set.
+   3) pause must not be set set.
+   If the page does not yet exist in the list, it is inserted and an empty page is sent instead.
 
-   return
-   1: always draw
-   2: draw if lock success
-   3: create an empty page.
+   @param[in,out] ps Drawdaemon connection. Its list of pages is updated.
+   @param[in] fig Category of the figure.
+   @param[in] fn Name of the figure. NULL to check fig only.
+   @return 0: do not draw. 1: always draw. 2: draw if lock success.
 */
 static int check_figfn(sockinfo_t *ps, const char* fig, const char* fn){
 	if(draw_disabled||ps->fd==-1||ps->pause) return 0;
@@ -490,6 +550,10 @@ static int check_figfn(sockinfo_t *ps, const char* fig, const char* fn){
 
 /**
    Check whether what we are drawing is current page of any drawdaemon.
+
+   @param[in] fig Category of the figure.
+   @param[in] fn Name of the figure. NULL to check fig only.
+   @return 0: do not draw. 1: draw. 2: current page and draw is not busy.
 */
 int draw_current(const char* fig, const char* fn){
     int current=0;
@@ -522,10 +586,26 @@ int draw_current(const char* fig, const char* fn){
     }
 	return current;
 }
+/**
+   Same as draw_current() with fn specified by printf-style format.
+
+   @param[in] fig Category of the figure.
+   @param[in] format printf style format of the figure name, followed by its arguments.
+   @return See draw_current().
+*/
 int draw_current_format(const char *fig, const char *format,...){
 	format2fn;
 	return draw_current(fig, fn);
 }
+/**
+   Send an empty page with category fig and name fn to the drawdaemon
+   connected via ps so that the page appears in the GUI.
+
+   @param[in,out] ps Drawdaemon connection. Closed on write failure.
+   @param[in] fig Category of the figure.
+   @param[in] fn Name of the figure.
+   @return 0 on success, -1 on write failure (the socket is closed), 1 if serialization fails.
+*/
 int plot_empty(sockinfo_t *ps, const char *fig, const char *fn){
 	if(ps->fd==-1) return -1;
 	char *buf=0;
@@ -549,6 +629,17 @@ end2:
 	free_default(buf);
 	return ans;
 }
+/**
+   Send the serialized plot data in buf (of bufsize bytes) to all connected
+   drawdaemons that need page fig/fn (always send if always is set).
+
+   @param[in] fig Category of the figure.
+   @param[in] fn Name of the figure.
+   @param[in] buf Serialized plot data.
+   @param[in] bufsize Size of buf in bytes.
+   @param[in] always Whether to send regardless of whether the page is current.
+   @return 0 on success, -1 if writing to any drawdaemon failed.
+*/
 int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize, int always){
 	int ans=0;
 	for(sockinfo_t *ps=sock_draws; ps; ps=ps->next){
@@ -582,15 +673,19 @@ int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize, int alw
 }
 typedef float dtype;
 /**
-   Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
+   Plot an image, points, or curves as specified in opts, and optionally circles.
+   Connects to drawdaemon if not yet.
+
+   @param[in] fig Category of the figure
+   @param[in] opts Additional options: image, points (loc), curves (dc or dd), circles, limits, style, legend, etc.
+   @param[in] title title of the plot
+   @param[in] xlabel x axis label
+   @param[in] ylabel y axis label
+   @param[in] format printf style format of the subcategory (name) of the plot, followed by its arguments.
+   @return 0 if succeeded or nothing to draw, -1 if sending failed, 1 if serialization failed.
 */
-int draw(const char* fig,    /**<Category of the figure*/
-	const plot_opts opts,     /**<Additional options*/
-	const char* title,  /**<title of the plot*/
-	const char* xlabel, /**<x axis label*/
-	const char* ylabel, /**<y axis label*/
-	const char* format, /**<subcategory of the plot.*/
-	...){
+int draw(const char* fig, const plot_opts opts, const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...){
 	if(draw_disabled) return 0;
 	format2fn;
 
@@ -811,6 +906,15 @@ end2:
 
 /**
    like ddraw, acting on map object. see ddraw()
+
+   @param[in] fig Category of the figure.
+   @param[in] map OPD map to plot.
+   @param[in] zlim Limit of the color scale is [-zlim, zlim]. 0 for automatic.
+   @param[in] title Title of the plot.
+   @param[in] xlabel x axis label.
+   @param[in] ylabel y axis label.
+   @param[in] format printf style format of the plot name, followed by its arguments.
+   @return 1 if the plot is sent to draw(), 0 if skipped (not current page or invalid input).
 */
 int drawmap(const char* fig, const map_t* map, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
@@ -825,6 +929,15 @@ int drawmap(const char* fig, const map_t* map, real zlim,
 }
 /**
    Plot the loc on the screen. see ddraw()
+
+   @param[in] fig Category of the figure.
+   @param[in] loc Coordinate to plot. Its map is created if not yet.
+   @param[in] zlim Limit of the color scale is [-zlim, zlim]. 0 for automatic.
+   @param[in] title Title of the plot.
+   @param[in] xlabel x axis label.
+   @param[in] ylabel y axis label.
+   @param[in] format printf style format of the plot name, followed by its arguments.
+   @return 1 if the plot is sent to draw(), 0 if skipped (not current page or invalid input).
 */
 int drawloc(const char* fig, loc_t* loc, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
@@ -852,6 +965,16 @@ int drawloc(const char* fig, loc_t* loc, real zlim,
 
 /**
    Plot the opd using coordinate loc. see ddraw()
+
+   @param[in] fig Category of the figure.
+   @param[in] loc Coordinate of opd. Its map is created if not yet.
+   @param[in] opd OPD defined on loc.
+   @param[in] zlim Limit of the color scale is [-zlim, zlim]. 0 for automatic.
+   @param[in] title Title of the plot.
+   @param[in] xlabel x axis label.
+   @param[in] ylabel y axis label.
+   @param[in] format printf style format of the plot name, followed by its arguments.
+   @return 1 if the plot is sent to draw(), 0 if skipped (not current page or invalid input).
 */
 int drawopd(const char* fig, loc_t* loc, const dmat* opd, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
@@ -875,12 +998,18 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real zlim,
 	dfree(opd0);
 	return 1;
 }
-/***
-	Sanitize gradients for plotting
+/**
+   Sanitize gradients for plotting
 
-	Zero those where saa<0.01
-	Remove tip/tilt if trs is set
- */
+   Set to NaN those where saa<0.01
+   Remove tip/tilt if trs is set
+
+   @param[in] gradin Gradients with all x gradients first.
+   @param[in] saa Subaperture area. NULL to skip masking.
+   @param[in] nsa Number of subapertures.
+   @param[in] trs Whether to remove tip/tilt (only for 2 gradients per subaperture).
+   @return Gradients with the same shape as gradin. A copy if modified, otherwise a reference. The caller frees it.
+*/
 static dmat* grad_prep(const dmat *gradin, const dmat *saa, long nsa, int trs){
 	long ng=PN(gradin)/nsa;
 	dmat *grad=0;
@@ -920,7 +1049,20 @@ static dmat* grad_prep(const dmat *gradin, const dmat *saa, long nsa, int trs){
 	return grad;
 }
 /**
-   Plot gradients using CuReD
+   Plot gradients, either reconstructed into OPD using CuReD or as x and y gradient maps side by side.
+
+   @param[in] fig Category of the figure.
+   @param[in] saloc Subaperture locations.
+   @param[in] saa Subaperture area used to mask gradients when grad2opd is set. May be NULL.
+   @param[in] gradin Gradients with all x gradients first.
+   @param[in] grad2opd Whether to reconstruct OPD with CuReD (requires more than 4 subapertures and 2 gradients each).
+   @param[in] trs Whether to remove tip/tilt.
+   @param[in] zlim Limit of the color scale is [-zlim, zlim]. 0 for automatic.
+   @param[in] title Title of the plot.
+   @param[in] xlabel x axis label.
+   @param[in] ylabel y axis label.
+   @param[in] format printf style format of the plot name, followed by its arguments.
+   @return 1 if the plot is sent to draw(), 0 if skipped (not current page or invalid input).
 */
 int drawgrad(const char* fig, loc_t* saloc, const dmat *saa, const dmat* gradin, int grad2opd, int trs, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
@@ -963,7 +1105,18 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat *saa, const dmat* gradin,
 	return 1;
 }
 /**
-   Plot opd with coordinate loc where amp is above threshold. see ddraw()
+   Plot opd with coordinate loc where amp is above half of its maximum. see ddraw()
+
+   @param[in] fig Category of the figure.
+   @param[in] loc Coordinate of opd. Its map is created if not yet.
+   @param[in] opd OPD defined on loc.
+   @param[in] amp Amplitude defined on loc.
+   @param[in] zlim Limit of the color scale is [-zlim, zlim]. 0 for automatic.
+   @param[in] title Title of the plot.
+   @param[in] xlabel x axis label.
+   @param[in] ylabel y axis label.
+   @param[in] format printf style format of the plot name, followed by its arguments.
+   @return 1 if the plot is sent to draw(), 0 if skipped (not current page or invalid input).
 */
 int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
@@ -1002,7 +1155,17 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 }
 /**
    Concatenate and plot subaperture images.
- */
+
+   @param[in] fig Category of the figure.
+   @param[in] saloc Subaperture locations.
+   @param[in] ints Subaperture images: one per subaperture, or a single (TT or PWFS) or 4 (TTF) images.
+   @param[in] zlim Limit of the color scale is [-zlim, zlim]. 0 for automatic.
+   @param[in] title Title of the plot.
+   @param[in] xlabel x axis label.
+   @param[in] ylabel y axis label.
+   @param[in] format printf style format of the plot name, followed by its arguments.
+   @return 1 if the plot is sent to draw(), 0 if skipped (not current page or invalid input).
+*/
 int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){

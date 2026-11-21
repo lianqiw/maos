@@ -32,9 +32,16 @@ int nbuf=65536;
 
 char* buf1, * buf2;
 /**
-   The following two routines overwrite the data when new data comes in. Just for testing jitter.
- */
-/*Write long messages with smaller buffer*/
+   Write long messages with smaller buffer. This and stread3() do not advance the
+   data pointer, so the same buffer is reused for every chunk. Just for testing
+   jitter.
+
+   @param[in] sfd File descriptor or socket to write to.
+   @param[in] p Data to write.
+   @param[in] len Total number of bytes to write.
+   @param[in] buflen Number of bytes per write() call (capped at len). Sockets use send() with the same size.
+   @return 0 if all bytes are written, -1 otherwise.
+*/
 int stwrite3(int sfd, const void* p, size_t len, size_t buflen){
 	if(buflen>len) buflen=len;
 	ssize_t nwrite;
@@ -54,7 +61,16 @@ int stwrite3(int sfd, const void* p, size_t len, size_t buflen){
 	} while(nwrite>0&&left>0);
 	return left?-1:0;
 }
-/*Read long messages with smaller buffer*/
+/**
+   Read long messages with smaller buffer. New data overwrites the beginning of
+   the buffer. Just for testing jitter.
+
+   @param[in] sfd File descriptor or socket to read from.
+   @param[out] p Buffer to read into. At least buflen bytes.
+   @param[in] len Total number of bytes to read.
+   @param[in] buflen Number of bytes per read() call (capped at len).
+   @return 0 if all bytes are read, -1 otherwise.
+*/
 int stread3(int sfd, void* p, size_t len, size_t buflen){
 	if(buflen>len) buflen=len;
 	ssize_t nread;
@@ -65,6 +81,16 @@ int stread3(int sfd, void* p, size_t len, size_t buflen){
 	} while(nread>0&&left>0);
 	return left?-1:0;
 }
+/**
+   Responder for listen_port() in ethernet latency test server mode. Reads
+   nstep, nmin, nmax, nrep from the client, then for each message length from nmin
+   to nmax (step nstep) receives nrep messages and replies 64 bytes to each.
+   The connection is closed when it returns -1.
+
+   @param[in] pfd Poll descriptor of the connected socket. Nothing is done if NULL.
+   @param[in] flag 0 when data is available, -1 when the listener is shutting down (nothing is done).
+   @return -1 when done or on error, 0 if nothing is done.
+*/
 int server(struct pollfd *pfd, int flag){
 	if(!pfd || flag==-1) return 0;
 	int sock=pfd->fd;
@@ -96,6 +122,20 @@ int server(struct pollfd *pfd, int flag){
 	return -1;
 }
 
+/**
+   Ethernet latency test client. Connects to the server at hostname:port, sends
+   messages of length nmin to nmax (step nstep) nrep times each and waits for a
+   64 byte reply. Round trip and send times are saved to pix_timing_* and
+   pix_timing2_* files.
+
+   @param[in] hostname Server host name.
+   @param[in] port Server port.
+   @param[in] nmin Minimum message length (bytes).
+   @param[in] nmax Maximum message length (bytes).
+   @param[in] nstep Step of message length (bytes).
+   @param[in] nrep Number of repetitions for each length.
+   @return 0 on success, 1 if connection failed.
+*/
 int client(const char* hostname, int port, int nmin, int nmax, int nstep, int nrep){
 	int sock=connect_port(hostname, port, 0, 1);
 	if(sock<0||stwriteint(sock, nstep)
@@ -139,7 +179,18 @@ int client(const char* hostname, int port, int nmin, int nmax, int nstep, int nr
 	dbg("done\n");
 	return 0;
 }
-//server for mvmfull_real
+/**
+   Responder for listen_port() that emulates a WFS pixel stream for mvmfull_real
+   (type 0) or mvmfull_iwfs (type 1). After receiving the configuration (nact,
+   nsa, sastep, totpix or pixpsa, nstep, nstep0, type) and pixels, sends pixels
+   of each frame in segments of sastep subapertures paced to the detector read
+   out, reads back the DM commands, and replies the latency in microseconds.
+   The connection is closed when it returns -1.
+
+   @param[in] pfd Poll descriptor of the connected socket. Nothing is done if NULL.
+   @param[in] flag 0 when data is available, -1 when the listener is shutting down (nothing is done).
+   @return -1 when done or on error, 0 if nothing is done.
+*/
 int mvm_server(struct pollfd *pfd, int flag){
 	if(!pfd || flag==-1) return 0;
 	int sock=pfd->fd;
@@ -260,6 +311,17 @@ int mvm_server(struct pollfd *pfd, int flag){
 	info("\n");
 	return -1;
 }
+/**
+   Ethernet latency test. Usage:
+   ./ethtest server port [ipaddr]
+   ./ethtest mvm_server port [ipaddr]
+   ./ethtest client hostname port [nrep] [nmin] [nmax] [nstep]
+   Environment variable NBUF sets nbuf, which is currently unused.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments. See above.
+   @return 0.
+*/
 int main(int argc, char* argv[]){
 	if(argc<3){
 		error("Usage: \n\t./ethtest client hostname port \n\t./ethtest server port\n\t./ethtest mvm_server port\n");

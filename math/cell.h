@@ -18,13 +18,19 @@
 /**
    \file cell.h
 
-   Function for a generic cell. use CELL() to case to cell.
+   Function for a generic cell. Cast a typed cell (dcell, ccell, ...) to cell* to use them.
 
 */
 #ifndef AOS_LIB_CELL_H
 #define AOS_LIB_CELL_H
 #include "type.h"
 cell* cellnew(long nx, long ny)CHECK_UNUSED_RESULT;
+/**
+   Cast A to cell* if it is a cell array, otherwise return NULL.
+
+   @param[in] A Pointer to the object. May be NULL.
+   @return A cast to cell* (not a copy; do not free separately), or NULL if A is not a cell array.
+*/
 static inline cell* cell_cast(const void* A){
 	return iscell(A)?(cell*)A:0;
 }

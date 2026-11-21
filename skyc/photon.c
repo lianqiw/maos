@@ -46,25 +46,28 @@ const real MB_K=(13.0+12.7)/2;//kshort
 /**
    Compute subaperture star flux from magnitude, subaperture size, sample
    period, etc.
+
+   @param[in] zb Sky background and zero magnitude flux.
+   @param[out] Np Number of signal photons at each wavelength. May be NULL.
+   @param[out] Nptot Total number of signal photons (sum of Np). May be NULL.
+   @param[out] Nbtot Number of background photons per pixel. May be NULL.
+   @param[out] QCSNR Signal to noise ratio for a quadcell. May be NULL.
+   @param[out] QCNEA Noise equivalent angle (rad) for a quadcell with Nyquist sampling. May be NULL.
+   @param[in] nwvl Number of wavelengths.
+   @param[in] wvls Wavelengths (m).
+   @param[in] mags Magnitude at each wavelength.
+   @param[in] dxsa Subaperture side length (m).
+   @param[in] iscircle Whether the subaperture is a circle (or part of one). True for TT/TTFA sensors.
+   @param[in] pixtheta Pixel size (rad).
+   @param[in] dt Sampling period (s).
+   @param[in] za Zenith angle (rad).
+   @param[in] strehl Strehl ratio of the image at each wavelength. NULL for full flux.
+   @param[in] imperrnm Implementation error (nm).
+   @param[in] rne Detector read out noise.
  */
-void photon_flux(const ZB_S* zb,        /**<[in] Sky background and zero magnitude flux*/
-	real* Np,      /**<[out] number of total signal at each wvl.*/
-	real* Nptot,   /**<[out] total signal (sum of Np).*/
-	real* Nbtot,   /**<[out] number of background photon per pixel*/
-	real* QCSNR,   /**<[out] signal to noise ratio for a Quadcell*/
-	real* QCNEA,   /**<[out] noise equivalent angle for a Quadcell with Nyquist sampling*/
-	int nwvl,        /**<[in] number of wavelength.*/
-	real* wvls,    /**<[in] vector of wavelength*/
-	real* mags,    /**<[in] vector of magnitudes*/
-	real dxsa,     /**<[in] subaperture side length*/
-	int iscircle,    /**<[in] where the subaperture is circle/part of a circle. true for TT/TTFA sensors.*/
-	real pixtheta, /**<[in] pixel extense in radian*/
-	real dt,       /**<[in] sampling period in seconds*/
-	real za,       /**<[in] zenith angle*/
-	real* strehl,  /**<[in] Strehl of the image. set to 1 for full flux.*/
-	real imperrnm, /**<[in] Implementation error in nm*/
-	real rne       /**<[in] detector read out noise.*/
-){
+void photon_flux(const ZB_S* zb, real* Np, real* Nptot, real* Nbtot, real* QCSNR, real* QCNEA,
+	int nwvl, real* wvls, real* mags, real dxsa, int iscircle, real pixtheta, real dt, real za, real* strehl,
+	real imperrnm, real rne){
 /*
    Written 2010-06-09;
    Tested PASS 2010-06-09;

@@ -24,6 +24,17 @@
 #include "../lib/aos.h"
 
 static int use_trans=1;
+/**
+   Accumulate dm+=mvmt*g using the transposed control matrix for a block of
+   gradients.
+
+   @param[in] mvmt Transposed control matrix, offset to the first gradient of the block. Leading dimension is ngtot.
+   @param[in] g Gradients of the block.
+   @param[in,out] dm Actuator commands to accumulate into.
+   @param[in] nact Number of actuators.
+   @param[in] ngleft Number of gradients in the block.
+   @param[in] ngtot Total number of gradients (leading dimension of mvmt).
+*/
 static void mvmt_do(const float* mvmt, float* g, float* dm, int nact, int ngleft, int ngtot){
 
 #pragma omp parallel for
@@ -45,6 +56,15 @@ static void mvmt_do(const float* mvmt, float* g, float* dm, int nact, int ngleft
 		dm[ia]=tmp;
 	}
 }
+/**
+   Accumulate dm+=mvm*g using the control matrix for a block of gradients.
+
+   @param[in] mvm Control matrix, offset to the first gradient column of the block. Leading dimension is nact.
+   @param[in] g Gradients of the block.
+   @param[in,out] dm Actuator commands to accumulate into.
+   @param[in] nact Number of actuators.
+   @param[in] ngleft Number of gradients in the block.
+*/
 static void mvm_do(const float* mvm, float* g, float* dm, int nact, int ngleft){
 
 	for(int ig=0; ig<ngleft; ig++){
@@ -54,6 +74,22 @@ static void mvm_do(const float* mvm, float* g, float* dm, int nact, int ngleft){
 		}
 	}
 }
+/**
+   Compute matched filter gradients of bias subtracted pixels for nsa
+   subapertures and accumulate the pixels for updating the matched filter.
+
+   @param[in] mtch Matched filter. For each subaperture, the x then the y filter.
+   @param[in] pix Pixel values.
+   @param[in] pixbias Pixel bias.
+   @param[out] grad Gradients, x and y interleaved for each subaperture.
+   @param[in,out] im0 Accumulated bias subtracted pixels.
+   @param[in,out] imx Accumulated pixels weighted by ct.
+   @param[in,out] imy Accumulated pixels weighted by st.
+   @param[in] saind Starting pixel index of each subaperture (nsa+1 entries).
+   @param[in] nsa Number of subapertures.
+   @param[in] ct Weight of imx (cosine of dithering phase).
+   @param[in] st Weight of imy (sine of dithering phase).
+*/
 static void mtch_do(const float* mtch, const short* pix, const short* pixbias,
 	float* grad, float* im0, float* imx, float* imy,
 	const int* saind, int nsa, float ct, float st){
@@ -80,6 +116,17 @@ static void mtch_do(const float* mtch, const short* pix, const short* pixbias,
 		grad[isa*2+1]=gy;
 	}
 }
+/**
+   Benchmark matched filter gradient computation and MVM on CPU for the NFIRAOS
+   subaperture layout (read from NFIRAOS_saind) reduced by fraction. Usage:
+   env MVM_CLIENT=hostname MVM_PORT=port MVM_SASTEP=sastep ./mvm_cpu fraction nstep
+   With MVM_CLIENT set, pixels are streamed from an ethtest mvm_server. Timing
+   is saved to cpu_timing_HOST.
+
+   @param[in] argc Number of command line arguments. Must be 3.
+   @param[in] argv Command line arguments: fraction and nstep.
+   @return 0. Exits with 1 on communication failure.
+*/
 int main(int argc, char* argv[]){
 	enum{
 		P_EXE,

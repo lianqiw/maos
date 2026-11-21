@@ -14,9 +14,9 @@ The following table and figure show comparison of turbulence profile at 25, 50, 
 
 |Percentile |Mauna Kea r0 (m) | ORM r0 (m)|
 |----------:|--------------------:|------------------:|
-|25p |0.247 |0.230|
+|25p |0.248 |0.230|
 |50p |0.186 |0.178|
-|75p |0.135 |0.138|
+|75p |0.137 |0.138|
 
 |Turbulence Profile|
 |------------------|
@@ -99,6 +99,6 @@ NFIRAOS+ is upgraded NFIRAOS with 0.25m actuator spacing. The following figure s
 - instrument: IRIS with 34"x34" FoV.
 - the rest are the same as NFIRAOS.
 
-|Wavefront erroor of NFIRAOS+ vs NFIRAOS|
+|Wavefront error of NFIRAOS+ vs NFIRAOS|
 |------------------|
 |![](LGS_mag_dsa_ron.svg)|

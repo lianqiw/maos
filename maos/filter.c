@@ -30,6 +30,16 @@
    actual position the DM goes to.
 */
 
+/**
+   Limit the difference between two neighboring actuators to thres. Stuck actuators are not moved.
+
+   @param[in,out] x1 Command of the first actuator.
+   @param[in,out] x2 Command of the second actuator.
+   @param[in] thres Maximum allowed difference.
+   @param[in] stuck1 Whether the first actuator is stuck.
+   @param[in] stuck2 Whether the second actuator is stuck.
+   @return 1 if the commands are modified, 0 otherwise.
+*/
 static inline int limit_diff(real* x1, real* x2, real thres, long stuck1, long stuck2){
 	real diff=*x2-*x1;
 	if(fabs(diff)>thres){
@@ -49,6 +59,11 @@ static inline int limit_diff(real* x1, real* x2, real thres, long stuck1, long s
 }
 /**
    Send LPF TT to TTM. Use DMTT, DMPTT to take into account possible stuck actuators.
+
+   @param[in] recon Reconstructor.
+   @param[in,out] dmcmd DM commands. Tip/tilt is removed and the high pass filtered tip/tilt is put on the ground DM.
+   @param[in,out] ttm Tip/tilt mirror command (low pass filtered).
+   @param[in] lp Low pass filter gain.
 */
 static inline void ttsplit_do(const recon_t* recon, dcell* dmcmd, dmat* ttm, real lp){
 #if 1
@@ -79,6 +94,12 @@ static inline void ttsplit_do(const recon_t* recon, dcell* dmcmd, dmat* ttm, rea
 #endif
 }
 
+/**
+   Clip DM commands to the actuator stroke limit.
+
+   @param[in] simu Simulation data.
+   @param[in,out] dmcmd DM commands to clip in place.
+*/
 static inline void clipdm(sim_t* simu, dcell* dmcmd){
 	const parms_t* parms=simu->parms;
 	if(!dmcmd) return;
@@ -124,6 +145,12 @@ static inline void clipdm(sim_t* simu, dcell* dmcmd){
 		}
 	}
 }
+/**
+   Set the command of stuck actuators to their stuck position.
+
+   @param[in] simu Simulation data.
+   @param[in,out] dmcmd DM commands to modify in place.
+*/
 static inline void clipdm_dead(const sim_t* simu, dcell* dmcmd){
 	if(!dmcmd) return;
 	const parms_t* parms=simu->parms;
@@ -141,6 +168,12 @@ static inline void clipdm_dead(const sim_t* simu, dcell* dmcmd){
 	}
 }
 
+/**
+   Clip the inter-actuator stroke of DM commands.
+
+   @param[in] simu Simulation data. simu->dmrealsq is used as a work array.
+   @param[in,out] dmcmd DM commands to clip.
+*/
 static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 	if(!dmcmd) return;
 	const parms_t* parms=simu->parms;
@@ -223,6 +256,7 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 		dmpsol and dmreal output is for step isim+1
 		wfspsol output is for DM shape at step isim. Uses for reconstruction at the next timestep.
 
+   @param[in,out] simu Simulation data.
 */
 static void filter_cl(sim_t* simu){
 	/*
@@ -313,6 +347,12 @@ static void filter_cl(sim_t* simu){
 		addlow2dm(&simu->dmtmp, parms, recon, simu->Mtmp_lo, 1);
 	}
 }
+/**
+   Post process the DM commands: convert to zonal space, apply tip/tilt split, focus offloading, dithering, NCPA,
+   clipping, and hysteresis to obtain simu->dmreal.
+
+   @param[in,out] simu Simulation data.
+*/
 static void postproc_dm(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
@@ -438,7 +478,9 @@ static void postproc_dm(sim_t* simu){
 }
 /**
    Servo filter for FSM commands.
- */
+
+   @param[in,out] simu Simulation data.
+*/
 void filter_fsm(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	if(!simu->fsmint) return;
@@ -519,6 +561,8 @@ void filter_fsm(sim_t* simu){
 
 /**
    Simulate turbulence on the DM
+
+   @param[in,out] simu Simulation data. simu->dmreal (or simu->dmrealsq) is updated.
 */
 void turb_dm(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -541,6 +585,8 @@ void turb_dm(sim_t* simu){
 }
 /**
    Update various quantities upon updating dmreal.
+
+   @param[in,out] simu Simulation data.
 */
 void update_dm(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -559,8 +605,10 @@ void update_dm(sim_t* simu){
 }
 
 /**
-   Does the servo filtering by calling filter_cl() or filter_ol()
- */
+   Does the servo filtering by calling filter_cl() or using the open loop error directly.
+
+   @param[in,out] simu Simulation data.
+*/
 void filter_dm(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	if(parms->sim.evlol) return;

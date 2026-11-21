@@ -75,6 +75,10 @@ template<typename T> static inline T* addr_of(T&& x){ return &x; }
 #endif
 /**
    Obtain the basename of a file. Has the GNU basename behavior.
+
+   @param[in] fn File path. May be NULL.
+   @return Pointer into fn after the last slash, fn itself if there is no slash,
+   or "" if fn is NULL or ends with a slash. Not allocated; do not free.
 */
 static inline const char *mybasename(const char *fn){
   if(fn){
@@ -98,9 +102,9 @@ extern int detached;
 #define MAGENTA "\033[0;35m"
 #define CYAN "\033[0;36m"
 
-extern int LOG_LEVEL;//default is 0; override with MAOS_LOG_LEVEL; higher value has more output
+extern int LOG_LEVEL;
 extern int signal_caught;
-extern FILE* fplog;//The output to fplog is always without color unless user specified.
+extern FILE* fplog;
 #define logstd(level, A...) 		      ({if(LOG_LEVEL>level){if(!detached)fprintf(stdout, A); if(fplog){fprintf(fplog, A);}}})
 #define logerr(level, COLOR, format, ...) ({if(LOG_LEVEL>level){if(!detached)fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__); if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
 #define logdbg(level, COLOR, format, ...) ({if(LOG_LEVEL>level){if(!detached)fprintf(stdout, COLOR format BLACK, ##__VA_ARGS__); if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
@@ -194,7 +198,14 @@ extern FILE* fplog;//The output to fplog is always without color unless user spe
 #else
 #define CHECK_NULL_TERMINATED
 #endif
-//check whether endptr only contains space. endstr marks the end of str (\0)
+/**
+   Check whether endptr only contains space up to endstr, which marks the end of
+   the string (\0).
+
+   @param[in] endptr Start of the remaining string to check.
+   @param[in] endstr End of the string (position of the terminating \0).
+   @return 0 if only space remains and 1 otherwise.
+*/
 static inline int check_space(const char *endptr, const char *endstr){
    while(endptr<endstr && endptr[0]==' ') endptr++;
    return endptr!=endstr;

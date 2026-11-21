@@ -69,6 +69,18 @@ void test_sum(){
 	dbg("sum2_wrap %.2f GB/s\n", N*sizeof(Real)/tim2);
 	dbg("Result: %g %g %g %g\n", res[0], res[1]-res[0], res[2]-res[1], res[3]-res[2]);
 }
+/**
+   Ray trace from map in to map out with displacement (dispx, dispy) using
+   map2map_do. Synchronous.
+
+   @param[in,out] out Output map; alpha times the ray traced input is added to it.
+   @param[in] in Input map (accumulated into instead when trans is 't').
+   @param[in] dispx Displacement along x (m).
+   @param[in] dispy Displacement along y (m).
+   @param[in] alpha Scaling factor.
+   @param[in] cc Cubic interpolation coefficients; empty for linear interpolation.
+   @param[in] trans 'n' for forward, 't' for transpose ray tracing.
+*/
 void gpu_map2map(cumap_t& out, const cumap_t& in, Real dispx, Real dispy, Real alpha, const curmat& cc, char trans){
 	map2map_t wrap;
 	Array<map2map_t, Gpu> wrap_gpu(1);
@@ -88,7 +100,9 @@ void gpu_map2map(cumap_t& out, const cumap_t& in, Real dispx, Real dispy, Real a
 	cudaFree(p);
 }
 
-/*Test ray tracing*/
+/**
+   Test GPU ray tracing (gpu_map2map) against CPU prop() and save both results.
+*/
 void test_prop(){
 	cudaSetDevice(0);
 	map_t* mapin=mapnew(30, 30, 0.5, 0.5);
@@ -113,6 +127,13 @@ void test_prop(){
 	writebin(mapout, "prop_mapout_cpu");
 }
 
+/**
+   Run GPU tests: "sum" for reduction, "prop" (default) for ray tracing.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments: optional test name.
+   @return Exit status (0).
+*/
 int main(int argc, char** argv){
 	const char* cmd=0;
 	if(argc>1){

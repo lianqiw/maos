@@ -21,13 +21,20 @@
 #include "../sim/cudata.h"
 #include "tomo.h"
 
-/*
-  Prepare data for GP operation in GPU
-  We convert GP from sparse matrix to coefficients of pos==1 or 2. By doing so, we can also convert the type to integer to save memory transfer. Short2 is used without performance penalty.
-  For partially illiminated subapertures, this conversion brings in approximation as we limite the influence of gradient from each subaperture to (pos*2-1)x(pos*2-1) points. The system performance is largely not affected.
+/**
+   Prepare data for GP operation in GPU
+   We convert GP from sparse matrix to coefficients of pos==1 or 2. By doing so, we can also convert the type to integer to save memory transfer. Short2 is used without performance penalty.
+   For partially illiminated subapertures, this conversion brings in approximation as we limite the influence of gradient from each subaperture to (pos*2-1)x(pos*2-1) points. The system performance is largely not affected.
+   If saloc and ploc are not aligned in this way, GP is copied as a sparse matrix instead.
+
+   @param[out] GPp Integer coefficients, (pos+1)^2 per subaperture. Set only for the matrix-free approach.
+   @param[out] GPscale Scaling factor to convert GPp to real values. Set only for the matrix-free approach.
+   @param[out] GPf GP as sparse matrix in GPU. Set only if the matrix-free approach is not applicable.
+   @param[in] GP Gradient operator from ploc to saloc.
+   @param[in] saloc Subaperture locations.
+   @param[in] ploc Grid locations where GP is defined.
 */
-void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
-	const dsp* GP, const loc_t* saloc, const loc_t* ploc){
+void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf, const dsp* GP, const loc_t* saloc, const loc_t* ploc){
 	if(!GP){
 		error("GP is required\n");
 	} else if(GP->nx!=saloc->nloc*2||GP->ny!=ploc->nloc){
@@ -92,6 +99,14 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 		GPf=cusp(GP);
 	}
 }
+/**
+   Map subaperture lower left corners onto the grid pmap and copy the integer
+   indices to GPU.
+
+   @param[out] saptr_gpu Grid indices (x, y) of each subaperture, 2*nsa.
+   @param[in] saloc Subaperture locations.
+   @param[in] pmap Grid that the WFS OPD is defined on.
+*/
 static void
 prep_saptr(cuimat& saptr_gpu, loc_t* saloc, map_t* pmap){
 	/*saloc mapped onto pmap*/
@@ -111,6 +126,14 @@ prep_saptr(cuimat& saptr_gpu, loc_t* saloc, map_t* pmap){
 	DO(cudaMemcpy(saptr_gpu, saptr, nsa*2*sizeof(int), H2D));
 	delete[] saptr;
 }
+/**
+   Convert the sparse inverse NEA matrix of a WFS to a compact 3*nsa array of
+   (xx, yy, xy) components per subaperture in GPU.
+
+   @param[in] nea Sparse inverse NEA matrix of size 2nsa*2nsa with nonzeros only
+   on the diagonal and the x/y cross terms of each subaperture.
+   @return The compact NEA array in GPU.
+*/
 static curmat convert_neai(dsp* nea){
 	spint* pp=nea->pp;
 	spint* pi=nea->pi;
@@ -141,6 +164,14 @@ static curmat convert_neai(dsp* nea){
 	return neai_gpu;
 }
 
+/**
+   Create the ray tracing operator HX from tomography layers to WFS directions
+   (with misregistration and prediction delay) and the laplacian regularization
+   coefficients. Called again when the turbulence profile is updated.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data.
+*/
 void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
 	//dbg("create raytracing operator.\n");
 	dir_t* dir=new dir_t[nwfs];
@@ -177,6 +208,15 @@ void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
 	DO(cudaMemcpy(lap(), lapc, sizeof(lap_t)*recon->npsr, H2D));
 }
 
+/**
+   Set up grid based tomography in GPU: gradient operator GP, NEA, tip/tilt and
+   focus removal (PTTF, PFF), ray tracing and regularization. Requires
+   tomo.square=1.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data.
+   @param[in] _grid Reconstruction geometry on GPU. Kept as a reference.
+*/
 cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curecon_geom* _grid)
 	:cusolve_cg(parms?parms->tomo.maxit:0, parms?parms->tomo.cgwarm:0),
 	grid(_grid), rhs_nttf(0), lhs_nttf(0), lhs_skip0(0), nwfs(0){
@@ -324,9 +364,20 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 	}
 }
 
-/*
-  If merge the operation in to gpu_prop_grid_do, need to do atomic
-  operation because previous retracing starts at offo, not 0.  */
+/**
+   Apply the laplacian regularization (biharmonic) with periodic boundary
+   condition and optional piston constraint: out+=alpha*L2*in for each layer.
+   Layer index is blockIdx.z.
+
+   If merge the operation in to gpu_prop_grid_do, need to do atomic
+   operation because previous retracing starts at offo, not 0.
+
+   @param[in] datai Per layer laplacian parameters.
+   @param[in,out] outall Per layer output, accumulated into.
+   @param[in] inall Per layer input.
+   @param[in] nwfs Unused.
+   @param[in] alpha Scaling factor.
+*/
 __global__ void gpu_laplacian_do(lap_t* datai, Real* const* outall, const Real* const* inall, int nwfs, Real alpha){
 	const int ips=blockIdx.z;
 	const Real* in=inall[ips];
@@ -370,6 +421,16 @@ __global__ void gpu_laplacian_do(lap_t* datai, Real* const* outall, const Real* 
    The third grid dimension tells the wfs to handle.
    gout = GP*wfsopd    #if wfsopd is set
    ttf = - PTTF * gout #if nttf is set
+
+   @param[in] data Per WFS GP data.
+   @param[in,out] gout Per WFS gradients. Written if wfsopd is set (for
+   matrix-free GP), otherwise read.
+   @param[in,out] ttfout Tip/tilt/focus coefficients, nttf per WFS, accumulated
+   into. Must be zeroed by the caller.
+   @param[in] wfsopd Per WFS OPD, or NULL.
+   @param[in] nttf Number of modes to project: 0 for none, 1 for focus only
+   (uses PFF), 2 or 3 for tip/tilt and optionally focus (uses PTTF).
+   @param[in] skip0 If positive, skip the mode projection for WFS skip0-1.
 */
 __global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttfout, Real* const* wfsopd, int nttf, int skip0){
 	__shared__ Real ggf[3][DIM_GP];
@@ -469,6 +530,12 @@ __global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttfout
    1) gin=nea*(gin + ttf)
    2) wfsopd = GP' * gin #if GP' is available.
    Be carefull about the ptt flag. It is always 1 for Right hand side, but may be zero for Left hand side.
+
+   @param[in] data Per WFS GP data.
+   @param[in,out] wfsopd Per WFS OPD to accumulate into, or NULL.
+   @param[in] ttfin Tip/tilt/focus coefficients, nttf per WFS.
+   @param[in,out] gin Per WFS gradients, replaced by nea*(gin+ttf).
+   @param[in] nttf Number of modes in ttfin.
 */
 __global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Real* ttfin, Real* const* gin, int nttf){
 	const int iwfs=blockIdx.z;
@@ -556,6 +623,17 @@ __global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Rea
 	}
 }
 
+/**
+   If _opdwfs is set, compute _grad=GP*_opdwfs. Also accumulate in ttf the
+   projection of the gradients onto the ptt2 tip/tilt/focus modes for removal,
+   skipping WFS skip0-1 (if skip0>0).
+
+   @param[in,out] _grad Gradients. Written if _opdwfs is set, otherwise read.
+   @param[in] _opdwfs WFS OPD, or empty.
+   @param[in] ptt2 Number of modes to project (see gpu_gp_do).
+   @param[in] skip0 If positive, skip mode projection for WFS skip0-1.
+   @param[in] stream CUDA stream.
+*/
 void cutomo_grid::do_gp(curcell& _grad, const curcell& _opdwfs, int ptt2, int skip0, stream_t& stream){
 	if(_opdwfs){//Sparse based is only needed when _opdwfs is set.
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -568,6 +646,15 @@ void cutomo_grid::do_gp(curcell& _grad, const curcell& _opdwfs, int ptt2, int sk
 	gpu_gp_do<<<dim3(24, 1, nwfs), dim3(DIM_GP, 1), 0, stream>>> //_opdwfs is initialized in the kernel.
 		(gpdata(), _grad.pm(), ttf(), _opdwfs?_opdwfs.pm():NULL, ptt2, skip0);
 }
+/**
+   Apply NEA^-1 to _grad after removing the ptt2 tip/tilt/focus modes in ttf,
+   and, if _opdwfs is set, compute _opdwfs=GP'*result. _grad is modified.
+
+   @param[in,out] _opdwfs WFS OPD output, zeroed first, or empty to skip GP'.
+   @param[in,out] _grad Gradients, replaced by NEA^-1*(_grad+ttf).
+   @param[in] ptt2 Number of modes in ttf.
+   @param[in] stream CUDA stream.
+*/
 void cutomo_grid::do_gpt(curcell& _opdwfs, curcell& _grad, int ptt2, stream_t& stream){
 	if(_opdwfs){
 		_opdwfs.Zero(stream);
@@ -586,7 +673,12 @@ void cutomo_grid::do_gpt(curcell& _opdwfs, curcell& _grad, int ptt2, stream_t& s
 	}
 }
 /**
-   apply HX from xin to opdwfs.
+   Apply HX from xin to opdwfs: opdwfs=alpha*HX*xin, with WFS rotation if
+   needed.
+
+   @param[in] xin Tomography layers.
+   @param[in] alpha Scaling factor.
+   @param[in] stream CUDA stream.
 */
 void cutomo_grid::HX(const curcell& xin, Real alpha, stream_t& stream){
 	if(wfsrot){
@@ -599,7 +691,11 @@ void cutomo_grid::HX(const curcell& xin, Real alpha, stream_t& stream){
 	}
 }
 /**
-   Apply HX' from opdwfs to xout
+   Apply HX' from opdwfs to xout: xout+=alpha*HX'*opdwfs.
+
+   @param[in,out] xout Tomography layers to accumulate into.
+   @param[in] alpha Scaling factor.
+   @param[in] stream CUDA stream.
 */
 void cutomo_grid::HXT(curcell& xout, Real alpha, stream_t& stream){
 	if(wfsrot){
@@ -609,9 +705,16 @@ void cutomo_grid::HXT(curcell& xout, Real alpha, stream_t& stream){
 		hx.backward(opdwfs.pm, xout.pm, alpha, NULL, stream);
 	}
 }
-/*
-  Tomography right hand side matrix. Computes xout = xout *beta + alpha * Hx' G' C * xin.
-  xout is zeroed out before accumulation.
+/**
+   Tomography right hand side matrix. Computes xout = xout *beta + alpha * Hx' G' C * xin.
+   xout is allocated if empty. _grad is modified.
+
+   @param[in,out] xout Output tomography layers. Allocated if empty, otherwise
+   scaled by beta and accumulated into.
+   @param[in] beta Scaling factor of existing xout.
+   @param[in,out] _grad Input gradients. Modified (replaced by NEA^-1 weighted gradients).
+   @param[in] alpha Scaling factor of the operator.
+   @param[in] stream CUDA stream.
 */
 void cutomo_grid::R(curcell& xout, Real beta, curcell& _grad, Real alpha, stream_t& stream){
 	if(!xout){
@@ -631,6 +734,17 @@ void cutomo_grid::R(curcell& xout, Real beta, curcell& _grad, Real alpha, stream
 #endif	
 }
 
+/**
+   Transpose of the right hand side matrix: computes C G Hx * (alpha*xin) into
+   gout. gout is allocated if empty, otherwise scaled by beta first.
+
+   @param[in,out] gout Output gradients. Allocated if empty, otherwise scaled
+   by beta and accumulated into.
+   @param[in] beta Scaling factor of existing gout.
+   @param[in] xin Input tomography layers.
+   @param[in] alpha Scaling factor of the operator.
+   @param[in] stream CUDA stream.
+*/
 void cutomo_grid::Rt(curcell& gout, Real beta, const curcell& xin, Real alpha, stream_t& stream){
 	const int accumulate=gout&&beta!=0;
 	if(!gout){
@@ -647,13 +761,20 @@ void cutomo_grid::Rt(curcell& gout, Real beta, const curcell& xin, Real alpha, s
 	}
 }
 
-/*
-  Tomography left hand size matrix. Computes xout = beta*xout + alpha * Hx' G' C Gp Hx * xin.
-  xout is zeroed out before accumulation.
+/**
+   Tomography left hand size matrix. Computes xout = beta*xout + alpha * Hx' G' C Gp Hx * xin.
+   xout is allocated if empty.
 
-  Be Careful about big kernels
-  1) When a kernel thread reads locations written by other threads, synchronization may be required unless gauranteed in the same wrap.
-  2) When a kernel thread writes to locations that may be written by others, atomic operations are required unless gauranteed in the same wrap.
+   Be Careful about big kernels
+   1) When a kernel thread reads locations written by other threads, synchronization may be required unless gauranteed in the same wrap.
+   2) When a kernel thread writes to locations that may be written by others, atomic operations are required unless gauranteed in the same wrap.
+
+   @param[in,out] xout Output tomography layers. Allocated if empty, otherwise
+   scaled by beta and accumulated into.
+   @param[in] beta Scaling factor of existing xout.
+   @param[in] xin Input tomography layers.
+   @param[in] alpha Scaling factor of the operator.
+   @param[in] stream CUDA stream.
 */
 void cutomo_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, stream_t& stream){
 	if(!xout){

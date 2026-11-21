@@ -32,8 +32,15 @@
    Contains wfsints() that computes physical optics WFS
    subaperture images from OPDs.  */
 /**
- * out=out*A*(B*wtb+C*wtc)
- * A, B and C are optional except that when C is present, B must be.
+   Compute out=out*A*(B*wtb+C*wtc) elementwise.
+   A, B and C are optional except that when C is present, B must be.
+
+   @param[in,out] out Array (OTF) to be multiplied in place.
+   @param[in] A Real multiplier (e.g. nominal detector transfer function). Optional.
+   @param[in] B First complex multiplier (e.g. elongation transfer function). Optional.
+   @param[in] wtb Weight of B. Only used when C is present.
+   @param[in] C Second complex multiplier. Optional.
+   @param[in] wtc Weight of C.
 */
 static void apply_dtf_etf(cmat *out, dmat *A, cmat *B, real wtb, cmat *C, real wtc){
 	if(C){
@@ -74,7 +81,10 @@ static void apply_dtf_etf(cmat *out, dmat *A, cmat *B, real wtb, cmat *C, real w
 
    WHen notf is bigger than nwvf*embfac, the PSF is embeded which preserves the sampling.
    The uplink OTF need to be upsampled to dx/lambda *(nwvf/notf)
-   
+
+   @param[in,out] thread_data Thread data; data is a wfsints_t whose ints and pistatout are accumulated for
+   subapertures from start to end.
+   @return NULL.
 */
 void* wfsints(thread_t* thread_data){
 	/* first, unwrap the data */

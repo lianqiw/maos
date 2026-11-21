@@ -56,18 +56,35 @@
 #define SS_MARK(w,j) { w [j] = SS_FLIP (w [j]) ; }
 
 /**
- wrapper for malloc */
+   wrapper for malloc. Allocates at least one element.
+
+   @param[in] n Number of elements.
+   @param[in] size Size of each element in bytes.
+   @return Newly allocated memory; the caller frees it.
+*/
 static void* ss_malloc(spint n, size_t size){
 	return (malloc(SS_MAX(n, 1)*size));
 }
 
 /**
- wrapper for calloc */
+   wrapper for calloc. Allocates at least one element.
+
+   @param[in] n Number of elements.
+   @param[in] size Size of each element in bytes.
+   @return Newly allocated zeroed memory; the caller frees it.
+*/
 static void* ss_calloc(spint n, size_t size){
 	return (calloc(SS_MAX(n, 1), size));
 }
 /**
- wrapper for realloc */
+   wrapper for realloc. Allocates at least one element.
+
+   @param[in] p Memory to reallocate.
+   @param[in] n Number of elements.
+   @param[in] size Size of each element in bytes.
+   @param[out] ok Set to 1 on success and 0 on failure.
+   @return The reallocated memory, or the original p on failure.
+*/
 static void* ss_realloc(void* p, spint n, size_t size, spint* ok){
 	void* pnew;
 	pnew=realloc(p, SS_MAX(n, 1)*size); /* realloc the block */
@@ -76,7 +93,12 @@ static void* ss_realloc(void* p, spint n, size_t size, spint* ok){
 }
 
 /**
- change the max # of entries sparse matrix */
+   change the max # of entries sparse matrix
+
+   @param[in,out] A Sparse matrix to resize.
+   @param[in] nzmax New maximum number of entries. If <=0, use the actual number of entries.
+   @return 1 on success, 0 on failure or if A is NULL.
+*/
 static spint ss_sprealloc(X(sp)* A, spint nzmax){
 	spint ok, oki, okj=1, okx=1;
 	if(!A) return (0);
@@ -89,7 +111,14 @@ static spint ss_sprealloc(X(sp)* A, spint nzmax){
 }
 
 /**
- free workspace and return a sparse matrix result */
+   free workspace and return a sparse matrix result
+
+   @param[in] C The result sparse matrix. Freed if ok is 0.
+   @param[in] w Workspace to free.
+   @param[in] x Workspace to free.
+   @param[in] ok Whether the operation succeeded.
+   @return C if ok, otherwise NULL.
+*/
 static X(sp)* ss_done(X(sp)* C, void* w, void* x, spint ok){
 	free(w);                       /* free workspace */
 	free(x);
@@ -97,9 +126,20 @@ static X(sp)* ss_done(X(sp)* C, void* w, void* x, spint ok){
 }
 
 /**
- x = x + beta * A(:,j), where x is a dense vector and A(:,j) is dsp */
-static spint ss_scatter(const X(sp)* A, spint j, T beta, spint* w, T* x, spint mark,
-	X(sp)* C, spint nz){
+   x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse. New
+   row indices are appended to the pattern of C.
+
+   @param[in] A Sparse matrix.
+   @param[in] j Column of A.
+   @param[in] beta Scaling factor.
+   @param[in,out] w Workspace marking rows already in the current column of C.
+   @param[in,out] x Dense accumulator. May be NULL to compute the pattern only.
+   @param[in] mark Mark value of the current column.
+   @param[in,out] C Result matrix whose row indices are updated.
+   @param[in] nz Current number of entries in C.
+   @return The updated number of entries in C, or -1 if inputs are invalid.
+*/
+static spint ss_scatter(const X(sp)* A, spint j, T beta, spint* w, T* x, spint mark, X(sp)* C, spint nz){
 	spint i, p, * Ap, * Ai, * Ci;
 	T* Ax;
 	if(!(A)||!w||!(C)) return (-1);     /* check inputs */
@@ -116,7 +156,12 @@ static spint ss_scatter(const X(sp)* A, spint j, T beta, spint* w, T* x, spint m
 }
 
 /**
- C = A*B */
+   Sparse matrix multiplication C = A*B.
+
+   @param[in] A Left sparse matrix.
+   @param[in] B Right sparse matrix.
+   @return Newly allocated sparse matrix C; the caller frees it.
+*/
 X(sp)* X(ss_multiply) (const X(sp)* A, const X(sp)* B){
 	spint p, nz=0, anz, * Cp, * Ci, * Bp, bnz, * w, values, * Bi;
 	long m, n, j;
@@ -159,7 +204,14 @@ X(sp)* X(ss_multiply) (const X(sp)* A, const X(sp)* B){
 }
 
 /**
- C = alpha*A + beta*B */
+   C = alpha*A + beta*B
+
+   @param[in] A First sparse matrix.
+   @param[in] B Second sparse matrix, same size as A.
+   @param[in] alpha Scaling of A.
+   @param[in] beta Scaling of B.
+   @return Newly allocated sparse matrix C; the caller frees it.
+*/
 X(sp)* X(ss_add) (const X(sp)* A, const X(sp)* B, T alpha, T beta){
 	spint p, j, nz=0, anz, * Cp, * Ci, * Bp, bnz, * w, values;
 	long m, n; //to avoid overflow when multying
@@ -200,7 +252,13 @@ X(sp)* X(ss_add) (const X(sp)* A, const X(sp)* B, T alpha, T beta){
 }
 
 /**
- drop entries for which fkeep(A(i,j)) is false; return nz if OK, else -1 */
+   drop entries for which fkeep(A(i,j)) is false.
+
+   @param[in,out] A Sparse matrix, modified in place.
+   @param[in] fkeep Function returning nonzero for entries to keep.
+   @param[in] other Extra data passed to fkeep.
+   @return Number of remaining entries if OK, else -1.
+*/
 static spint ss_fkeep(X(sp)* A, spint(*fkeep) (spint, spint, T, void*), void* other){
 	spint p, nz=0, * Ap, * Ai;
 	long j, n;
@@ -222,7 +280,13 @@ static spint ss_fkeep(X(sp)* A, spint(*fkeep) (spint, spint, T, void*), void* ot
 	return (nz);
 }
 /**
-   return true of is not zero.
+   return true if aij is not zero.
+
+   @param[in] i Row index. Unused.
+   @param[in] j Column index. Unused.
+   @param[in] aij Value of the entry.
+   @param[in] other Unused.
+   @return 1 if abs(aij)>1e-50, 0 otherwise.
 */
 static spint ss_nonzero(spint i, spint j, T aij, void* other){
 	(void)i;
@@ -232,24 +296,45 @@ static spint ss_nonzero(spint i, spint j, T aij, void* other){
 }
 /**
    drop zeros in the sparse matrix.
- */
+
+   @param[in,out] A Sparse matrix, modified in place.
+   @return Number of remaining entries, or -1 if A is NULL.
+*/
 spint X(ss_dropzeros) (X(sp)* A){
 	return (ss_fkeep(A, &ss_nonzero, NULL));  /* keep all nonzero entries */
 }
 /**
-   whether value is below threshold.
- */
+   whether value is above threshold.
+
+   @param[in] i Row index. Unused.
+   @param[in] j Column index. Unused.
+   @param[in] aij Value of the entry.
+   @param[in] tol Pointer to the threshold (real).
+   @return 1 if abs(aij)>*tol, 0 otherwise.
+*/
 static spint ss_tol(spint i, spint j, T aij, void* tol){
 	(void)i;
 	(void)j;
 	return (ABS(aij)>*((real*)tol));
 }
 /**
-   drop values below threashold of tol.
+   drop values whose magnitude is not above tol.
+
+   @param[in,out] A Sparse matrix, modified in place.
+   @param[in] tol Threshold.
+   @return Number of remaining entries, or -1 if A is NULL.
 */
 spint X(ss_droptol) (X(sp)* A, real tol){
 	return (ss_fkeep(A, &ss_tol, &tol));    /* keep all large entries */
 }
+/**
+   p [0..n] = cumulative sum of c [0..n-1], and then copy p [0..n-1] into c
+
+   @param[out] p Cumulative sum, of length n+1.
+   @param[in,out] c Counts of length n. Replaced by p[0..n-1] on return.
+   @param[in] n Number of elements in c.
+   @return Sum of c[0..n-1] (as real to avoid overflow), or -1 if inputs are NULL.
+*/
 static real ss_cumsum(spint* p, spint* c, spint n){
 	spint i, nz=0;
 	real nz2=0;
@@ -264,6 +349,14 @@ static real ss_cumsum(spint* p, spint* c, spint n){
 	return (nz2);                  /* return sum (c [0..n-1]) */
 }
 
+/**
+   Return the transpose of sparse matrix A as a new matrix. If values>0, the
+   values are conjugated (for complex); otherwise they are copied as is.
+
+   @param[in] A Sparse matrix.
+   @param[in] values Whether to conjugate the values.
+   @return Newly allocated transpose; the caller frees it.
+*/
 X(sp)* X(ss_transpose) (const X(sp)* A, spint values){
 	spint p, q, * Cp, * Ci, * Ap, * Ai, * w;
 	long n, m, j;
@@ -285,4 +378,3 @@ X(sp)* X(ss_transpose) (const X(sp)* A, spint values){
 	}
 	return (ss_done(C, w, NULL, 1));  /* success; free w and return C */
 }
-/* p [0..n] = cumulative sum of c [0..n-1], and then copy p [0..n-1] into c */

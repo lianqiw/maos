@@ -46,6 +46,17 @@ typedef struct GENOTF_T{
 /**
    Generate OTF from the B or tip/tilted removed B matrix. Notice that tip/tilt
    in opdbias is NOT removed.
+
+   @param[in,out] otf OTF of npsfx*npsfy with peak at the center. Allocated if NULL; otherwise overwritten.
+   @param[in] pttr Whether to remove piston/tip/tilt from the covariance.
+   @param[in] npsfx Size of the OTF along x.
+   @param[in] npsfy Size of the OTF along y.
+   @param[in] loc The aperture grid.
+   @param[in] amp Amplitude on loc. NULL for uniform amplitude.
+   @param[in] opdbias Static OPD bias on loc (m). NULL for none.
+   @param[in] wvl Wavelength (m).
+   @param[in] B Covariance of the OPD on loc (m^2).
+   @param[in] pval Pairs of overlapping points for each OTF separation, from gen_pval().
 */
 static void genotf_do(cmat** otf, long pttr, long npsfx, long npsfy,
 	loc_t* loc, const real* amp, const real* opdbias, real wvl,
@@ -109,8 +120,11 @@ static void genotf_do(cmat** otf, long pttr, long npsfx, long npsfy,
 		dfree(BP);
 }
 /**
-   A wrapper to execute pttr parallel in pthreads
- */
+   A wrapper to execute genotf_do() in parallel for subapertures in pthreads
+
+   @param[in] info Thread data with data pointing to GENOTF_T and the subaperture range in start, end.
+   @return NULL.
+*/
 static void *genotf_wrap(thread_t* info){
 	GENOTF_T* data=(GENOTF_T*)info->data;
 	const long nsa=data->nsa;
@@ -154,7 +168,12 @@ static void *genotf_wrap(thread_t* info){
 
    2010-11-08: removed amp. It caused wrong otf because it uses the amp of the
    first subaperture to build pval, but this one is not fully illuminated.
- */
+
+   @param[in] npsfx Size of the OTF along x.
+   @param[in] npsfy Size of the OTF along y.
+   @param[in] loc The aperture grid. Its map is created if not yet.
+   @return Newly allocated array of npsfx*npsfy T_VALID. The caller frees pval[0].loc and then the array.
+*/
 static T_VALID* gen_pval(long npsfx, long npsfy, loc_t* loc){
 	const long nloc=loc->nloc;
 	const real* locx=loc->locx;
@@ -204,7 +223,10 @@ static T_VALID* gen_pval(long npsfx, long npsfy, loc_t* loc){
 	return pval;
 }
 /**
-   Compute the separation vector of each point in loc.
+   Compute the separation (distance) between each pair of points in loc.
+
+   @param[in] loc Point coordinates.
+   @return Newly allocated nloc*nloc matrix of separation (m). The caller frees it.
 */
 static dmat* loc_sep(const loc_t* loc){
 	long nloc=loc->nloc;

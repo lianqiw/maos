@@ -24,20 +24,22 @@
 #define MIN_SA_OVERLAP 5 /*minimum of subaperture overlap at this separation*/
 #define COV_ROTATE 0     /*1: rotate the covariance and then cut along x. (old method).*/
 /**
-   Initialize cn2est_t
+   Initialize cn2est_t for SLODAR based Cn2 estimation.
+
+   @param[in] wfspair 2n*1 vector for n pair of WFS indices.
+   @param[in] wfstheta nwfs*2: angular direction of each WFS (radian).
+   @param[in] saloc nsa*2: Subaperture low left corner coordinates.
+   @param[in] saa nsa*1: Normalized subaperture area. NULL to use all subapertures.
+   @param[in] saat Threshold, relative to the maximum of saa, for keeping subapertures.
+   @param[in] hs nwfs*1: altitude of guide star (m).
+   @param[in] htrecon Layers height intended for tomography (m).
+   @param[in] keepht 2: slodar directly to htrecon, otherwise: interpolate onto htrecon from native slodar heights.
+   @param[in] L0 The Outer scale (m).
+   @return Newly allocated cn2est_t, or NULL if there is no WFS pair or not enough subapertures.
+   Free with cn2est_free().
 */
-cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indices.*/
-	const dmat* wfstheta,/**<nwfs*2: angular direction of each WFS.*/
-	const loc_t* saloc,  /**<nsa*2: Subaperture low left corner coordinates*/
-	const dmat* saa,     /**<nsa*1: Normalized subaperture area*/
-	const real saat,     /**<Threshold for keeping subapertures*/
-	const dmat* hs,      /**<nwfs*1: altitude of guide star*/
-	const dmat* htrecon, /**<Layers height intended for tomography*/
-	int keepht,          /**<2: slodar directly to htrecon,
-			  * otherwise: interpolate onto htrecon
-			  * from native slodar heights*/
-	real L0            /**<The Outer scale*/
-){
+cn2est_t* cn2est_new(const dmat* wfspair, const dmat* wfstheta, const loc_t* saloc, const dmat* saa, const real saat,
+	const dmat* hs, const dmat* htrecon, int keepht, real L0){
 	info("Cn2 estimation: ");
 	/*We need at least a pair */
 	if(!wfspair) return 0;
@@ -381,7 +383,12 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 }/*cn2est_new */
 
 /**
-   Compute covariance from gradients and embed into a 2d map cn2est->curi.
+   Embed gradients into a 2d map, compute the wavefront curvature, and store
+   its FFT in cn2est->curi.
+
+   @param[in,out] cn2est Cn2 estimation data; gxs, gys, and curi are updated.
+   @param[in] gradol Open loop gradients of each WFS.
+   @param[in] icol Column of the gradients to use.
 */
 static void cn2est_embed(cn2est_t* cn2est, const dcell* gradol, int icol){
 	long* embed=P(cn2est->embed);
@@ -427,7 +434,10 @@ static void cn2est_embed(cn2est_t* cn2est, const dcell* gradol, int icol){
 	}
 }
 /**
-   Compute cross-covairance from gradient curvature
+   Accumulate the cross-covariance of gradient curvature of each WFS pair into
+   cn2est->covc and increment cn2est->count.
+
+   @param[in,out] cn2est Cn2 estimation data.
 */
 static void cn2est_cov(cn2est_t* cn2est){
 	/*accumulate cross-covariance of gradient curvature. */
@@ -446,8 +456,11 @@ static void cn2est_cov(cn2est_t* cn2est){
 	}/*iwfspair */
 }
 /**
-   Accumulate the coveriance.
- */
+   Accumulate the covariance of open loop gradients gradol (one per WFS) for Cn2 estimation.
+
+   @param[in,out] cn2est Cn2 estimation data.
+   @param[in] gradol Open loop gradients of each WFS. Each column is a time step.
+*/
 void cn2est_push(cn2est_t* cn2est, const dcell* gradol){
 	int ncol=0;
 	if(NX(gradol)<cn2est->nwfs){
@@ -471,7 +484,11 @@ void cn2est_push(cn2est_t* cn2est, const dcell* gradol){
 DEF_ENV_FLAG(CN2EST_NO_NEGATIVE, 1);
 
 /**
-   Do the Cn2 Estimation.
+   Do the Cn2 Estimation from the accumulated covariance. Results are stored in
+   cn2est->wt, r0, r0m, and wtrecon.
+
+   @param[in,out] cn2est Cn2 estimation data.
+   @param[in] verbose Whether to print the results.
 */
 void cn2est_est(cn2est_t* cn2est, int verbose){
 	info("cn2est from %d measurements\n", cn2est->count);
@@ -595,7 +612,9 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 }
 /**
    Reset the accumulation
- */
+
+   @param[in,out] cn2est Cn2 estimation data.
+*/
 void cn2est_reset(cn2est_t* cn2est){
 	if(cn2est->count){
 		info("cn2est: reset the accumulation\n");
@@ -606,6 +625,8 @@ void cn2est_reset(cn2est_t* cn2est){
 
 /**
    Free all the data.
+
+   @param[in] cn2est Cn2 estimation data to free. May be NULL.
 */
 void cn2est_free(cn2est_t* cn2est){
 	if(!cn2est) return;
@@ -637,7 +658,20 @@ void cn2est_free(cn2est_t* cn2est){
 }
 /**
    One stop wrapper for #cn2est_new, #cn2est_push, and #cn2est_est.
- */
+
+   @param[in] wfspair 2n*1 vector for n pair of WFS indices.
+   @param[in] wfstheta nwfs*2: angular direction of each WFS. Treated as arcsec and converted
+   to radian (in a temporary copy; the input is not modified) if its maximum absolute value is above 1.
+   @param[in] saloc Subaperture low left corner coordinates.
+   @param[in] saa Normalized subaperture area.
+   @param[in] saat Threshold for keeping subapertures.
+   @param[in] hs Altitude of guide star (m).
+   @param[in] htrecon Layers height intended for tomography (m).
+   @param[in] keepht 2: slodar directly to htrecon, otherwise: interpolate onto htrecon.
+   @param[in] l0 The outer scale (m).
+   @param[in,out] grad Open loop gradients of each WFS. Reshaped to a column if it is a row.
+   @return Newly allocated cn2est_t with the estimation result. Free with cn2est_free().
+*/
 cn2est_t* cn2est_all(const dmat* wfspair, dmat* wfstheta, const loc_t* saloc,
 	const dmat* saa, const real saat,
 	const dmat* hs, const dmat* htrecon, int keepht, real l0, dcell* grad){

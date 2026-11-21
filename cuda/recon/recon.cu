@@ -40,6 +40,16 @@ extern "C"{
 #define toc_test(A) toc2(A);tic
 #endif
 #define CATCH_ERR 0
+/**
+   Create a curcell for tomography output on the xloc layers, as 2-d grids if
+   tomo.square is set, otherwise as vectors. If p is not NULL, the cell wraps
+   the existing memory p.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data.
+   @param[in] p Existing device memory to wrap, or NULL to allocate.
+   @return The new curcell.
+*/
 curcell new_opdr(const parms_t *parms, const recon_t* recon, Real *p){
 	if(parms->tomo.square){
 		return curcell(recon->npsr, 1, P(recon->xnx), P(recon->xny), p);
@@ -47,6 +57,17 @@ curcell new_opdr(const parms_t *parms, const recon_t* recon, Real *p){
 		return curcell(recon->npsr, 1, P(recon->xnloc), (long*)NULL, p);
 	}
 }
+/**
+   Create a curcell for DM commands: modal vectors if recon.modal is set and
+   zonal is 0, 2-d grids for MVR with fit.square, otherwise actuator vectors.
+   If p is not NULL, the cell wraps the existing memory p.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data.
+   @param[in] zonal Force zonal DM commands even if recon.modal is set.
+   @param[in] p Existing device memory to wrap, or NULL to allocate.
+   @return The new curcell.
+*/
 curcell new_dmr(const parms_t *parms, const recon_t* recon, int zonal, Real *p){
 	if(parms->recon.modal && !zonal){
 		return curcell(parms->ndm, 1, P(recon->anmod), (long*)NULL, p);
@@ -56,8 +77,12 @@ curcell new_dmr(const parms_t *parms, const recon_t* recon, int zonal, Real *p){
 		return curcell(parms->ndm, 1, P(recon->anloc), (long*)NULL, p);
 	}
 }
-/*
-  The caller must specify current GPU.
+/**
+   Set up the GPU reconstructor: geometry, MVM, DM fitting, tomography and
+   MOAO, depending on parms->gpu settings. The caller must specify current GPU.
+
+   @param[in] parms Simulation parameters. If NULL, an empty object is created.
+   @param[in] recon Reconstruction data.
 */
 curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	:grid(0), FR(0), FL(0), RR(0), RL(0), MVM(0), nmoao(0), moao(0){
@@ -98,7 +123,14 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	gpu_print_mem("recon init");
 }
 
-//this is only for initialization. updating mvm requires calling gpu_setup_recon_mvm and perhaps more changes
+/**
+   Set up the MVM solver in GPU from cuglobal->mvm or recon->MVM if
+   recon.mvm is set. This is only for initialization. Updating mvm requires
+   calling gpu_setup_recon_mvm and perhaps more changes.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data.
+*/
 void curecon_t::init_mvm(const parms_t* parms, recon_t* recon){
 	if(parms->recon.mvm){
 		reset_mvm();
@@ -110,7 +142,14 @@ void curecon_t::init_mvm(const parms_t* parms, recon_t* recon){
 		}//else: waiting for future call
 	}
 }
-//There is usually no need to update DM fitting
+/**
+   Set up the DM fitting right hand side (FR) and left hand side (FL) solvers
+   in GPU according to gpu.fit and fit.alg. Skipped if MVM is used and already
+   available. There is usually no need to update DM fitting.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data.
+*/
 void curecon_t::init_fit(const parms_t* parms, recon_t* recon){
 	int skip_tomofit=parms->recon.mvm&&(cuglobal->mvm||recon->MVM);
 	if(parms->gpu.fit&&!skip_tomofit){
@@ -143,6 +182,15 @@ void curecon_t::init_fit(const parms_t* parms, recon_t* recon){
 	}
 }
 
+/**
+   Set up the tomography right hand side (RR) and left hand side (RL) solvers
+   in GPU according to tomo.alg (CBS, CG with optional FDPCG, or SVD). Skipped
+   if MVM is used and already available. Also called to update the control
+   parameters.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data.
+*/
 void curecon_t::init_tomo(const parms_t*parms, recon_t*recon){
 	int skip_tomofit=parms->recon.mvm&&(cuglobal->mvm||recon->MVM);
 	if(parms->gpu.tomo&&!skip_tomofit){
@@ -176,6 +224,14 @@ void curecon_t::init_tomo(const parms_t*parms, recon_t*recon){
 		}
 	}
 }
+/**
+   Set up the MOAO solvers in GPU and allocate the MOAO DM commands for the WFS
+   and evaluation directions that use each MOAO DM. The MOAO DM grids are also
+   registered in the WFS and evaluation GPUs.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data.
+*/
 void curecon_t::init_moao(const parms_t*parms, recon_t*recon){
 	if(!parms->nmoao) return;
 	dbg("initialize MOAO in GPU %d.\n", current_gpu());
@@ -254,6 +310,14 @@ void curecon_t::init_moao(const parms_t*parms, recon_t*recon){
 	dmrecon_zonal=new_dmr(parms, recon, 1);
 	dmrecon_zonal_vec=dmrecon_zonal.Vector();
 }
+/**
+   Update the tomography operators after the turbulence profile (cn2) is
+   updated: ray tracing, laplacian regularization, and FDPCG preconditioner.
+   For predictive tomography, layer wind velocities are also updated.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data with updated operators.
+*/
 void curecon_t::update_cn2(const parms_t* parms, recon_t* recon){
 	dbg("update turbulence profile.\n");
 	if(parms->tomo.predict){
@@ -275,6 +339,10 @@ void curecon_t::update_cn2(const parms_t* parms, recon_t* recon){
 		_RL->update_fdpcg(recon->fdpcg);
 	}
 }
+/**
+   Zero runtime data (tomography and DM fitting results, MOAO DM commands) used
+   for warm restart.
+*/
 void curecon_t::reset_runtime(){
 	dbg("zero out runtime data.\n");
 	opdr.Zero();
@@ -283,8 +351,18 @@ void curecon_t::reset_runtime(){
 	dm_evl.Zero();
 }
 
-Real curecon_t::tomo(dcell** _opdr, dcell** _gngsmvst,
-	const dcell* _gradin){
+/**
+   Tomography from gradients _gradin in GPU. The result is copied to *_opdr if
+   _opdr is not NULL. For MVST split tomography, GXL*opdr is accumulated to
+   *_gngsmvst. Synchronizes cgstream.
+
+   @param[in,out] _opdr If not NULL, receives a copy of the tomography result.
+   Allocated if NULL.
+   @param[in,out] _gngsmvst For MVST, GXL*opdr is accumulated into it.
+   @param[in] _gradin Gradients.
+   @return The CG residual.
+*/
+Real curecon_t::tomo(dcell** _opdr, dcell** _gngsmvst, const dcell* _gradin){
 	cp2gpu(gradin, _gradin);
 
 	RR->R(tomo_rhs, 0, gradin, 1, cgstream);
@@ -300,6 +378,10 @@ Real curecon_t::tomo(dcell** _opdr, dcell** _gngsmvst,
 	cgstream.sync();
 	return cgres;
 }
+/**
+   Copy tomography result from the reconstruction GPU to all other GPUs (for
+   evl.tomo).
+*/
 void curecon_t::copy_opdr(){
 	for(int igpu=0; igpu<NGPU; igpu++){
 		if(igpu!=cuglobal->recongpu){
@@ -309,6 +391,15 @@ void curecon_t::copy_opdr(){
 	}
 	gpu_set(cuglobal->recongpu);
 }
+/**
+   DM fitting in GPU. Uses _opdr as input if not NULL, otherwise the GPU
+   tomography result. The DM commands are copied to *_dmrecon. Synchronizes
+   cgstream.
+
+   @param[in,out] _dmrecon Receives the DM commands. Allocated if NULL.
+   @param[in] _opdr Tomography result from CPU, or NULL to use the GPU result.
+   @return The CG residual.
+*/
 Real curecon_t::fit(dcell** _dmrecon, dcell* _opdr){
 	if(_opdr){
 		cp2gpu(opdr_vec, _opdr);
@@ -321,6 +412,15 @@ Real curecon_t::fit(dcell** _dmrecon, dcell* _opdr){
 	cgstream.sync();
 	return cgres;
 }
+/**
+   MOAO reconstruction for all MOAO DMs. _dmrecon and _opdr, if not NULL,
+   override the GPU DM fitting and tomography results. Modal DM commands are
+   converted to zonal first.
+
+   @param[in] _dmrecon DM fitting result from CPU, or NULL.
+   @param[in] _opdr Tomography result from CPU, or NULL.
+   @return Always 0.
+*/
 Real curecon_t::moao_recon(dcell* _dmrecon, dcell* _opdr){
 	if(_dmrecon){
 		cp2gpu(dmrecon_vec, _dmrecon);
@@ -343,6 +443,16 @@ Real curecon_t::moao_recon(dcell* _dmrecon, dcell* _opdr){
 	return 0;
 }
 
+/**
+   Apply a low pass filter with gain gdm to the MOAO DM commands for WFS and
+   evaluation directions: dm=(1-g)*dm+g*dm_new, in the GPU that owns each
+   direction. The results are copied to _dm_wfs and _dm_evl if needed by CPU.
+
+   @param[in,out] _dm_wfs MOAO DM commands of WFS on CPU. Elements are updated
+   if not NULL or if WFS is not simulated in GPU.
+   @param[in,out] _dm_evl MOAO DM commands of evaluation directions on CPU.
+   Elements are updated if not NULL or if evaluation is not done in GPU.
+*/
 void curecon_t::moao_filter(dcell* _dm_wfs, dcell* _dm_evl){
 	info_once("MOAO temporal filter implemented with LPF\n");
 	const int* wfsgpu=cuglobal->wfsgpu();
@@ -385,6 +495,13 @@ void curecon_t::moao_filter(dcell* _dm_wfs, dcell* _dm_evl){
 		}
 	}
 }
+/**
+   Matrix vector multiply reconstruction: *_dmerr=MVM*_gradin. Synchronizes
+   cgstream.
+
+   @param[in,out] _dmerr DM error signal. Allocated if NULL, otherwise overwritten.
+   @param[in] _gradin Gradients.
+*/
 void curecon_t::mvm(dcell** _dmerr, dcell* _gradin){
 	cp2gpu(gradin, _gradin);
 	MVM->solve(dmrecon, gradin, cgstream);
@@ -392,6 +509,12 @@ void curecon_t::mvm(dcell** _dmerr, dcell* _gradin){
 	cgstream.sync();
 }
 
+/**
+   Debugging: compare tomography operators (R, Rt, L, preconditioner, solve)
+   between CPU and GPU by saving their results to files. Exits the program.
+
+   @param[in] simu Simulation data. simu->gradlastol is used as input.
+*/
 void curecon_t::tomo_test(sim_t* simu){
 	gpu_set(cuglobal->recongpu);
 	const parms_t* parms=simu->parms;
@@ -461,6 +584,13 @@ void curecon_t::tomo_test(sim_t* simu){
 	CUDA_SYNC_DEVICE;
 	exit(0);
 }
+/**
+   Debugging: compare DM fitting operators (R, L, solve) between CPU and GPU by
+   saving their results to files. Exits the program.
+
+   @param[in,out] simu Simulation data. simu->opdr is used as input and
+   filled from GPU if empty.
+*/
 void curecon_t::fit_test(sim_t* simu){	//Debugging. 
 	gpu_set(cuglobal->recongpu);
 	stream_t stream;
@@ -520,6 +650,13 @@ void curecon_t::fit_test(sim_t* simu){	//Debugging.
 	exit(1);
 }
 
+/**
+   Create the GPU reconstructor in the reconstruction GPU, replacing any
+   existing one.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data.
+*/
 void gpu_setup_recon(const parms_t* parms, recon_t* recon){
 	gpu_set(cuglobal->recongpu);
 	if(cudata->recon){
@@ -528,8 +665,13 @@ void gpu_setup_recon(const parms_t* parms, recon_t* recon){
 	cudata->recon=new curecon_t(parms, recon);
 }
 /**
- * Assembles MVM in gpu and put in recon->MVM. 
- * */
+   Assembles MVM in gpu and put in recon->MVM if it does not exist yet. A
+   temporary GPU reconstructor is created in each GPU and deleted afterwards.
+
+   @param[in] parms Simulation parameters. tomo.cgwarm and fit.cgwarm are
+   temporarily set to 0 and restored.
+   @param[in,out] recon Reconstruction data. recon->MVM is set.
+*/
 void gpu_setup_recon_mvm(const parms_t* parms, recon_t* recon){
 	if(!recon->MVM){
 		const int tomo_cgwarm=parms->tomo.cgwarm;
@@ -564,6 +706,13 @@ void gpu_setup_recon_mvm(const parms_t* parms, recon_t* recon){
 		gpu_print_mem("MVM");
 	}
 }
+/**
+   Update the GPU tomography solver after control parameters change. Not
+   implemented for MVM.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data.
+*/
 void gpu_update_recon_control(const parms_t* parms, recon_t* recon){
 	gpu_set(cuglobal->recongpu);
 	for(int igpu=0; igpu<NGPU; igpu++){
@@ -579,6 +728,13 @@ void gpu_update_recon_control(const parms_t* parms, recon_t* recon){
 		}
 	}
 }
+/**
+   Update the GPU tomography operators after the turbulence profile is updated.
+   Not implemented for MVM.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data with updated turbulence profile.
+*/
 void gpu_update_recon_cn2(const parms_t* parms, recon_t* recon){
 	if(!parms->gpu.tomo) return;
 	for(int igpu=0; igpu<NGPU; igpu++){
@@ -593,6 +749,12 @@ void gpu_update_recon_cn2(const parms_t* parms, recon_t* recon){
 		}
 	}
 }
+/**
+   Reset GPU reconstruction runtime data and MOAO DM commands in all GPUs, for
+   example between seeds. Synchronizes each device.
+
+   @param[in] parms Simulation parameters.
+*/
 void gpu_recon_reset(const parms_t* parms){//reset warm restart.
 	for(int igpu=0; igpu<NGPU; igpu++){
 		gpu_set(igpu);
@@ -600,6 +762,7 @@ void gpu_recon_reset(const parms_t* parms){//reset warm restart.
 		if(curecon){
 			curecon->reset_runtime();
 		}
+		//MOAO DM commands of each direction are registered only in the GPU that owns it.
 		if(cudata->dm_wfs){
 			for(int iwfs=0; iwfs<parms->nwfs&&iwfs<cudata->dm_wfs.N(); iwfs++){
 				if(cudata->dm_wfs[iwfs]){
@@ -617,6 +780,14 @@ void gpu_recon_reset(const parms_t* parms){//reset warm restart.
 		CUDA_SYNC_DEVICE;
 	}
 }
+/**
+   Tomography in GPU from gradin. Stores the CG residual in simu->cgres and
+   copies the result to simu->opdr when needed by CPU (plotting, CPU fitting or
+   MOAO, saving, or evl.tomo). Runs tomo_test() instead if dbg.tomo is set.
+
+   @param[in,out] simu Simulation data.
+   @param[in] gradin Gradients.
+*/
 void gpu_tomo(sim_t* simu, dcell* gradin){
 	gpu_set(cuglobal->recongpu);
 	curecon_t* curecon=cudata->recon;
@@ -639,6 +810,14 @@ void gpu_tomo(sim_t* simu, dcell* gradin){
 	}
 }
 
+/**
+   DM fitting in GPU. Uses simu->opdr as input if tomography is done in CPU.
+   The result is copied to *dmout and the CG residual stored in simu->cgres.
+   Runs fit_test() instead if dbg.fit is set.
+
+   @param[in,out] dmout DM commands. Allocated if NULL, otherwise overwritten.
+   @param[in,out] simu Simulation data.
+*/
 void gpu_fit(dcell** dmout, sim_t* simu){
 	gpu_set(cuglobal->recongpu);
 	curecon_t* curecon=cudata->recon;
@@ -652,12 +831,24 @@ void gpu_fit(dcell** dmout, sim_t* simu){
 	}
 	//Don't free opdr. Needed for warm restart in tomo.
 }
+/**
+   MVM reconstruction in GPU: *dmout=MVM*gradin.
+
+   @param[in,out] dmout DM error signal. Allocated if NULL, otherwise overwritten.
+   @param[in] gradin Gradients.
+*/
 void gpu_recon_mvm(dcell** dmout, dcell* gradin){
 	gpu_set(cuglobal->recongpu);
 	curecon_t* curecon=cudata->recon;
 	curecon->mvm(dmout, gradin);
 }
 
+/**
+   MOAO reconstruction in GPU. Uses CPU tomography or fitting results from
+   simu when those steps are not done in GPU.
+
+   @param[in] simu Simulation data.
+*/
 void gpu_moao_recon(sim_t* simu){
 	gpu_set(cuglobal->recongpu);
 	const parms_t* parms=simu->parms;
@@ -665,6 +856,12 @@ void gpu_moao_recon(sim_t* simu){
 	curecon->moao_recon(parms->gpu.fit?NULL:simu->dmrecon, (parms->gpu.tomo||parms->gpu.fit)?NULL:simu->opdr);
 }
 
+/**
+   Temporal filtering of MOAO DM commands in GPU, results copied to
+   simu->dm_wfs and simu->dm_evl when needed.
+
+   @param[in,out] simu Simulation data. simu->dm_wfs and simu->dm_evl are updated.
+*/
 void gpu_moao_filter(sim_t* simu){
 	gpu_set(cuglobal->recongpu);
 	curecon_t* curecon=cudata->recon;

@@ -31,7 +31,15 @@
    Contains a few support functions for simulation.
 */
 extern int disable_save;
-real tk_setup;   /**<Start time of setup */
+/**Start time of setup*/
+real tk_setup;
+/**
+   Generate the atmospheric turbulence screens, or test screens of pure Zernike or Fourier modes when
+   parms->dbg.atm is set.
+
+   @param[in,out] simu Simulation data; simu->atmcfg is created on first call and its random stream is used.
+   @return Newly allocated screens; the caller frees them.
+*/
 static mapcell* genatm_do(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const atm_cfg_t* atm=&parms->atm;
@@ -133,7 +141,10 @@ static mapcell* genatm_do(sim_t* simu){
 
 /**
    wrap of the generic vonkarman_genatm to generate turbulence screens. Wind
-   velocities are set for each screen.  \callgraph */
+   velocities are set for each screen.  \callgraph
+
+   @param[in,out] simu Simulation data; simu->atm and related data are updated.
+*/
 void genatm(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const atm_cfg_t* atm=&(simu->parms->atm);
@@ -247,6 +258,8 @@ void genatm(sim_t* simu){
    Evolving the Sodium layer by updating the elongation transfer function. 
    
    The trombone position is also updated.
+
+   @param[in,out] simu Simulation data.
 */
 void sim_update_sodium(sim_t* simu){
 	const int isim=simu->wfsisim;
@@ -342,8 +355,11 @@ void sim_update_sodium(sim_t* simu){
 	}
 }
 /**
- * Update flags
- * */
+   Update per powfs flags (gradient output, physical optics, pistat, dithering
+   PLL and optical gain update) for the current WFS time step simu->wfsisim.
+
+   @param[in,out] simu Simulation data; simu->wfsflags is allocated if NULL and updated.
+*/
 void update_wfsflags(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	if(!simu->wfsflags){
@@ -379,6 +395,8 @@ void update_wfsflags(sim_t* simu){
    Shift gradient when new gradients are ready (in the end of parallel section
    in sim in CL or wfsgrad in OL). Do not execute in parallel with other
    routines. In GLAO mode, also averaged gradients from the same type of powfs.
+
+   @param[in,out] simu Simulation data.
 */
 void shift_grad(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -437,7 +455,10 @@ void shift_grad(sim_t* simu){
 /**
    use random number dirived from input seed to seed other stream.  necessary to
    have independant streams for different wfs in threading routines to avoid
-   race condition and have consitent result */
+   race condition and have consitent result
+
+   @param[in,out] simu Simulation data; random streams are allocated and seeded from simu->seed.
+*/
 void seeding(sim_t* simu){
 	info2("Running seed %d\n", simu->seed);
 	simu->init_rand=mycalloc(1, rand_t);
@@ -463,7 +484,13 @@ void seeding(sim_t* simu){
 #endif
 	seed_rand(simu->misc_rand, simu->seed);
 }
-const char *fnextra="-";//replaced when save.extra is set
+/**replaced when save.extra is set*/
+const char *fnextra="-";
+/**
+   Initialize performance evaluation data and ray tracing configuration in simu.
+
+   @param[in,out] simu Simulation data.
+*/
 static void init_simu_evl(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const aper_t* aper=simu->aper;
@@ -733,6 +760,11 @@ static void init_simu_evl(sim_t* simu){
 	}
 }
 
+/**
+   Initialize wavefront sensor data and ray tracing configuration in simu.
+
+   @param[in,out] simu Simulation data.
+*/
 static void init_simu_wfs(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	if(parms->sim.idealtomo) return;
@@ -1159,6 +1191,11 @@ static void init_simu_wfs(sim_t* simu){
 	}
 }
 
+/**
+   Initialize reconstruction and DM control data in simu.
+
+   @param[in,out] simu Simulation data.
+*/
 static void init_simu_recon(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	recon_t* recon=simu->recon;
@@ -1332,7 +1369,11 @@ static void init_simu_recon(sim_t* simu){
 		"%s/ResCG_%d.bin", fnextra, seed);
 }
 
-/** MOAO **/
+/**
+   Initialize MOAO data in simu.
+
+   @param[in,out] simu Simulation data.
+*/
 static void init_simu_moao(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	recon_t* recon=simu->recon;
@@ -1395,9 +1436,15 @@ static void init_simu_moao(sim_t* simu){
 /**
    Initialize simu (of type sim_t) and various simulation data structs. Called
    for every seed.
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] powfs WFS configuration; referenced by simu.
+   @param[in,out] aper Aperture data; referenced by simu.
+   @param[in,out] recon Reconstructor; referenced by simu.
+   @param[in] iseed Index of the seed in parms->sim.seeds.
+   @return Newly allocated simulation struct; free with sim_free().
 */
-sim_t* sim_init(const parms_t* parms, powfs_t* powfs,
-	aper_t* aper, recon_t* recon, int iseed){
+sim_t* sim_init(const parms_t* parms, powfs_t* powfs, aper_t* aper, recon_t* recon, int iseed){
 	const int nevl=parms->evl.nevl;
 	const int nwfs=parms->nwfs;
 	sim_t* simu=mycalloc(1, sim_t);
@@ -1503,6 +1550,8 @@ sim_t* sim_init(const parms_t* parms, powfs_t* powfs,
 }
 /**
    Release memory of simu (of type sim_t) and close files.
+
+   @param[in,out] simu Simulation data to free. May be NULL.
 */
 void sim_free(sim_t* simu){
 	if(!simu) return;
@@ -1762,6 +1811,8 @@ void sim_free(sim_t* simu){
 
 /**
    Print out wavefront error information and timing at each time step.
+
+   @param[in,out] simu Simulation data; status and plotting data are updated.
 */
 void print_progress(sim_t* simu){
 	const int isim=simu->perfisim;
@@ -1967,6 +2018,10 @@ void print_progress(sim_t* simu){
 }
 /**
    Output parameters necessary to run postproc using skyc/skyc.c
+
+   @param[in] powfs WFS configuration.
+   @param[in] recon Reconstructor.
+   @param[in] parms Simulation parameters.
 */
 void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 	char fn[PATH_MAX];

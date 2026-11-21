@@ -200,6 +200,12 @@
 #else
 #define M_SPT M_SPT32
 #endif
+/**
+   Check whether the object pointed by id is a sparse matrix of the current type.
+
+   @param[in] id Pointer to the object. May be NULL.
+   @return 1 if it is a sparse matrix of the current type, 0 otherwise.
+*/
 static inline int issp(const void* id){
 	return id?(*((const M_ID*)id)==M_SPT):0;
 }
@@ -215,6 +221,12 @@ static inline int issp(const void* id){
 #endif
 #define ABS2(A) REAL((A)*CONJ(A))
 
+/**
+   Check whether the object pointed by id is a dense matrix of the current type.
+
+   @param[in] id Pointer to the object. May be NULL.
+   @return 1 if it is a dense matrix of the current type, 0 otherwise.
+*/
 static inline int ismat(const void* id){
 	return id?(*(const uint16_t*)id==M_T):0;
 }

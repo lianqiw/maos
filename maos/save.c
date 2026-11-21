@@ -25,6 +25,8 @@
    up recon.c, wfsgrad.c and perfevl.c etc.  */
 /**
    Save pixel statistics for matched filter.
+
+   @param[in,out] simu The simulation struct. The accumulated statistics are temporarily rescaled and then restored.
 */
 void save_pistat(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -69,7 +71,9 @@ void save_pistat(sim_t* simu){
 }
 /**
    Save open loop gradients to file and optionally occumulate gcov.
- */
+
+   @param[in,out] simu The simulation struct. simu->gcov is accumulated into.
+*/
 void save_gradol(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const powfs_t* powfs=simu->powfs;
@@ -109,6 +113,8 @@ void save_gradol(sim_t* simu){
    2011-04-26: opdx was incorrectly computed when atm.ht and atmr.ht does not
    match in number. Fixed. Do not do scaling even if fit.ht is less.
 
+   @param[in,out] opdx The OPD on xloc. Allocated if NULL; otherwise overwritten. Not touched in GLAO mode.
+   @param[in] simu The simulation struct.
 */
 static void atm2xloc(dcell** opdx, const sim_t* simu){
 	const recon_t* recon=simu->recon;
@@ -140,7 +146,9 @@ static void atm2xloc(dcell** opdx, const sim_t* simu){
 }
 /**
    Plot and save reconstruction data.
- */
+
+   @param[in,out] simu The simulation struct.
+*/
 void save_recon(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
@@ -217,8 +225,11 @@ void save_recon(sim_t* simu){
 }
 
 /**
-   Plot and save dmreal
- */
+   Save the DM commands (dmreal, dmcmd, ttmreal, and the integrator) to the
+   telemetry files when save.dm is set.
+
+   @param[in,out] simu The simulation struct. The data are appended to simu->save.
+*/
 void save_dmreal(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	

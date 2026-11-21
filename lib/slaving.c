@@ -20,7 +20,11 @@
 #include "zernike.h"
 /**
    Compute the actuator coupling coefficient to be used to identify non-coupled
-   actuators. W1 is optional weighting function. The max value is 1.
+   actuators. The max value is 1.
+
+   @param[in] HA_ Ray tracing matrix (cell array of fit directions by DMs) from DM actuators to the fitting grid.
+   @param[in] W1 Optional weighting function. If NULL, the column sum of abs(HA) is used.
+   @return Newly allocated coupling coefficient for each DM. The caller frees it.
 */
 dcell* genactcpl(const_anyarray HA_, const dmat* W1){
 	const cell *HA=HA_.c;
@@ -65,6 +69,15 @@ dcell* genactcpl(const_anyarray HA_, const dmat* W1){
    if mode==2: b(igroup)=alpha*sum(a(jsa)), where jsa are fully active actuators belonging to igroup
    if mode==3: b(isa)=alpha*sum(a(jsa)-a(ksa)), where isa is inactive, and jsa and ksa are neighrboring and opposite active actuator
 
+   @param[in] aloc The actuator grid. Its map is created if not yet.
+   @param[in,out] actcplc Actuator coupling coefficiency (required). Entries of stuck actuators are set to 1 and floating actuators
+   to 0.
+   @param[in] actstuck Mask for stuck actuators that will not be slaved, but have value constrained.
+   @param[in] actfloat Mask for float actuators that will be slaved, but not have value constrained.
+   @param[in] thres The threshold below which an actuator is deemed slave.
+   @param[in] sclsq Expected norm of the slaving matrix.
+   @param[in] mode Mode of operation (1, 2, or 3 as described above; 4 is experimental).
+   @return Newly allocated block diagonal slaving regularization matrix S=H'*H. The caller frees it.
 */
 dspcell* slaving(loccell* aloc, const dcell* actcplc, const lcell* actstuck, const lcell* actfloat, const real thres,
 	const real sclsq, const int mode){
@@ -380,6 +393,10 @@ dspcell* slaving(loccell* aloc, const dcell* actcplc, const lcell* actstuck, con
 }
 /**
    When some actuators are stuck, zero the corresponding column in HA
+
+   @param[in] aloc Actuator grid array.
+   @param[in,out] HA_ Interaction matrix (dense or sparse, nfit by ndm or ndm by 1) or coupling vector to modify in place.
+   @param[in] stuck Mask of stuck actuators for each DM. Nothing is done if NULL.
 */
 void act_stuck(loccell* aloc, anyarray HA_, const lcell* stuck){
 	cell *HA=HA_.c;
@@ -440,6 +457,10 @@ void act_stuck(loccell* aloc, anyarray HA_, const lcell* stuck){
 }
 /**
    Zero out rows of dead actuators in mode vector.
+
+   @param[in] aloc Actuator grid array.
+   @param[in,out] HB Mode vectors (ndm by nmod) to modify in place.
+   @param[in] dead Mask of dead actuators for each DM. Nothing is done if NULL.
 */
 void act_zero(loccell* aloc, const dcell* HB, const lcell* dead){
 	if(!dead||!HB) return;
@@ -473,12 +494,14 @@ void act_zero(loccell* aloc, const dcell* HB, const lcell* dead){
 /**
    When some actuators are float, remove the corresponding column in HA and/or HB,
    and add to neighboring actuators. This is implemented using a second matrix and
-   then add to the original matrix.*/
-void act_float(loccell* aloc, 	///<coordinate of actuators
-	dspcell** HA, 				///<sparse matrix to modify
-	const dcell* HB, 			///<dense matrix to modify
-	const lcell* actfloat		///<floating actuator mask
-	){
+   then add to the original matrix.
+
+   @param[in] aloc Coordinate of actuators. Its map is created if not yet.
+   @param[in,out] HA Sparse matrix to modify. Used instead of HB if set.
+   @param[in,out] HB Dense matrix to modify in place.
+   @param[in] actfloat Floating actuator mask.
+*/
+void act_float(loccell* aloc, dspcell** HA, const dcell* HB, const lcell* actfloat){
 	if(!actfloat||((!HA||!*HA)&&!HB)){
 		warning("Nothing to do\n");
 		return;
@@ -613,11 +636,12 @@ void act_float(loccell* aloc, 	///<coordinate of actuators
 }
 /**
    Make DM actuator commands zero at stuck actuator locations.
+
+   @param[in] aloc Actuator grid array.
+   @param[in,out] adm Actuator command to process in place.
+   @param[in] stuck List of stuck actuators.
 */
-void act_stuck_cmd(loccell* aloc, /**<[in] Actuator grid array*/
-	const dcell* adm,   /**<[in,out] Actuator command to process*/
-	const lcell* stuck  /**<[in] List of stuck actuators*/
-){
+void act_stuck_cmd(loccell* aloc, const dcell* adm, const lcell* stuck){
 	if(!adm||!stuck) return;
 	const int ndm=(int)NX(aloc);
 	for(int idm=0; idm<ndm; idm++){
@@ -639,10 +663,12 @@ void act_stuck_cmd(loccell* aloc, /**<[in] Actuator grid array*/
 }
 /**
    Create an interpreter that make floating actuators equal to their neighbors.
+
+   @param[in] aloc Actuator grid array. Its map is created if not yet.
+   @param[in] actfloat List of floating actuators.
+   @return Newly allocated block diagonal interpolation matrix. The caller frees it.
 */
-dspcell* act_float_interp(loccell* aloc,  /**<[in] Actuator grid array*/
-	const lcell* actfloat/**<[in] List of floating actuators*/
-){
+dspcell* act_float_interp(loccell* aloc, const lcell* actfloat){
 	int ndm=(int)NX(aloc);
 	dspcell* out=dspcellnew(ndm, ndm);
 	for(int idm=0; idm<ndm; idm++){
@@ -703,11 +729,13 @@ dspcell* act_float_interp(loccell* aloc,  /**<[in] Actuator grid array*/
 /**
    Create an interpreter that make inactive actuators equal avearage of active
    neighbors if exist or all other neighbors.
+
+   @param[in] aloc Actuator grid. Its map is created if not yet.
+   @param[in] actcplc Actuator coupling coefficiency.
+   @param[in] thres Threshold of coupling to turn on interpolation.
+   @return Newly allocated extrapolation matrix. The caller frees it.
 */
-dsp* act_extrap_each(loc_t* aloc,        /**<[in] Actuator grid array*/
-	const dmat* actcplc,/**<[in] Actuator coupling coefficiency*/
-	const real thres  /**<[in] Threshold of coupling to turn on interpolation*/
-){
+dsp* act_extrap_each(loc_t* aloc, const dmat* actcplc, const real thres){
 	//TIC;tic;
 	loc_create_map(aloc);
 	map_t *map=aloc->map;
@@ -857,19 +885,20 @@ dsp* act_extrap_each(loc_t* aloc,        /**<[in] Actuator grid array*/
 	return out;
 }
 /**
- * Create an extrapolator that does the following
- * 1. Reduce the information to active actuators
- * 2. Project low order modes out from the active actuators
- * 3. Project back to full vector
- * 4. Extrapolate to inactive actuators
- * 5. Add back low order modes to the full vector
- * extrap = H_extrap*H_reduce*(I-M*M^+)+M*M^
- * */
+   Create an extrapolator that does the following
+   1. Reduce the information to active actuators
+   2. Project low order modes out from the active actuators
+   3. Project back to full vector
+   4. Extrapolate to inactive actuators
+   5. Add back low order modes to the full vector
+   extrap = H_extrap*H_reduce*(I-M*M^+)+M*M^
 
-dsp *act_extrap_lor(loc_t *aloc,
-	const dmat *actcplc,
-	const real thres
-){
+   @param[in] aloc Actuator grid.
+   @param[in] actcplc Actuator coupling coefficiency.
+   @param[in] thres Threshold of coupling above which an actuator is active.
+   @return Newly allocated extrapolation matrix. The caller frees it.
+*/
+dsp *act_extrap_lor(loc_t *aloc, const dmat *actcplc, const real thres){
 	//step1: reduce to active actuators
 	dmat *mask=dnew(NX(actcplc), NY(actcplc));
 	for(long i=0; i<PN(actcplc); i++){
@@ -918,12 +947,14 @@ dsp *act_extrap_lor(loc_t *aloc,
 /**
    Create an extrapolator that make inactive actuators equal avearage of active
    neighbors if exist or all other neighbors.
+
+   @param[in] aloc Actuator grid array.
+   @param[in] actcplc Actuator coupling coefficiency.
+   @param[in] thres Threshold of coupling to turn on interpolation.
+   @param[in] lor Low order mode removal before extrapolation.
+   @return Newly allocated block diagonal extrapolation matrix. The caller frees it.
 */
-dspcell* act_extrap(loccell* aloc,     /**<[in] Actuator grid array*/
-	const dcell* actcplc,/**<[in] Actuator coupling coefficiency*/
-	real thres, /**<[in] Threshold of coupling to turn on interpolation*/
-	int lor /**<[in] Low order mode removal before extrapolation*/ 
-){
+dspcell* act_extrap(loccell* aloc, const dcell* actcplc, real thres, int lor){
 	int ndm=(int)NX(actcplc);
 	dspcell* out=dspcellnew(ndm, ndm);
 	for(int idm=0; idm<ndm; idm++){

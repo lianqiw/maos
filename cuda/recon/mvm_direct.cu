@@ -26,7 +26,8 @@
    \file mvm_direct.cu
    Compute the MVM control matrix in GPU colume by colume
 */
-static int* gpu_avail=NULL;//implementes a single stack to manage available GPUs
+/**implementes a single stack to manage available GPUs*/
+static int* gpu_avail=NULL;
 static int gpu_pos=0;
 PNEW(gpu_mutex);
 typedef struct{
@@ -41,6 +42,16 @@ typedef struct{
 	X(mat)* mvmi;
 }mvm_igpu_t;
 
+/**
+   Thread worker that computes the columns info->start to info->end of the MVM
+   control matrix in one GPU by applying tomography and DM fitting to unit
+   gradient vectors. When gpu_avail is set, a GPU is taken from that stack and
+   returned when done.
+
+   @param[in] info Thread data. info->data points to mvm_igpu_t whose mvmc,
+   mvmi, residual, and residualfit arrays are filled for the assigned columns.
+   @return Always NULL.
+*/
 static void* mvm_direct_igpu(thread_t* info){
 	int igpu=info->ithread;
 	if(gpu_avail){
@@ -138,7 +149,11 @@ static void* mvm_direct_igpu(thread_t* info){
 	return NULL;
 }
 /**
-   Assemble the MVM control matrix.
+   Assemble the MVM control matrix in GPU directly, column by column, unless
+   it is loaded (load.mvm). The result is stored in recon->MVM.
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] recon Reconstruction data. recon->MVM is set.
 */
 void gpu_setup_recon_mvm_direct(const parms_t* parms, recon_t* recon){
 	TIC;tic;

@@ -26,6 +26,13 @@
    - If p is NULL, mem should be NULL as well. memory is allocated. if mem is not null, it is ignored and warning is print. new mem_t is created.
    - If p is not NULL, mem is NULL, we act as a weak pointer. p is managed externally. 
    - If both p and mem are not NULL, we increment mem reference count.
+
+   @param[in,out] pout The matrix. Allocated if NULL. If it already has data, only the dimension is checked.
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @param[in] p Existing memory to wrap. NULL to allocate.
+   @param[in] mem Reference counter of p. May be NULL.
+   @return 0 on success, -1 on failure.
 */
 static int X(init_do)(X(mat) **pout, long nx, long ny, T *p, mem_t *mem){
 	if(!pout){
@@ -73,10 +80,25 @@ static int X(init_do)(X(mat) **pout, long nx, long ny, T *p, mem_t *mem){
    check the size of matrix if exist. Otherwise create it. content is not zeroed if already exists.
    - empty matrix is initialized.
    - existing matrix is not resized.
+
+   @param[in,out] A The matrix. Allocated if NULL; otherwise its dimension must match.
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @return 0 on success, -1 on failure.
 */
 int X(init)(X(mat) **A, long nx, long ny){
 	return X(init_do)(A, nx, ny, NULL, 0);
 }
+/**
+   Create a new X(mat) of nx*ny. If p is not NULL, wraps the existing memory p
+   with reference counting by mem (may be NULL) instead of allocating.
+
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @param[in] p Existing memory to wrap. NULL to allocate.
+   @param[in] mem Reference counter of p. May be NULL for a weak reference.
+   @return Newly allocated matrix; the caller frees it.
+*/
 X(mat) *X(new_do)(long nx, long ny, T *p, mem_t *mem){
 	X(mat)* out=NULL;
 	X(init_do)(&out, nx, ny, p, mem);
@@ -84,13 +106,24 @@ X(mat) *X(new_do)(long nx, long ny, T *p, mem_t *mem){
 }
 /**
    Create a new X(mat). Initialized to zero.
+
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @return Newly allocated matrix; the caller frees it.
 */
  X(mat)* X(new)(long nx, long ny){
 	return X(new_do)(nx, ny, NULL, 0);
 }
 /**
- * Calls X(new) with a filename to be saved to.
- * */
+   Calls X(new) with a filename to be saved to. The data is written to the file
+   asynchronously, or when it is freed for fits files.
+
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @param[in] keywords Keywords to save with the data. May be NULL.
+   @param[in] format printf style format of the file name. A leading - disables saving.
+   @return Newly allocated matrix; the caller frees it. NULL if nx or ny is 0.
+*/
 X(mat)* X(new_file)(long nx, long ny, const char* keywords, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
@@ -107,12 +140,17 @@ X(mat)* X(new_file)(long nx, long ny, const char* keywords, const char* format, 
 }
 /**
    check and cast an object to matrix
- */
+
+   @param[in] A The object.
+   @return A cast to matrix if it is a matrix of this type, otherwise NULL. Not a new reference.
+*/
 X(mat)* X(mat_cast)(const_anyarray A){
 	return ismat(A.c)?(X(mat)*)A.c:NULL;
 }
 /**
    free content of a matrix object.
+
+   @param[in,out] A The matrix. Its content is freed and the struct is kept.
 */
 void X(free_content)(X(mat)* A){
 	if(check_mat(A)){
@@ -141,6 +179,8 @@ void X(free_content)(X(mat)* A){
 }
 /**
    free a matrix object.
+
+   @param[in] A The matrix to free.
 */
 void X(free_do)(X(mat) *A){
 	X(free_content)(A);
@@ -150,6 +190,11 @@ void X(free_do)(X(mat) *A){
    create an new reference another with different shape.
    - total number of elements must be preserved
    - set ny to 1 or 0 to return a vector.
+
+   @param[in] in The matrix to reference.
+   @param[in] nx New number of rows.
+   @param[in] ny New number of columns.
+   @return Newly allocated matrix sharing data with in; the caller frees it. NULL if in is invalid.
 */
 X(mat)* X(ref_reshape)(const X(mat)* in, long nx, long ny){
 	X(mat) *out=NULL;
@@ -165,6 +210,9 @@ X(mat)* X(ref_reshape)(const X(mat)* in, long nx, long ny){
 
 /**
    creat a reference to an existing matrix. header is duplicated if exists.
+
+   @param[in] in The matrix to reference.
+   @return Newly allocated matrix sharing data with in; the caller frees it. NULL if in is invalid.
 */
 X(mat) *X(ref)(const X(mat) *in){
 	if(!check_mat(in)) return NULL;
@@ -176,6 +224,11 @@ X(mat) *X(ref)(const X(mat) *in){
 /**
    creat a new matrix referencing columns in existing
    matrix. reference counted. 
+
+   @param[in] in The matrix to reference.
+   @param[in] icol Index of the first column.
+   @param[in] ncol Number of columns.
+   @return Newly allocated matrix sharing data with in; the caller frees it. NULL if in is invalid.
 */
 X(mat)* X(refcols)(const X(mat)* in, long icol, long ncol){
 	if(!check_mat(in)) return NULL;
@@ -187,6 +240,11 @@ X(mat)* X(refcols)(const X(mat)* in, long icol, long ncol){
 }
 /**
    Override a stack matrix struct with pointers to columns of another matrix. Does not add reference count the original data.
+
+   @param[in,out] out The matrix struct. Its existing content is freed if initialized.
+   @param[in] in The matrix to reference.
+   @param[in] icol Index of the first column.
+   @param[in] ncol Number of columns.
 */
 void X(cols)(X(mat) *out, const X(mat) *in, long icol, long ncol){
 	if(!check_mat(in)||!out) return;
@@ -202,6 +260,13 @@ void X(cols)(X(mat) *out, const X(mat) *in, long icol, long ncol){
 }
 /**
    Create a new sub matrix of nx*ny starting from(sx,sy) and copy the data.
+
+   @param[in] in The input matrix.
+   @param[in] sx Starting row.
+   @param[in] nx Number of rows. <=0 to use all remaining rows.
+   @param[in] sy Starting column.
+   @param[in] ny Number of columns. <=0 to use all remaining columns.
+   @return Newly allocated matrix; the caller frees it. NULL if in is invalid or out of range.
 */
 X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
 	if(!check_mat(in)) return NULL;
@@ -228,6 +293,11 @@ X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
    possible.
    - -1 in dimension preserves original value.
    - 0 in dimension will free array.
+
+   @param[in,out] A The matrix resized in place. Must not be referenced elsewhere.
+   @param[in] nx New number of rows.
+   @param[in] ny New number of columns.
+   @return 0 on success, -1 on failure.
 */
 int X(resize)(X(mat)* A, long nx, long ny){
 	if(A){
@@ -310,6 +380,11 @@ int X(resize)(X(mat)* A, long nx, long ny){
 
 /**
    Concatenate two matrixes into 1 along "dim" (1 for x, 2 for y)
+
+   @param[in] in1 The first matrix.
+   @param[in] in2 The second matrix.
+   @param[in] dim 1 to concatenate along x (rows), 2 along y (columns).
+   @return Newly allocated matrix; the caller frees it. A copy of the other if one is empty.
 */
 X(mat)* X(cat)(const X(mat)* in1, const X(mat)* in2, int dim){
 	if(!check_mat(in2)){
@@ -350,6 +425,8 @@ X(mat)* X(cat)(const X(mat)* in1, const X(mat)* in2, int dim){
 }
 /**
    Set elements to zero.
+
+   @param[in,out] A The matrix. Skipped if NULL.
 */
 void X(zero)(X(mat)* A){
 	if(A&&P(A)){
@@ -358,6 +435,10 @@ void X(zero)(X(mat)* A){
 }
 /**
    Set column elements to zero.
+
+   @param[in,out] A The matrix.
+   @param[in] icol Index of the column.
+   @return 0 on success, -1 if A is invalid or icol is out of range.
 */
 int X(zerocol)(X(mat)* A, int icol){
 	int ans=0;
@@ -374,8 +455,13 @@ int X(zerocol)(X(mat)* A, int icol){
 	return ans;
 }
 /**
-   Compute the hashlittle
- */
+   Compute the hashlittle of the matrix content using key as the seed. Returns
+   the updated key. Returns key unchanged if A is invalid.
+
+   @param[in] A The matrix.
+   @param[in] key Initial hash key.
+   @return Updated hash key.
+*/
 uint32_t X(hash)(const X(mat)* A, uint32_t key){
 	if(check_mat(A)){
 		key=hashlittle(P(A), PN(A)*sizeof(T), key);
@@ -384,6 +470,9 @@ uint32_t X(hash)(const X(mat)* A, uint32_t key){
 }
 /**
    copy the values from one matrix to another.
+
+   @param[in,out] out0 Output matrix. Allocated if NULL; otherwise its dimension must match in. Zeroed if in is empty.
+   @param[in] in Input matrix.
 */
 void X(cp)(X(mat)** out0, const X(mat)* in){
 	if(check_mat(in)){
@@ -402,7 +491,10 @@ void X(cp)(X(mat)** out0, const X(mat)* in){
 }
 
 /**
-   duplicate a matrix
+   duplicate a matrix including keywords. The caller owns the result.
+
+   @param[in] in The matrix to copy.
+   @return Newly allocated matrix; the caller frees it. NULL if in is invalid.
 */
 X(mat)* X(dup)(const X(mat)* in){
 	if(!check_mat(in)) return NULL;
@@ -412,7 +504,10 @@ X(mat)* X(dup)(const X(mat)* in){
 }
 
 /**
-   transpose a matrix
+   transpose a matrix into a newly allocated one.
+
+   @param[in] A The matrix.
+   @return Newly allocated matrix; the caller frees it. NULL if A is invalid.
 */
 X(mat)* X(trans)(const X(mat)* A){
 	if(!check_mat(A)) return NULL;
@@ -430,6 +525,9 @@ X(mat)* X(trans)(const X(mat)* A){
 }
 /**
    set values of each element in an matrix to val.
+
+   @param[in,out] A The matrix.
+   @param[in] val The value.
 */
 void X(set)(X(mat)* A, const T val){
 	if(!check_mat(A)) return;
@@ -439,7 +537,11 @@ void X(set)(X(mat)* A, const T val){
 }
 
 /**
-   display a matrix. 
+   display the content of a matrix, labeled by the printf-style format, with
+   info(). Output is truncated to 20 rows and 12 columns (100 elements for a vector).
+
+   @param[in] A The matrix.
+   @param[in] format printf style format of the label.
 */
 void X(show)(const X(mat)* A, const char* format, ...){
 	format2fn;
@@ -481,6 +583,9 @@ void X(show)(const X(mat)* A, const char* format, ...){
 }
 /**
    display diagonal of a matrix. 
+
+   @param[in] A The matrix.
+   @param[in] format printf style format of the label.
 */
 void X(show_diag)(const X(mat)* A, const char* format, ...){
 	format2fn;
@@ -506,6 +611,10 @@ void X(show_diag)(const X(mat)* A, const char* format, ...){
 /**
    Permute the vector so that
    out(:)=in(p);
+
+   @param[out] out Output vector with the same dimension as in.
+   @param[in] in Input vector.
+   @param[in] perm Permutation index. A negative (or zero) entry -j takes the conjugate of in(j).
 */
 void X(vecperm)(X(mat)* out, const X(mat)* in, const long* perm){
 	if(!check_mat(in)||!check_mat(out)||!check_match(in, out)) return;
@@ -520,6 +629,10 @@ void X(vecperm)(X(mat)* out, const X(mat)* in, const long* perm){
 /**
    Reverse permute the vector so that
    out(p)=in(:);
+
+   @param[out] out Output vector with the same dimension as in.
+   @param[in] in Input vector.
+   @param[in] perm Permutation index. A negative (or zero) entry -j stores the conjugate into out(j).
 */
 void X(vecpermi)(X(mat)* out, const X(mat)* in, const long* perm){
 	if(!check_mat(in)||!check_mat(out)||!check_match(in, out)) return;
@@ -533,8 +646,12 @@ void X(vecpermi)(X(mat)* out, const X(mat)* in, const long* perm){
 	}
 }
 /**
- * Flip the matrix along the set axis. 0 to flip both, 1 along x, 2 along y.
- * */
+   Flip the matrix along the set axis. 0 to flip both, 1 along x, 2 along y.
+
+   @param[in,out] A The matrix flipped in place.
+   @param[in] axis 0 to flip both, 1 along x, 2 along y.
+   @return 0 on success, -1 if axis is invalid.
+*/
 int X(flip)(X(mat)* A, int axis){
 	if(!A || !PN(A)) return 0;
 	if(axis<0 || axis>2) {
@@ -567,6 +684,9 @@ int X(flip)(X(mat)* A, int axis){
 }
 /**
    Calculate sum of all the elements in A.
+
+   @param[in] A The matrix.
+   @return The sum; 0 if A is invalid.
 */
 T X(sum)(const X(mat)* A){
 	T v=0;
@@ -577,6 +697,9 @@ T X(sum)(const X(mat)* A){
 }
 /**
    Calculate average of all the elements in A.
+
+   @param[in] A The matrix.
+   @return The average; 0 if A is NULL.
 */
 T X(mean)(const X(mat) *A){
 	if(!A) return 0;
@@ -584,6 +707,9 @@ T X(mean)(const X(mat) *A){
 }
 /**
    compute the trace (sum of diagonal elements)
+
+   @param[in] A The matrix.
+   @return The trace; 0 if A is invalid.
 */
 T X(trace)(const X(mat)* A){
 	TD trace=0;
@@ -623,6 +749,9 @@ static int sort_descend(const void* pA, const void* pB){
 }
 /**
   Sort all columns of A, in ascending order if ascend is non zero, otherwise in descending order.
+
+  @param[in,out] A The matrix sorted in place.
+  @param[in] ascend Non zero for ascending order, otherwise descending.
 */
 void X(sort)(X(mat)* A, int ascend){
 	if(!check_mat(A)) return;
@@ -632,12 +761,12 @@ void X(sort)(X(mat)* A, int ascend){
 }
 
 /**
- * @brief Find unique values and sort from small to large
- * 
- * @param input 	input array
- * @param ascend	sorting direction
- * @return X(mat)*  unique values
- */
+   Find unique values and sort them.
+
+   @param[in] input Input array.
+   @param[in] ascend Non zero for ascending order, otherwise descending.
+   @return Newly allocated vector of unique values; the caller frees it.
+*/
 X(mat) *X(unique)(const X(mat) *input, int ascend){
 	X(mat) *output=X(new)(PN(input), 1);//unique dtrats
 	int nout=0;
@@ -660,6 +789,10 @@ X(mat) *X(unique)(const X(mat) *input, int ascend){
 #endif
 /**
    find the maximum and minimum value
+
+   @param[in] A The matrix.
+   @param[out] max The maximum value. May be NULL.
+   @param[out] min The minimum value. May be NULL.
 */
 void X(maxmin)(const X(mat)*A, R*max, R*min){
 	if(!check_mat(A)) return ;
@@ -667,6 +800,9 @@ void X(maxmin)(const X(mat)*A, R*max, R*min){
 }
 /**
    find the maximum value
+
+   @param[in] A The matrix.
+   @return The maximum value; 0 if A is invalid.
 */
 R X(max)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
@@ -677,6 +813,9 @@ R X(max)(const X(mat)* A){
 
 /**
    find the minimum value
+
+   @param[in] A The matrix.
+   @return The minimum value; 0 if A is invalid.
 */
 R X(min)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
@@ -686,6 +825,9 @@ R X(min)(const X(mat)* A){
 }
 /**
    find the maximum of abs of all elements
+
+   @param[in] A The matrix.
+   @return The maximum absolute value; 0 if A is invalid.
 */
 R X(maxabs)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
@@ -693,6 +835,9 @@ R X(maxabs)(const X(mat)* A){
 }
 /**
    compute the sum of abs of all elements
+
+   @param[in] A The matrix.
+   @return The sum of absolute values; 0 if A is invalid.
 */
 R X(sumabs)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
@@ -704,6 +849,9 @@ R X(sumabs)(const X(mat)* A){
 }
 /**
    compute the sum of A.*A
+
+   @param[in] A The matrix.
+   @return The sum of squared absolute values; 0 if A is invalid.
 */
 R X(sumsq)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
@@ -715,6 +863,10 @@ R X(sumsq)(const X(mat)* A){
 }
 /**
    compute the sum of (A-B)^2
+
+   @param[in] A The first matrix.
+   @param[in] B The second matrix with the same dimension.
+   @return The sum of squared absolute differences; -1 if the inputs are invalid.
 */
 R X(sumdiffsq)(const X(mat)* A, const X(mat)* B){
 	if(!check_mat(A)||!check_mat(B)||!check_match(A, B)) return -1;
@@ -728,6 +880,8 @@ R X(sumdiffsq)(const X(mat)* A, const X(mat)* B){
 
 /**
    shift frequency components by n/2
+
+   @param[in,out] A The matrix shifted in place. Dimensions should be even.
 */
 void X(fftshift)(X(mat)* A){
 	if(!check_mat(A)) return;
@@ -775,6 +929,10 @@ void X(fftshift)(X(mat)* A){
    1 2
    3 4
    \endverbatim
+
+   @param[out] A Output matrix. Zeroed if larger than B.
+   @param[in] B Input matrix. Must not share memory with A.
+   @return 0 on success, -1 if the inputs are invalid or A and B share memory.
 */
 int X(cpcorner2center)(X(mat)* A, const X(mat)* B){
 	if(!check_mat(A)||!check_mat(B) || P(A)==P(B)) return -1;
@@ -809,6 +967,12 @@ int X(cpcorner2center)(X(mat)* A, const X(mat)* B){
 
    2   1 to  3   4
    \endverbatim
+
+   @param[in,out] B0 Output matrix. Allocated if NULL; otherwise its dimension must match A.
+   @param[in] A Input matrix. Must not share memory with *B0.
+   @param[in] sx Shift along x (rows).
+   @param[in] sy Shift along y (columns).
+   @return 0 on success, -1 if A is invalid or shares memory with *B0.
 */
 int X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy){
 	if(!check_mat(A)) return -1;
@@ -837,7 +1001,10 @@ int X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy){
 }
 /**
    cast a cell object to actual cell after checking.
- */
+
+   @param[in] A The cell object.
+   @return A cast to X(cell) if all non-empty elements are matrices, otherwise NULL. Not a new reference.
+*/
 X(cell)* X(cell_cast)(const cell* A){
 	if(!iscell(A)) return NULL;
 	for(long iy=0; iy<NY(A); iy++){
@@ -853,6 +1020,9 @@ X(cell)* X(cell_cast)(const cell* A){
 /**
    create an new cell similar to A in shape.
    When a cell is empty, it is created with an emtry matrix and cannot be overriden.
+
+   @param[in] A The cell to copy the shape from.
+   @return Newly allocated zero cell with continuous memory; the caller frees it. NULL if A is NULL.
 */
 X(cell)* X(cellnew2)(const X(cell)* A){
 	if(!A) return NULL;
@@ -878,6 +1048,12 @@ X(cell)* X(cellnew2)(const X(cell)* A){
 
 /**
    Create an new cell with matrix specified. Each block is stored continuously in memory.
+
+   @param[in] nx Number of rows of the cell.
+   @param[in] ny Number of columns of the cell.
+   @param[in] nnx Number of rows of each block, nx*ny entries. A negative pointer value -m means all blocks have m rows.
+   @param[in] nny Number of columns of each block, nx*ny entries. A negative pointer value -m means all blocks have m columns. NULL means 1.
+   @return Newly allocated zero cell; the caller frees it.
 */
 X(cell)* X(cellnew3)(long nx, long ny, long* nnx, long* nny){
 	long tot=0;
@@ -900,16 +1076,29 @@ X(cell)* X(cellnew3)(long nx, long ny, long* nnx, long* nny){
 	return out;
 }
 /**
-   Create an new cell with matrix specified. Each block is stored continuously in memory.
+   Create an new cell with all blocks of the same size. Each block is stored continuously in memory.
+
+   @param[in] nx Number of rows of the cell.
+   @param[in] ny Number of columns of the cell.
+   @param[in] mx Number of rows of each block.
+   @param[in] my Number of columns of each block.
+   @return Newly allocated zero cell; the caller frees it.
 */
 X(cell)* X(cellnew_same)(long nx, long ny, long mx, long my){
 	return X(cellnew3)(nx, ny, (long*)-mx, (long*)-my);
 }
 /**
    Calls cellnew3 with a filename to be saved to.
+
+   @param[in] nx Number of rows of the cell.
+   @param[in] ny Number of columns of the cell.
+   @param[in] nnx Number of rows of each block. See X(cellnew3).
+   @param[in] nny Number of columns of each block. See X(cellnew3).
+   @param[in] keywords Keywords to save with the data. May be NULL.
+   @param[in] format printf style format of the file name. A leading - disables saving.
+   @return Newly allocated cell; the caller frees it. NULL if nx or ny is 0.
 */
-X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,
-	const char* keywords, const char* format, ...){
+X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny, const char* keywords, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
@@ -924,9 +1113,16 @@ X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,
 }
 /**
    Calls cellnew_same with a filename to be saved to.
+
+   @param[in] nx Number of rows of the cell.
+   @param[in] ny Number of columns of the cell.
+   @param[in] mx Number of rows of each block.
+   @param[in] my Number of columns of each block.
+   @param[in] keywords Keywords to save with the data. May be NULL.
+   @param[in] format printf style format of the file name. A leading - disables saving.
+   @return Newly allocated cell; the caller frees it. NULL if nx or ny is 0.
 */
-X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,
-	const char* keywords, const char* format, ...){
+X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my, const char* keywords, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
@@ -942,6 +1138,9 @@ X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,
 /**
    creat a cell reference an existing cell by referencing the
    elements.
+
+   @param[in] in The cell to reference.
+   @return Newly allocated cell sharing data with in; the caller frees it. NULL if in is NULL.
 */
 X(cell)* X(cellref)(const X(cell)* in){
 	if(!in) return NULL;
@@ -957,7 +1156,10 @@ X(cell)* X(cellref)(const X(cell)* in){
 }
 
 /**
-   setting all elements of a cell to alpha.
+   setting all elements of a cell to val.
+
+   @param[in,out] dc The cell.
+   @param[in] val The value.
 */
 void X(cellset)(X(cell)* dc, T val){
 	if(dc){
@@ -968,7 +1170,10 @@ void X(cellset)(X(cell)* dc, T val){
 }
 
 /**
-   transpose a cell object
+   transpose a cell object, including each element.
+
+   @param[in] A The cell.
+   @return Newly allocated cell; the caller frees it. NULL if A is NULL.
 */
 X(cell)* X(celltrans)(const X(cell)* A){
 	if(!A) return NULL;
@@ -983,6 +1188,10 @@ X(cell)* X(celltrans)(const X(cell)* A){
 
 /**
    reduce nx*ny cell matrix to 1*ny if dim=1 and nx*1 if dim=2 by merging the cells.
+
+   @param[in] A The cell.
+   @param[in] dim 1 to merge along rows, 2 to merge along columns.
+   @return Newly allocated cell; the caller frees it. NULL if A is empty.
 */
 X(cell)* X(cellreduce)(const X(cell)* A, int dim){
 	if(!A) return NULL;
@@ -1033,6 +1242,9 @@ X(cell)* X(cellreduce)(const X(cell)* A, int dim){
 
 /**
    drop empty rows or columns. size of *A0 is changed.
+
+   @param[in,out] A0 The cell. Freed and set to NULL if all are dropped.
+   @param[in] dim 1 to drop empty rows, 2 to drop empty columns.
 */
 void X(celldropempty)(X(cell)** A0, int dim){
 	if(!A0) return;
@@ -1115,6 +1327,11 @@ void X(celldropempty)(X(cell)** A0, int dim){
 
 /**
    convert a vector to cell using dimensions specified in dims. Reference the vector
+
+   @param[in] A The vector.
+   @param[in] dims Number of elements of each block. Must sum to the length of A.
+   @param[in] ndim Number of blocks.
+   @return Newly allocated ndim*1 cell sharing data with A; the caller frees it.
 */
 X(cell)* X(2cellref)(const X(mat)* A, long* dims, long ndim){
 	if(!A||!dims) return NULL;
@@ -1144,6 +1361,10 @@ X(cell)* X(2cellref)(const X(mat)* A, long* dims, long ndim){
    make A a cell array using shape information from ref if *B is NULL.
 
    Notice that empty cells may be replaced by zeros if it is within valid column or row.
+
+   @param[in,out] B The output cell. Allocated using shape of ref if NULL; otherwise used as reference.
+   @param[in] A The matrix with the same total dimension as the reference.
+   @param[in] ref The reference cell for the shape. Used only if *B is NULL.
 */
 void X(2cell)(X(cell)** B, const X(mat)* A, const X(cell)* ref){
 	long nx, ny, * nxs, * nys;
@@ -1205,6 +1426,13 @@ void X(2cell)(X(cell)** B, const X(mat)* A, const X(cell)* ref){
 
 /**
    Create a new sub cell matrix of nx*ny starting from(sx,sy)
+
+   @param[in] in The input cell.
+   @param[in] sx Starting row.
+   @param[in] nx Number of rows. <=0 to use all remaining rows.
+   @param[in] sy Starting column.
+   @param[in] ny Number of columns. <=0 to use all remaining columns.
+   @return Newly allocated cell with elements referencing those of in; the caller frees it. NULL if in is NULL.
 */
 X(cell)* X(cellsub)(const X(cell)* in, long sx, long nx, long sy, long ny){
 	if(!in) return NULL;
@@ -1229,6 +1457,10 @@ X(cell)* X(cellsub)(const X(cell)* in, long sx, long nx, long sy, long ny){
 
 /**
    input is nsa*ncol cell. each cell has npix=nx*ny elements. Extract icol of cell as npix*nsa array.
+
+   @param[in] input The cell.
+   @param[in] icol Index of the column.
+   @return Newly allocated matrix; the caller frees it. If input->m is set, it is a weak reference into input->m and must not outlive input. NULL if input is NULL.
 */
 X(mat)* X(cell_col)(X(cell)* input, long icol){
 	if(!input) return NULL;
@@ -1260,6 +1492,9 @@ X(mat)* X(cell_col)(X(cell)* input, long icol){
 }
 /**
    create sum of all the elements in A.
+
+   @param[in] A The cell.
+   @return The sum of all elements of all matrices; 0 if A is empty.
 */
 T X(cellsum)(const X(cell)* A){
 	if(isempty(A)) return 0;
@@ -1271,6 +1506,9 @@ T X(cellsum)(const X(cell)* A){
 }
 /**
    return sum of each cell in a X(mat)
+
+   @param[in] A The cell.
+   @return Newly allocated matrix of the same shape as A with the sum of each element; the caller frees it. NULL if A is empty.
 */
 X(mat)* X(cellsum_each)(const X(cell)* A){
 	if(isempty(A)) return 0;

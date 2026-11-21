@@ -29,18 +29,34 @@
 #define UDP_HEADER 12 //size of UDP sub frame header in bytes
 int ndrawdata=0;
 int count=0;
-int byte_float=sizeof(float);//default to float until client changes it.
+/**default to float until client changes it.*/
+int byte_float=sizeof(float);
 udp_t udp_client={0};
-int client_port=-1;//client udp port
+/**client udp port*/
+int client_port=-1;
 in_addr_t client_addr;
-int udp_sock=-1;//server udp socket
-float io_time1=0;//time the latest drawdata is receievd
-float io_time2=0;//time the previous drawdata is receveid
-float io_timeclear=0;//plots
+/**server udp socket*/
+int udp_sock=-1;
+/**time the latest drawdata is receievd*/
+float io_time1=0;
+/**time the previous drawdata is receveid*/
+float io_time2=0;
+/**plots*/
+float io_timeclear=0;
 int io_heartbeat=0;
-int session=1;//session counter
-int noellipsis=1; 	/*do not allow legend ellipsis.*/
+/**session counter*/
+int session=1;
+/**do not allow legend ellipsis.*/
+int noellipsis=1;
 //This file does not link to math folder
+/**
+   Find the maximum and minimum of an array, ignoring NaN.
+
+   @param[in] p Array.
+   @param[in] n Number of elements.
+   @param[out] pmax Maximum value (-INFINITY if no valid value). May be NULL.
+   @param[out] pmin Minimum value (INFINITY if no valid value). May be NULL.
+*/
 void fmaxmin(const float *p, long n, float *pmax, float *pmin){
 	float max=-INFINITY, min=INFINITY;
 	for(long i=0; i<n; i++){
@@ -57,7 +73,12 @@ void fmaxmin(const float *p, long n, float *pmax, float *pmin){
 	if(pmin) *pmin=min;
 }
 /**
-   convert float to int
+   Color map ramp: triangular function of x centered at x0, clipped to [0, 1]
+   and scaled to an 8 bit color component.
+
+   @param[in] x Normalized value.
+   @param[in] x0 Center of the ramp.
+   @return Color component between 0 and 255.
 */
 static unsigned int crp(float x, float x0){
 	float res=1.5-4.*fabs(x-x0);
@@ -67,7 +88,19 @@ static unsigned int crp(float x, float x0){
 }
 
 /**
-   convert float to char with color map*/
+   Convert float to colored (ARGB32) or gray scale (8 bit) pixels with color
+   map. Updates zlim automatically unless it is set manually.
+
+   @param[in] p Input data of nx*ny elements.
+   @param[out] pix Output pixels: nx*ny int for color, or nx*ny unsigned char for gray.
+   @param[in] nx Number of elements along x.
+   @param[in] ny Number of elements along y.
+   @param[in] gray Whether to output gray scale.
+   @param[in,out] zlim Color scale limits (2 elements). Replaced if invalid, or updated if the data range changes a
+   lot and zlim_manual is 0.
+   @param[in] zlim_manual Whether zlim is set manually.
+   @param[in] zlog Whether to use log10 of the absolute value.
+*/
 void flt2pix(const float *restrict p, void *pix, long nx, long ny, int gray, float *zlim, int zlim_manual, int zlog){
 	float max, min;
 	fmaxmin(p, nx*ny, &max, &min);
@@ -148,6 +181,13 @@ void flt2pix(const float *restrict p, void *pix, long nx, long ny, int gray, flo
 	}
 }
 
+/**
+   Thread function that receives UDP packets from the client into a buffer until
+   reception fails. Experimental; the data is not yet used.
+
+   @param[in] dummy Unused.
+   @return NULL.
+*/
 void *listen_udp(void *dummy){
 	(void)dummy;
 	dbg_time("listen_dup listening at socket %d\n", udp_sock);
@@ -160,7 +200,12 @@ void *listen_udp(void *dummy){
 	} while(counter>0);
 	return NULL;
 }
-/* Initialize */
+/**
+   Set the default zoom, legend, and axis scale settings of a newly allocated
+   drawdata and initialize its mutex.
+
+   @param[out] drawdata The drawdata to initialize.
+*/
 void drawdata_init(drawdata_t *drawdata){
 	drawdata->zoomx=1;
 	drawdata->zoomy=1;
@@ -175,10 +220,10 @@ void drawdata_init(drawdata_t *drawdata){
 	pthread_mutex_init(&drawdata->mutex, NULL);
 }
 /**
- * @brief Free content but keep for reuse.
- * 
- * @param drawdata 
- */
+   Free content but keep for reuse.
+
+   @param[in,out] drawdata The drawdata whose content is freed.
+*/
 static void drawdata_freecontent(drawdata_t *drawdata){
 	/*Only free the input received via fifo from draw.c */
 	if(!drawdata->fig) return;
@@ -214,6 +259,15 @@ static void drawdata_freecontent(drawdata_t *drawdata){
 }
 
 static drawdata_t *HEAD=NULL;
+/**
+   Find the drawdata matching fig and name in the list, or create a new one.
+   Also frees drawdata recycled by the GUI.
+
+   @param[in,out] fig Figure name. Ownership is transferred: stored in a new drawdata or freed; set to NULL.
+   @param[in,out] name Page name. Ownership is transferred: stored in a new drawdata or freed; set to NULL.
+   @param[in] reset Whether to request update of the plot limits.
+   @return The drawdata. Owned by the list; do not free.
+*/
 static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 	drawdata_t *drawdata=0;
 	for(drawdata_t **pp=&HEAD; *pp; ){
@@ -264,8 +318,12 @@ static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 	return drawdata;
 }
 /**
- * Replace common span of phases by ...
- */
+   Replace common span of legends by ...
+
+   @param[in] legends Array of legends.
+   @param[in] npts Number of legends.
+   @return Newly allocated array of newly allocated strings; the caller frees them. NULL if legends is empty.
+*/
 static char** char_ellipsis(char *legends[], int npts){
 	if(!legends || npts<1 || !legends[0]){
 		return NULL;
@@ -323,8 +381,10 @@ static char** char_ellipsis(char *legends[], int npts){
 	return legends2;
 }
 /**
- * Delete pages that are not updated between DRAW_INIT and DRAW_FINAL
- * */
+   Delete pages that are not updated between DRAW_INIT and DRAW_FINAL
+
+   @param[in] timclear Pages with io_time older than this (s) are deleted.
+*/
 static void drawdata_clear_older(float timclear){
 	if(!HEAD) return;
 	for(drawdata_t *p=HEAD; p; p=p->next){
@@ -351,19 +411,39 @@ if(byte_float==8){								\
 	    ((float*)p)[i]=(float)(((double*)p)[i]);\
 	}											\
 }
-int sock;//socket
-int client_pid=-1;//client PID. -1: disconnected. 0: idle. >1: active plotting
-int client_pidold=-1; //old client PID.
+/**socket*/
+int sock;
+/**client PID. -1: disconnected. 0: idle. >1: active plotting*/
+int client_pid=-1;
+/**old client PID.*/
+int client_pidold=-1;
 int draw_id=0; //1: maos, 2: drawres.
-int keep_listen=1;//set to 0 to stop listening
-int draw_single=0;//whether client only wants to draw to the active tab.
-static drawdata_t *drawdata=NULL;//current
-static drawdata_t *drawdata_prev=NULL;//previous
+/**set to 0 to stop listening*/
+int keep_listen=1;
+/**whether client only wants to draw to the active tab.*/
+int draw_single=0;
+/**current*/
+static drawdata_t *drawdata=NULL;
+/**previous*/
+static drawdata_t *drawdata_prev=NULL;
 char *client_hostname=NULL;
-char *client_path=NULL;//received
-char *client_path_full=NULL;//with ~ expanded.
-char *client_exename=NULL;//client executable name.
+/**received*/
+char *client_path=NULL;
+/**with ~ expanded.*/
+char *client_path_full=NULL;
+/**client executable name.*/
+char *client_exename=NULL;
 int npts=0;
+/**
+   Thread function that receives drawing commands from the client and queues each
+   completed page to the GUI with addpage(). user_data is either a socket number
+   or a hostname; with a hostname the socket is obtained through the scheduler,
+   retrying every 60 seconds on failure, and reconnects after disconnection. Runs
+   until keep_listen is cleared.
+
+   @param[in] user_data Socket number or hostname as a string. If NULL, uses previous information.
+   @return NULL.
+*/
 void *listen_draw(void *user_data){
 	if(user_data){
 		char *str2=0;

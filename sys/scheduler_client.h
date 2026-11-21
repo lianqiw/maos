@@ -180,7 +180,6 @@ void scheduler_finish(int status);
 void scheduler_report(status_t *status);
 /*called by monitor */
 int scheduler_launch_exe(char *hostarr, int argc, const char *argv[]);
-/*save a socket for draw()*/
 int scheduler_socket(int dir, int *sfd, int id);
 /*Handling backtrace*/
 int call_addr2line(char *ans, int nans, const char *cmd);

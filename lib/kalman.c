@@ -31,8 +31,11 @@ typedef struct{
 	int ncov;
 }sde_fit_t;
 /**
-   Do FFT to convert PSD to Covariance
- */
+   Do FFT to convert PSD to Covariance. The DC component is zeroed.
+
+   @param[in,out] psd PSD in FFT ordering; replaced by the covariance.
+   @param[in] df Frequency spacing of the PSD (Hz).
+*/
 static void psd2cov(dmat* psd, real df){
 	dscale(psd, df);
 	P(psd,0)=0;//zero dc. critical
@@ -41,7 +44,14 @@ static void psd2cov(dmat* psd, real df){
 }
 /**
    Computes PSD of SDE with coefficients (coeff) and frequency (f)
- */
+
+   @param[in,out] psd PSD at f. Allocated if NULL; otherwise zeroed first. If it has nmod columns,
+   each mode is stored separately; otherwise the modes are summed.
+   @param[in] f Frequency (Hz).
+   @param[in] coeff SDE coefficients, ncoeff for each mode. The last one of each mode is the strength.
+   @param[in] ncoeff Number of coefficients per mode (order+1).
+   @param[in] nmod Number of modes.
+*/
 void sde_psd(dmat** psd, const dmat* f, const real* coeff, int ncoeff, int nmod){
 	int order=ncoeff-1;
 	if(!*psd){
@@ -92,12 +102,23 @@ void sde_psd(dmat** psd, const dmat* f, const real* coeff, int ncoeff, int nmod)
 }
 /**
    A convenient wrapper for sde_psd()
+
+   @param[in] ff Frequency (Hz).
+   @param[in] coeff SDE coefficients. One column per mode.
+   @return Newly allocated PSD summed over modes. The caller frees it.
 */
 dmat* sde_psd2(const dmat* ff, const dmat* coeff){
 	dmat* psd=0;
 	sde_psd(&psd, ff, P(coeff), (int)NX(coeff), (int)NY(coeff));
 	return psd;
 }
+/**
+   Check whether any of the SDE coefficients is not positive.
+
+   @param[in] coeff SDE coefficients.
+   @param[in] ncoeff Number of coefficients.
+   @return 0 if all are positive, otherwise 1 minus the first non-positive coefficient (a positive penalty).
+*/
 static real coeff_isbad(const real* coeff, int ncoeff){
 	for(int icoeff=0; icoeff<ncoeff; icoeff++){
 		if(coeff[icoeff]<=0){
@@ -178,6 +199,12 @@ static real sde_diff(const real* coeff, void* pdata){
 }
 /**
    Scale the third coefficient (sigma) to have the same energy
+
+   @param[in,out] coeff SDE coefficients. One column per mode. Non-positive sigma is first set to 1.
+   @param[in] var_in Variance of the input to match.
+   @param[in,out] psdcov_sde Work space for the SDE PSD or covariance (must be preallocated).
+   @param[in] freq Frequency (Hz).
+   @param[in] ncov Nonzero to use covariance (FFT ordered freq) instead of PSD integration.
 */
 static void sde_scale_coeff(dmat* coeff, real var_in, dmat* psdcov_sde, const dmat* freq, int ncov){
 	for(int iy=0; iy<NY(coeff); iy++){
@@ -204,6 +231,12 @@ static void sde_scale_coeff(dmat* coeff, real var_in, dmat* psdcov_sde, const dm
 /**
    Fit a PSD with SDE model. Use initial guess from coeff and return final
    answer in the same format. Functions returns difference in PSD to indicate residual
+
+   @param[in,out] pcoeff SDE coefficients. Initial guess on input (allocated as 3x1 if NULL) and fitted result on output.
+   @param[in] psdin Input PSD with frequency in the first column and PSD in the second.
+   @param[in] tmax_fit Time span (s) for covariance fitting. 0 to fit the PSD instead.
+   @param[in] print Whether to print the result.
+   @return Fitting residual.
 */
 static real sde_fit_do(dmat **pcoeff, const dmat* psdin, real tmax_fit, int print){
 	if(!pcoeff){
@@ -321,8 +354,16 @@ static real sde_fit_do(dmat **pcoeff, const dmat* psdin, real tmax_fit, int prin
 	return fwhm*peak;
 	}*/
 /**
-   If coeff0 is not null, use it immediately, otherwise, do vibration identification
- */
+   Fit a PSD with SDE model. If vibid is set, vibration peaks are identified
+   and fitted separately before fitting the remaining PSD.
+
+   @param[in,out] pcoeff SDE coefficients. Initial guess on input if vibid is 0. Replaced by the fitted
+   result (one column per mode) if vibid is set.
+   @param[in] psdin Input PSD with frequency in the first column and PSD in the second.
+   @param[in] tmax_fit Time span (s) for covariance fitting. 0 to fit the PSD instead.
+   @param[in] vibid Whether to do vibration identification.
+   @return Fitting residual (of the last fit if vibid is set).
+*/
 real sde_fit(dmat** pcoeff, const dmat* psdin, real tmax_fit, int vibid){
 	if(!pcoeff){
 		error("pcoeff must not be NULL\n");
@@ -342,6 +383,7 @@ real sde_fit(dmat** pcoeff, const dmat* psdin, real tmax_fit, int vibid){
 				real omegai=2*M_PI*P(vibs,ivib*4+0);
 				long i1=P(vibs,ivib*4+2);
 				long i2=P(vibs,ivib*4+3)+1;
+
 				if(i2-i1<3){
 					i2++;
 					i1--;
@@ -386,14 +428,15 @@ real sde_fit(dmat** pcoeff, const dmat* psdin, real tmax_fit, int vibid){
 	}
 }
 /**
- * @brief Fit PSD to SHO by maximum the damping ratio while keeping it less than
- * 5. Does not support vibration identification which have different damping
- * characteristics.
- * @param[in,out] pcoeff	Return the SHO coefficients
- * @param psdin_    The input PSD
- * @param tfit		For covariance fitting, time span.
- * @return real		Fitting quality
- */
+   Fit PSD to SHO by maximum the damping ratio while keeping it less than 2.
+   Does not support vibration identification which have different damping
+   characteristics.
+
+   @param[in,out] pcoeff Return the SHO coefficients. One column per PSD.
+   @param[in] psdin_ The input PSD: a dmat with frequency in the first column and one PSD per remaining column, or a cell of such PSDs.
+   @param[in] tfit For covariance fitting, the initial time span (s). 0 for default of 0.2.
+   @return Fitting residual (the worst one if there are multiple PSDs).
+*/
 real sde_fit_auto(dmat **pcoeff, const_anyarray psdin_, real tfit){
 	if(!iscell(psdin_.dc) && NY(psdin_.dm)==2){//single PSD
 		dmat *psdin=dmat_cast(psdin_.dm);
@@ -463,15 +506,16 @@ real sde_fit_auto(dmat **pcoeff, const_anyarray psdin_, real tfit){
 }
 
 /**
- * @brief Compute the reccati equation. When noise (Rn) is too large, the iteration will fail to converge.
- * @param Kinf  [Out] Asymptotic Kalman gain \f$K_\infty\f$
- * @param Pout  [Out] The Sigma_infty: Estimation error covariance matrix
- * @param A 	Block diagonal stage evolution matrix
- * @param Qn 	Discrete state noise covariance
- * @param C 	Measurement interaction matrix
- * @param Rn 	Measurement error covariance matrix
- * @return diff	Converegence indicator
- */
+   Compute the reccati equation. When noise (Rn) is too large, the iteration will fail to converge.
+
+   @param[in,out] Kinf Asymptotic Kalman gain \f$K_\infty\f$. Allocated if NULL; otherwise overwritten.
+   @param[in,out] Pout If not NULL, the Sigma_infty: Estimation error covariance matrix. Allocated if NULL; otherwise overwritten.
+   @param[in] A Block diagonal stage evolution matrix
+   @param[in] Qn Discrete state noise covariance
+   @param[in] C Measurement interaction matrix
+   @param[in] Rn Measurement error covariance matrix
+   @return Convergence indicator: relative change of the last iteration.
+*/
 real reccati(dmat**Kinf, dmat** Pout, const dmat* A, const dmat* Qn, const dmat* C, const dmat* Rn){
 	real diff=100;
 	dmat* P2=dnew(NX(A), NY(A)); daddI(P2, P(Qn,0));//Initialize P to identity
@@ -511,13 +555,13 @@ real reccati(dmat**Kinf, dmat** Pout, const dmat* A, const dmat* Qn, const dmat*
 }
 
 /**
- * @brief Compute Q=(1/dT)*(1-exp(-Ac*dT))*Ac^-1 : averages the state over a sampling period.
- * 
- * @param pQ 	Return the Result
- * @param Ac 	The continuous domain state evolution matrix
- * @param AcI 	Ac^-1
- * @param dT 	The sampling period
- */
+   Compute Q=(1/dT)*(1-exp(-Ac*dT))*Ac^-1 : averages the state over a sampling period.
+
+   @param[in,out] pQ Return the Result. Allocated if NULL; otherwise overwritten.
+   @param[in] Ac The continuous domain state evolution matrix
+   @param[in] AcI Ac^-1
+   @param[in] dT The sampling period (s).
+*/
 static void calc_Q(dmat **pQ, dmat *Ac, dmat *AcI, real dT){
 	dmat* tmp=0;
 	dexpm(&tmp, 0, Ac, -dT);
@@ -528,14 +572,15 @@ static void calc_Q(dmat **pQ, dmat *Ac, dmat *AcI, real dT){
 }
 
 /**
- * @brief Compute the discrete state noise covariance from continuous state noise covariance
- * Sigma_kappa: Qn=\int_ti exp(Ac*ti)*Sigma_ep*exp(Ac'*ti) 
- * 
- * @param Ac 		The continuous domain state evolution matrix
- * @param Sigma_ep 	The continuous state noise covariance
- * @param dT 		The sampling period
- * @return dmat* 
- */
+   Compute the discrete state noise covariance from continuous state noise covariance
+   Sigma_kappa: Qn=\int_ti exp(Ac*ti)*Sigma_ep*exp(Ac'*ti)
+
+   @param[in] Ac The continuous domain state evolution matrix
+   @param[in] Sigma_ep The continuous state noise covariance
+   @param[in] dT The sampling period (s).
+   @param[in] nsec Number of sections for the numerical integration.
+   @return Newly allocated discrete state noise covariance. The caller frees it.
+*/
 static dmat* calc_Qn(dmat *Ac, const dmat *Sigma_ep, real dT, int nsec){
 	dmat *expAj=0;
 	dmat *Qn=0;//Sigma_kappa
@@ -550,18 +595,17 @@ static dmat* calc_Qn(dmat *Ac, const dmat *Sigma_ep, real dT, int nsec){
 }
 
 /**
- * @brief Kalman filter based on SDE model
- * 
- * @param coeff 	SDE coefficients
- * @param dthi 		High order loop frequency
- * @param dtrat_wfs WFS dtrat over high order loop. Each wfs may have a different rate. Only 1 or 2 rates are supported
- * @param mdirect	Mode indices that are directly controlled by the slower loop.
- * @param Gwfs 		WFS measurement from modes. Can be identity if reconstructor is already applied.
- * @param Cnn 		WFS measurement noise covariance in radian^2. nwfs*ndtrat.
- * @param Proj 		Project modes in statespace to DM/correction space. Can be identity or NULL.
- 
- * @return kalman_t* 
- */
+   Kalman filter based on SDE model
+
+   @param[in] coeff SDE coefficients. One column per mode.
+   @param[in] dthi High order loop sampling period (s).
+   @param[in] dtrat_wfs WFS dtrat over high order loop. Each wfs may have a different rate. Only 1 or 2 rates are supported
+   @param[in] mdirect Mask of modes that are directly controlled by the slower loop. May be NULL.
+   @param[in] Gwfs WFS measurement from modes. Can be identity if reconstructor is already applied.
+   @param[in] Cnn WFS measurement noise covariance in radian^2. nwfs*ndtrat.
+   @param[in] Proj Project modes in statespace to DM/correction space. Can be identity or NULL.
+   @return Newly allocated Kalman filter, or NULL if the Riccati equation does not converge. Free with kalman_free().
+*/
 kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,const lmat *mdirect,
 	const dcell *Gwfs, const dcell *Cnn, const dmat *Proj){
 	const long nmod=NY(coeff);//number of modes
@@ -759,7 +803,11 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 	}
 	return res;
 }
-/**free the struct*/
+/**
+   free the struct
+
+   @param[in] kalman Kalman filter to free. May be NULL.
+*/
 void kalman_free(kalman_t* kalman){
 	if(!kalman) return;
 	dfree(kalman->AdM);
@@ -784,7 +832,11 @@ void kalman_free(kalman_t* kalman){
 	cellfree(kalman->psol);
 	free(kalman);
 }
-/**Initialize kalman filter state*/
+/**
+   Initialize kalman filter state. Allocates the state vectors if not yet, otherwise zeros them.
+
+   @param[in,out] kalman Kalman filter.
+*/
 void kalman_init(kalman_t* kalman){
 	if(!kalman->xhat){
 		long nstat=NX(kalman->AdM);
@@ -809,8 +861,12 @@ void kalman_init(kalman_t* kalman){
 	xhat3=xhat+M*(meas-Cd*xhat) //xhat is x_k|k-1. xhat3 is x_k|k
 	xhat =Ad*xhat3; //xhat is now x_k+1|k
 	xhat2=AdM*xhat3; //xhat2 is x_k+1/M|k
-	
- */
+
+   @param[in,out] kalman Kalman filter. Its state is updated.
+   @param[in,out] meas WFS measurements (residual). The PSOL part is added to it, and if meas->m is set,
+   it is replaced by the difference with the predicted measurement.
+   @param[in] idtrat Index of the rate (0: fast, 1: slow).
+*/
 void kalman_update(kalman_t* kalman, dcell* meas, int idtrat){
 	//First, compute PSOL commands
 	for(int iwfs=0; iwfs<NX(kalman->Gwfs); iwfs++){
@@ -836,6 +892,12 @@ void kalman_update(kalman_t* kalman, dcell* meas, int idtrat){
    Output correction
    xhat2=AdM*xhat2 //evolve correction forward
    out=out*alpha+(BM*xhat2-psol)*beta
+
+   @param[in,out] kalman Kalman filter. Its state is updated. psol is set to *out if alpha or beta is 1.
+   @param[in,out] out Output correction. Allocated if NULL; otherwise scaled by alpha and accumulated into.
+   @param[in] alpha Scaling of the existing output. If 1, psol is subtracted to form closed loop signal.
+   @param[in] beta Scaling of the new correction.
+   @param[in] idtrat Index of the rate (0: fast, 1: slow).
 */
 void kalman_output(kalman_t* kalman, dmat** out, real alpha, real beta, int idtrat){
 	if((alpha==1||beta==1)&&*out){//save PSOL.
@@ -859,6 +921,12 @@ void kalman_output(kalman_t* kalman, dmat** out, real alpha, real beta, int idtr
    0: both LQG
    1: both integrator
    2: LQG (fast) + integrator (slow)
+
+   @param[in,out] kalman Kalman filter. Its state is reinitialized and updated.
+   @param[in] goff Gradient measurement offset (fast loop). May be NULL.
+   @param[in] input Time series of nmod*nstep. A single column is treated as a row (single mode).
+   @param[in] flag Servo type as described above.
+   @return Newly allocated correction residual of nmod*nstep. The caller frees it.
 */
 dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int flag){
 	dmat* input_row=NULL;
@@ -999,22 +1067,37 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 	servo_free(st_slow);
 	return mres;
 }
-dmat* kalman_test2(const dmat* coeff, /**<SDE coefficients*/
-	const real dthi, 	/**<Loop frequency*/
-	const lmat* dtrat_wfs,   /**<WFS frequency as a fraction of loop*/
-	const lmat* mdirect,/**<mask for modes directly controlled by slower loop */
-	const dcell* Gwfs,  /**<WFS measurement from modes. Can be identity*/
-	const dcell* Cnn,   /**<WFS measurement noise covariance in radian^2*/
-	const dmat* Proj,   /**<Kalman Projection matrix */
-	const dcell *goff,  /**<Gradient measurement offset (fast loop) */
-	const dmat* input,  /**<Time series */
-	int flag 		    /**<flag controlls the servo type:  0: both LQG  1: both integrator  2: LQG (fast) + integrator (slow) */
-){
+/**
+   Create a Kalman filter with sde_kalman() and test it with kalman_test().
+
+   @param[in] coeff SDE coefficients
+   @param[in] dthi Loop sampling period (s).
+   @param[in] dtrat_wfs WFS sampling period as a multiple of the loop
+   @param[in] mdirect mask for modes directly controlled by slower loop
+   @param[in] Gwfs WFS measurement from modes. Can be identity
+   @param[in] Cnn WFS measurement noise covariance in radian^2
+   @param[in] Proj Kalman Projection matrix
+   @param[in] goff Gradient measurement offset (fast loop)
+   @param[in] input Time series
+   @param[in] flag flag controlls the servo type:  0: both LQG  1: both integrator  2: LQG (fast) + integrator (slow)
+   @return Newly allocated correction residual. The caller frees it.
+*/
+dmat* kalman_test2(const dmat* coeff, const real dthi, const lmat* dtrat_wfs, const lmat* mdirect, const dcell* Gwfs,
+	const dcell* Cnn, const dmat* Proj, const dcell *goff, const dmat* input, int flag){
 	kalman_t *kalman=sde_kalman(coeff, dthi, dtrat_wfs, mdirect, Gwfs, Cnn, Proj);
 	dmat* res=kalman_test(kalman, goff, input, flag);
 	kalman_free(kalman);
 	return res;
 }
+/**
+   Read kalman_t from file fn and run kalman_test() with input time series and
+   servo type flag. See kalman_test().
+
+   @param[in] input Time series.
+   @param[in] flag Servo type. See kalman_test().
+   @param[in] fn File name of the saved kalman_t.
+   @return Newly allocated correction residual. The caller frees it.
+*/
 dmat* kalman_test3(const dmat* input, int flag, const char* fn){
 	kalman_t *kalman=kalman_read("%s", fn);
 	dmat* res=kalman_test(kalman, NULL, input, flag);
@@ -1023,6 +1106,9 @@ dmat* kalman_test3(const dmat* input, int flag, const char* fn){
 }
 /**
    Save kalman_t to file
+
+   @param[in] kalman Kalman filter. If NULL, an empty file is created.
+   @param[in] format printf style format of the file name, followed by its arguments.
 */
 void kalman_write(kalman_t* kalman, const char* format, ...){
 	format2fn;
@@ -1061,6 +1147,12 @@ void kalman_write(kalman_t* kalman, const char* format, ...){
 	zfclose(fp);
 }
 
+/**
+   Read kalman_t from file saved by kalman_write() and initialize it.
+
+   @param[in] format printf style format of the file name, followed by its arguments.
+   @return Newly allocated Kalman filter. Free with kalman_free().
+*/
 kalman_t* kalman_read(const char* format, ...){
 	format2fn;
 	cell *tmp=readbin("%s", fn);

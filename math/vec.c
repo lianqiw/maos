@@ -22,7 +22,11 @@
 
 /**
    sum of a vector using pointer and length
- */
+
+   @param[in] p Pointer to the vector.
+   @param[in] nx Number of elements.
+   @return Sum of the elements.
+*/
 T X(vecsum)(const T *restrict p, long nx){
     TD sum=0;
     if(check_vec(p, nx)){
@@ -33,7 +37,12 @@ T X(vecsum)(const T *restrict p, long nx){
     return (T)sum;
 }
 /**
-   normalize vector so that the sum is norm;*/
+   normalize vector so that the sum is norm.
+
+   @param[in,out] p Pointer to the vector, scaled in place.
+   @param[in] nx Number of elements.
+   @param[in] norm Target sum.
+*/
 void X(vecnormalize_sum)(T *restrict p, long nx, T norm){
     if(!check_vec(p, nx)) return;
     T ss=norm/X(vecdot)(p,NULL,NULL,nx);
@@ -42,7 +51,12 @@ void X(vecnormalize_sum)(T *restrict p, long nx, T norm){
     }
 }
 /**
-   normalize vector so that the sum of abs is norm;*/
+   normalize vector so that the sum of abs is norm.
+
+   @param[in,out] p Pointer to the vector, scaled in place.
+   @param[in] nx Number of elements.
+   @param[in] norm Target sum of absolute values.
+*/
 void X(vecnormalize_sumabs)(T *restrict p, long nx, T norm){
     if(!check_vec(p, nx)) return;
     TD ss=0;
@@ -55,8 +69,14 @@ void X(vecnormalize_sumabs)(T *restrict p, long nx, T norm){
     }
 }
 /**
-   Compute max, min and sum. Has to handle NAN nicely. Complex values are
-   converted into magnitude during comparison. */
+   Compute max and min. NAN values are skipped except for the first element.
+   Complex values are converted into magnitude during comparison.
+
+   @param[in] p Pointer to the vector.
+   @param[in] N Number of elements.
+   @param[out] max Maximum value. May be NULL.
+   @param[out] min Minimum value. May be NULL.
+*/
 void X(vecmaxmin)(const T *restrict p, long N, R *max, R *min){
     if(!check_vec(p, N)) return; 
     R a,b;
@@ -116,7 +136,11 @@ T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, lo
 
 /**
    find the maximum of abs of all elements using pointer and count.
- */
+
+   @param[in] p Pointer to the vector.
+   @param[in] n Number of elements.
+   @return Maximum absolute value. 0 if empty.
+*/
 R X(vecmaxabs)(const T*restrict p, long n){
     if(!check_vec(p, n)) return 0;
     R max,min;

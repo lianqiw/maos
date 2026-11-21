@@ -32,6 +32,13 @@
 #include "accphi.h"
 #include "proj.h"
 /*const real pi=3.1415926535897932384626433832795; */
+/**
+   Cosine of the angle between two 3-d vectors.
+
+   @param[in] a The first vector.
+   @param[in] b The second vector.
+   @return The cosine of the angle between a and b.
+*/
 static inline real cosangle(real a[3], real b[3]){
 	return (a[0]*b[0]+a[1]*b[1]+a[2]*b[2])
 		/sqrt((a[0]*a[0]+a[1]*a[1]+a[2]*a[2])
@@ -39,21 +46,23 @@ static inline real cosangle(real a[3], real b[3]){
 }
 /**
    Ray tracing for tilted surface like M3
- */
-void proj_rect_grid(real* phiout,  /**<[out] output OPD*/
-	const rmap_t* mapin, /**<mapin: M3 surface map, NOT OPD. */
-	real thetax,   /**<tilt of surface along x, 0 or pi/2*/
-	real thetay,   /**<tilt of surface along y, pi/2 or 0*/
-	const loc_t* locout, /**<output grid*/
-	const real ratiox,   /**<pupil x scaling.*/
-	const real ratioy,   /**<pupil y scaling.*/
-	const real* ampout,  /**<amplitude of output grid*/
-	real sc,       /**<scaling of OPD*/
-	real hs,       /**<distance from exit pupil to object image*/
-	real ht,       /**<distance from exit pupil to M3 surface*/
-	real betax,    /**<real beam angle*/
-	real betay     /**<real beam angle*/
-){
+
+   @param[in,out] phiout Output OPD, accumulated into.
+   @param[in] mapin M3 surface map, NOT OPD.
+   @param[in] thetax Tilt of surface along x (radian), 0 or pi/2.
+   @param[in] thetay Tilt of surface along y (radian), pi/2 or 0.
+   @param[in] locout Output grid.
+   @param[in] ratiox Pupil x scaling.
+   @param[in] ratioy Pupil y scaling.
+   @param[in] ampout Amplitude of output grid. Points with zero amplitude are skipped. Can be NULL.
+   @param[in] sc Scaling of OPD.
+   @param[in] hs Distance from exit pupil to object image (m).
+   @param[in] ht Distance from exit pupil to M3 surface (m).
+   @param[in] betax Real beam angle along x (radian).
+   @param[in] betay Real beam angle along y (radian).
+*/
+void proj_rect_grid(real* phiout, const rmap_t* mapin, real thetax, real thetay, const loc_t* locout, const real ratiox,
+	const real ratioy, const real* ampout, real sc, real hs, real ht, real betax, real betay){
 	const long wrapx1=NX(mapin);
 	const long wrapy1=NY(mapin);
 	const long wrapx=wrapx1-1;
@@ -112,6 +121,13 @@ void proj_rect_grid(real* phiout,  /**<[out] output OPD*/
 
 /**
    Wraps proj_rect_grid for M3.
+
+   @param[in] tsurf The tilted M3 surface map with txdeg, tydeg, ftel, fexit, fsurf set.
+   @param[in,out] opd The OPD on locout, accumulated into.
+   @param[in] locout The output grid.
+   @param[in] thetax Angle of the guide star along x (radian).
+   @param[in] thetay Angle of the guide star along y (radian).
+   @param[in] hs Range of the guide star (m).
 */
 void m3proj(const rmap_t* tsurf, dmat* opd, const loc_t* locout, real thetax, real thetay, real hs){
 	const real alx=tsurf->txdeg/180*M_PI;
@@ -136,7 +152,15 @@ void m3proj(const rmap_t* tsurf, dmat* opd, const loc_t* locout, real thetax, re
 }
 /**
    A convenient wrapper for m3proj() to be called from matlab or python
- */
+
+   @param[in,out] mapin_0 The surface map. Its keywords are replaced by keywords.
+   @param[in] keywords The keywords describing the surface (txdeg, tydeg, ftel, fexit, fsurf, etc.).
+   @param[in] locout The output grid.
+   @param[in] thetax Angle of the guide star along x (radian).
+   @param[in] thetay Angle of the guide star along y (radian).
+   @param[in] hs Range of the guide star (m).
+   @return Newly allocated OPD on locout; the caller frees it.
+*/
 dmat* m3proj2(dmat* mapin_0, const char* keywords, const loc_t* locout, real thetax, real thetay, real hs){
 	free(mapin_0->keywords);
 	mapin_0->keywords=strdup(keywords);

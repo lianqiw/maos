@@ -25,7 +25,11 @@
 
 */
 /**
-   Setup ray tracing operator HXF from xloc to aperture ploc along DM fiting directions*/
+   Setup ray tracing operator HXF from xloc to the fitting grid floc along DM fitting directions.
+
+   @param[in] fit The fit struct.
+   @return HXF of size nfit x npsr. Newly allocated; the caller frees it. NULL if fit->xloc is not set.
+*/
 static dspcell*
 setup_fit_HXF(const fit_t* fit){
 	TIC;tic;
@@ -49,7 +53,12 @@ OMP_FOR_COLLAPSE(2, NTHREAD)
 }
 
 /**
-   Setup ray tracing operator HA from aloc to aperture ploc along DM fiting direction*/
+   Setup ray tracing operator HA from aloc to the fitting grid floc along DM
+   fitting directions. Applies modal basis, actuator coupling, extrapolation, and
+   floating actuator treatment as configured.
+
+   @param[in,out] fit The fit struct. fit->HA, and in zonal mode fit->actcpl and fit->actextrap, are set.
+*/
 static void
 setup_fit_HA(fit_t* fit){
 	const int nfit=(int)NX(fit->thetax);
@@ -114,7 +123,10 @@ OMP_FOR_COLLAPSE(2, NTHREAD)
 /**
    Setup fitting low rank terms that are in the NULL space of DM fitting
    operator. typically include piston on each DM and tip/tilt on certain
-   DMs. Becareful with tip/tilt contraint when using CBS.  */
+   DMs. Becareful with tip/tilt contraint when using CBS.
+
+   @param[in,out] fit The fit struct. fit->NW and possibly fit->actslave are set.
+*/
 static void
 setup_fit_lrt(fit_t* fit){
 	const int ndm=(int)NX(fit->aloc);
@@ -202,6 +214,8 @@ setup_fit_lrt(fit_t* fit){
    \f$a=\left[H_A^T(W_0-W_1 W_1^T)H_A\right]^{-1} H_A^T (W_0-W_1) H_X x\f$
 
    For details see www.opticsinfobase.org/abstract.cfm?URI=josaa-19-9-1803
+
+   @param[in,out] fit The fit struct. fit->FR and fit->FL are set.
 */
 static void
 setup_fit_matrix(fit_t* fit){
@@ -336,7 +350,10 @@ setup_fit_matrix(fit_t* fit){
 }
 /**
    A generic DM fitting routine.
- */
+
+   @param[in,out] fit The fit struct with geometry and flags already set. The operators are filled.
+   @param[in] idealtomo If set, do not compute HXF; FitR traces through the atmosphere directly.
+*/
 void setup_fit(fit_t* fit, int idealtomo){
 	TIC;tic;
 	if(!idealtomo&&fit->xloc){
@@ -362,6 +379,12 @@ void setup_fit(fit_t* fit, int idealtomo){
 	fit->FL.maxit=fit->flag.maxit;
 	toc2("Setting up DM Fitting.");
 }
+/**
+   Free the array of nfit fit_t. Data in entries marked isref is not freed.
+
+   @param[in] fit The array of fit_t to free, including the array itself. May be NULL.
+   @param[in] nfit Number of entries in fit.
+*/
 void free_fit(fit_t* fit, int nfit){
 	if(!fit) return;
 	for(int ifit=0; ifit<nfit; ifit++){
@@ -380,6 +403,9 @@ void free_fit(fit_t* fit, int nfit){
 }
 /**
    Setup DM fitting parameters
+
+   @param[in,out] recon The reconstruction struct. recon->fit is allocated and set.
+   @param[in] parms The parameter struct.
 */
 void setup_recon_fit(recon_t* recon, const parms_t* parms){
 	fit_t* fit=mycalloc(1, fit_t);
@@ -468,7 +494,11 @@ void setup_recon_fit(recon_t* recon, const parms_t* parms){
 }
 /**
    Setting fitting parameter for turbulence to WFS lenslet grid.
- */
+
+   @param[in,out] powfs The powfs struct array. powfs[].fit is allocated and set for high order powfs.
+   @param[in] recon The reconstruction struct.
+   @param[in] parms The parameter struct.
+*/
 void setup_powfs_fit(powfs_t* powfs, const recon_t* recon, const parms_t* parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].lo) continue;
@@ -514,6 +544,9 @@ void setup_powfs_fit(powfs_t* powfs, const recon_t* recon, const parms_t* parms)
 }
 /**
    Call this instead of free_fit directly to free powfs fit parameters.
+
+   @param[in,out] powfs The powfs struct array. powfs[].fit is freed.
+   @param[in] parms The parameter struct.
 */
 void free_powfs_fit(powfs_t* powfs, const parms_t* parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -538,6 +571,11 @@ void free_powfs_fit(powfs_t* powfs, const parms_t* parms){
 /**
    Apply fit right hand side matrix in CG mode without using assembled matrix.
    Slow. don't use. Assembled matrix is faster because of multiple directions.
+
+   @param[in,out] xout The output; alpha*FR*xin is accumulated into it.
+   @param[in] A The fit_t struct.
+   @param[in] xin Tomography output on xloc. If NULL, trace through the atmosphere directly.
+   @param[in] alpha Scaling factor.
 */
 void FitR(dcell** xout, const void* A,
 	const dcell* xin, const real alpha){
@@ -587,7 +625,13 @@ void FitR(dcell** xout, const void* A,
 /**
    Apply fit left hand side matrix in CG mode without using assembled
    matrix. Slow. don't use. Assembled matrix is faster because of multiple
-   directions.  */
+   directions.
+
+   @param[in,out] xout The output; alpha*FL*xin is accumulated into it.
+   @param[in] A The fit_t struct.
+   @param[in] xin DM commands.
+   @param[in] alpha Scaling factor.
+*/
 void FitL(dcell** xout, const void* A,
 	const dcell* xin, const real alpha){
 	const fit_t* fit=(const fit_t*)A;

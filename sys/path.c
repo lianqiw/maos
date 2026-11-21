@@ -36,10 +36,15 @@ typedef struct PATH_T{
 	int priority;
 	struct PATH_T* next;
 }PATH_T;
-static PATH_T* PATH=NULL;/*privately maintained path to locate config files. */
+/**privately maintained path to locate config files.*/
+static PATH_T* PATH=NULL;
 PNEW(mutex_path);
 /**
-   Add a directory to path. Higher priority is searched first.
+   Add a directory to path. Higher priority is searched first. An existing
+   entry is moved according to the new priority.
+
+   @param[in] priority Priority of the directory.
+   @param[in] format printf-style format of the directory name, followed by its arguments.
 */
 void addpath2(int priority, const char *format, ...){
 	format2fn;
@@ -84,13 +89,17 @@ void addpath2(int priority, const char *format, ...){
 }
 /**
    Add a directory to path with default priority of 0.
+
+   @param[in] path Directory name.
 */
 void addpath(const char *path){
 	addpath2(0, "%s", path);
 }
 /**
    Remove a directory from path.
- */
+
+   @param[in] path Directory name.
+*/
 void rmpath(const char* path){
 	char *abspath=myabspath(path);
 	LOCK(mutex_path);
@@ -109,7 +118,7 @@ void rmpath(const char* path){
 	free(abspath);
 }
 /**
-   Print current path.
+   Print the current search path for configuration files.
 */
 void printpath(void){
 	if(PATH){
@@ -120,7 +129,7 @@ void printpath(void){
 	}
 }
 /**
-   Empty the path.
+   Empty the search path and free its memory.
 */
 void freepath(void){
 	LOCK(mutex_path);
@@ -133,11 +142,11 @@ void freepath(void){
 }
 /**
    Try to find a file in path and return its absolute filename if exist, NULL
-otherwise.  
+   otherwise.
 
-@param	fn			filename to search
-@param	current		search current folder
-
+   @param[in] fn filename to search
+   @param[in] current search current folder
+   @return Newly allocated file name, or NULL if not found; the caller frees it.
 */
 char* search_file(const char* fn, int current){
 	if(!fn) return NULL;
@@ -167,8 +176,12 @@ char* search_file(const char* fn, int current){
 }
 
 /**
-   Find the directory that hold the configuration files. name is "maos" for
-maos, "skyc" for skyc.  */
+   Find the directory that hold the configuration files.
+
+   @param[in] name "maos" for maos, "skyc" for skyc.
+   @return Newly allocated directory name, or NULL if not found; the caller frees it.
+*/
+
 char* find_config(const char* name){
 	const char* maos_config_path=getenv("MAOS_CONFIG_PATH");
 	char* config_path=NULL;

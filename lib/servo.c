@@ -40,7 +40,12 @@ typedef struct SERVO_CALC_T{
 	int keepnu;
 }SERVO_CALC_T;
 
-/*Compute phase between -2pi, and 0*/
+/**
+   Compute phase between -2pi, and 0
+
+   @param[in] val Complex number.
+   @return Phase of val (radian) in the range of (-2pi, 0].
+*/
 static inline real phase(comp val){
 	real ang=atan2(cimag(val), creal(val));
 	if(ang>0){
@@ -55,12 +60,14 @@ static inline real phase(comp val){
    Written: 2010-06-11
 
    Tested OK: 2010-06-11
+
+   @param[out] fcross Cross over frequency (Hz) where abs(Hol) equals gain.
+   @param[in] nu Frequency grid (Hz).
+   @param[in] Hol Open loop transfer function defined on nu.
+   @param[in] gain Compute phase at this gain.
+   @return Phase of Hol (radian, between -2pi and 0) at the cross over frequency. Not the phase margin.
 */
-static real phase_at_gain(real* fcross, /**<[out] Cross over frequency*/
-	const dmat* nu, /**<[in] frequency grid*/
-	const cmat* Hol, /**<[in] open loop transfer function defined on nu*/
-	real gain/**<[in] compute phase at this gain*/
-){
+static real phase_at_gain(real* fcross, const dmat* nu, const cmat* Hol, real gain){
 	/*if(cabs(P(Hol,0))<gain){
 	error("Hol is less than 1 from the beginning\n");
 	}*/
@@ -97,13 +104,15 @@ static real phase_at_gain(real* fcross, /**<[out] Cross over frequency*/
 }
 
 /**
- * Determine the gain in dB between Hol and 1 when phase of Hol is angle
- * */
-static real gain_at_phase(real* fcross, /**<[out] Cross over frequency*/
-	const dmat* nu, /**<[in] frequency grid*/
-	const cmat* Hol, /**<[in] open loop transfer function defined on nu*/
-	real angle     /**<[in] compute gain at this phase*/
-){
+   Determine the gain in dB between Hol and 1 when phase of Hol is angle
+
+   @param[out] fcross Frequency (Hz) where the phase of Hol crosses angle. 0 if not found.
+   @param[in] nu Frequency grid (Hz).
+   @param[in] Hol Open loop transfer function defined on nu.
+   @param[in] angle Compute gain at this phase (radian, between -2pi and 0).
+   @return Gain of Hol (dB) at the given phase, or NAN if the phase is never reached (unstable loop).
+*/
+static real gain_at_phase(real* fcross, const dmat* nu, const cmat* Hol, real angle){
 	if(angle<-TWOPI||angle>0){
 		error("angle=%g is invalid\n", angle);
 	}
@@ -147,7 +156,12 @@ static real gain_at_phase(real* fcross, /**<[out] Cross over frequency*/
 
 /**
    Make basic arrays for servo analysis.
-   al: additional latency
+
+   @param[in,out] st Servo analysis struct. Arrays are allocated; st->keepnu controls whether the frequency grid of psdin is kept.
+   @param[in] psdin Input PSD with frequency in the first column and PSD in the second. May be NULL.
+   @param[in] dt Simulation time step (s).
+   @param[in] dtrat Number of time steps per loop update.
+   @param[in] al Additional latency in units of dt.
 */
 static void servo_calc_init(SERVO_CALC_T* st, const dmat* psdin, real dt, long dtrat, real al){
 	real Ts=dt*dtrat;
@@ -202,8 +216,12 @@ static void servo_calc_init(SERVO_CALC_T* st, const dmat* psdin, real dt, long d
 	}
 }
 /**
- * Multiply SHO transfer function to Hsys.
- * */
+   Multiply SHO transfer function to Hsys.
+
+   @param[in,out] st Servo analysis struct. st->Hsys is updated.
+   @param[in] f0 SHO resonance frequency (Hz). No-op if not positive or infinite.
+   @param[in] zeta SHO damping ratio.
+*/
 static void
 servo_calc_sho(SERVO_CALC_T *st, real f0, real zeta){
 	if(f0<=0||isinf(f0)) return;
@@ -216,6 +234,11 @@ servo_calc_sho(SERVO_CALC_T *st, real f0, real zeta){
 		P(st->Hsys, i)*=Hfsm;
 	}
 }
+/**
+   Free arrays in the servo analysis struct (not the struct itself).
+
+   @param[in,out] st Servo analysis struct.
+*/
 static void servo_calc_free(SERVO_CALC_T* st){
 	cfree(st->s);
 	cfree(st->Hol);
@@ -225,6 +248,14 @@ static void servo_calc_free(SERVO_CALC_T* st){
 	dfree(st->nu);
 	dfree(st->psd);
 }
+/**
+   Check stability of the loop using phase and gain margin.
+
+   @param[in] nu Frequency grid (Hz).
+   @param[in] Hol Open loop transfer function defined on nu.
+   @param[in] pmargin_thres Minimum phase margin (radian) required.
+   @return 1 if the loop is stable with sufficient phase margin, 0 otherwise.
+*/
 static int servo_isstable(const dmat* nu, const cmat* Hol, real pmargin_thres){
 	real fp, fg;
 	real pmargin=phase_at_gain(&fp, nu, Hol, 1)+M_PI;
@@ -256,7 +287,11 @@ static real servo_calc_max_gain(SERVO_CALC_T *st, real pmargin){
 	return gain;
 	}*/
 /**
-   Calculate total error. If g0 is 0, use st->g, otherwith use g0 to figure out g, a T.
+   Calculate total error. If g0 is 0, use st->g, otherwise use g0 to figure out g, a, T.
+
+   @param[in,out] pst Servo analysis struct (SERVO_CALC_T*). Hol, g, a, T, res_sig, res_n, and gain_n are updated.
+   @param[in] g0 Integrator gain to evaluate. Use 0 to keep existing st->g (and a, T).
+   @return Total residual (signal plus noise). A large penalty is used if the loop is unstable.
 */
 static real servo_calc_do(void* pst, real g0){
 	SERVO_CALC_T* st=(SERVO_CALC_T*)pst;
@@ -354,15 +389,23 @@ static real servo_calc_do(void* pst, real g0){
 
    2013-06-27: The maximum gain should not be limited to 0.5 beause it is later scaled by sqrt(a);
 
-   sigma2n is a dmat array of all wanted sigma2n.
-   Returns a zfarray of a dmat of [g0, a, T, res_sig, res_n]
-
    The upper end of frequency must be nyquist freq so that noise transfer can be
    computed. But we need to capture the turbulence PSD beyond nyquist freq,
    which are uncorrectable.
 
    2022-03-04: added SHO response parameter.
 
+   @param[in] dt Simulation time step (s).
+   @param[in] dtrat Number of time steps per loop update.
+   @param[in] al Additional latency in units of dt.
+   @param[in] pmargin Phase margin (radian). 0 means pi/4.
+   @param[in] f0 SHO resonance frequency (Hz). Not used if not positive.
+   @param[in] zeta SHO damping ratio.
+   @param[in] servo_type 1 for integrator, 2 for type II with lead filter.
+   @param[in] psdin Input PSD with frequency in the first column. If NULL, only optimize for phase margin.
+   @param[in] sigma2n Array of all wanted noise variance. May be NULL.
+   @return Newly allocated dcell with one dmat per sigma2n entry, containing [g, res_sig, res_n] for type I or [g, a, T,
+   res_sig, res_n] for type II. If psdin is NULL, contains only the gain. The caller frees it.
 */
 dcell* servo_optim(real dt, long dtrat, real al, real pmargin, real f0, real zeta,
 	int servo_type, const dmat *psdin, const dmat *sigma2n){
@@ -413,8 +456,16 @@ dcell* servo_optim(real dt, long dtrat, real al, real pmargin, real f0, real zet
 	return gm;
 }
 /**
- * Optimize integrator control with optional SHO response (output) to have correct phase margin (pi/4) when abs(Hol)==1.
- * */
+   Optimize integrator control with optional SHO response (output) to have correct phase margin when abs(Hol)==1.
+
+   @param[in] dt Simulation time step (s).
+   @param[in] dtrat Number of time steps per loop update.
+   @param[in] al Additional latency in units of dt.
+   @param[in] pmargin Phase margin (radian). 0 means pi/4.
+   @param[in] f0 SHO resonance frequency (Hz). Not used if not positive.
+   @param[in] zeta SHO damping ratio.
+   @return Integrator gain.
+*/
 real servo_optim_margin(real dt, long dtrat, real al, real pmargin, real f0, real zeta){
 	dcell *g=servo_optim(dt, dtrat, al, pmargin, f0, zeta, 1, NULL, 0);
 	real gain=P(P(g,0),0);
@@ -442,7 +493,16 @@ real servo_optim_margin(real dt, long dtrat, real al, real pmargin, real f0, rea
    Convert Closed loop residual PSD back to OL psd using rejection transfer function:
    PSD_OL=PSD_CL/Hrej-sigma2n/F_nyquist;
    Only implemented for integrator.
- */
+
+   @param[in] psdcl Closed loop PSD with frequency in the first column and one or more PSD columns.
+   @param[in] dt Simulation time step (s).
+   @param[in] dtrat Number of time steps per loop update.
+   @param[in] al Additional latency in units of dt.
+   @param[in] gain Integrator gain. If 0, psdcl is copied.
+   @param[in] sigma2n Noise variance.
+   @return Newly allocated open loop PSD with frequency in the first column. Negative values are clipped to 0. The
+   caller frees it.
+*/
 dmat* servo_cl2ol(const dmat* psdcl, real dt, long dtrat, real al, real gain, real sigma2n){
 	if(fabs(gain)<1e-15){
 		return ddup(psdcl);
@@ -474,11 +534,20 @@ dmat* servo_cl2ol(const dmat* psdcl, real dt, long dtrat, real al, real gain, re
 	return psdol;
 }
 /**
-   Compute the residual error after servo rejection of a type II servo given the gain.
+   Compute the residual error after servo rejection of a type I or type II servo given the gain.
 
    Written: 2010-06-11
 
    Tested OK: 2010-06-11
+
+   @param[out] noise_amp Noise amplification factor.
+   @param[in] psdin Input PSD with frequency in the first column and PSD in the second.
+   @param[in] dt Simulation time step (s).
+   @param[in] dtrat Number of time steps per loop update.
+   @param[in] al Additional latency in units of dt.
+   @param[in] gain Servo gain: [g] for type I or [g, a, T] for type II.
+   @param[in] servo_type 1 for integrator, 2 for type II.
+   @return Residual signal error after servo rejection.
 */
 real servo_residual(real* noise_amp, const dmat* psdin, real dt, long dtrat, real al, const dmat* gain, int servo_type){
 	if(!psdin||NY(psdin)!=2||!gain||PN(gain)<(servo_type==2?3:1)){
@@ -506,8 +575,15 @@ real servo_residual(real* noise_amp, const dmat* psdin, real dt, long dtrat, rea
 	return st.res_sig;
 }
 /**
-   Apply type II servo filter on measurement error and output integrator.  gain
-   must be 3x1 or 3x5.  */
+   Apply type II servo filter on measurement error and accumulate the lead filter output to mpreintc. gain must be 3x1
+   or 3xn where n is the number of modes.
+
+   @param[in] gain Converted type II gain with rows [g, exp(-dt/(aT)), exp(-dt/T)].
+   @param[in,out] mpreintc Accumulates the lead filter output.
+   @param[in,out] mleadc Lead filter state.
+   @param[in,out] merrlastc Measurement error of the previous step.
+   @param[in] merrc Measurement error.
+*/
 static inline void
 servo_typeII_filter(const dmat *gain, cell *mpreintc, cell *mleadc, cell *merrlastc, const cell *merrc){
 	if(!merrc) return;
@@ -558,6 +634,12 @@ servo_typeII_filter(const dmat *gain, cell *mpreintc, cell *mleadc, cell *merrla
 		dcelladd(&mpreintc, 1, mleadc, 1);//integrator
 	}
 }
+/**
+   Allocate the servo state arrays using merr as the template and mark as initialized.
+
+   @param[in,out] st Servo struct.
+   @param[in] merr_ Template measurement error used to size the arrays. Nothing is done if empty.
+*/
 static void servo_init(servo_t* st, const anyarray merr_){
 	cell* merr=merr_.c;
 	if(!merr) return;
@@ -575,6 +657,9 @@ static void servo_init(servo_t* st, const anyarray merr_){
 }
 /**
    Update servo parameters
+
+   @param[in,out] st Servo struct. st->ep is replaced.
+   @param[in] ep Servo gain. For type II (3 rows: g, a, T), it is converted to [g, exp(-dt/(aT)), exp(-dt/T)].
 */
 static void servo_convert_ep(servo_t* st, const dmat* ep){
 	if(!ep){
@@ -599,7 +684,14 @@ static void servo_convert_ep(servo_t* st, const dmat* ep){
 	}
 }
 /**
-   Initialize servo_t. al is additional latency
+   Initialize servo_t.
+
+   @param[in] merr Template measurement error used to allocate memory. May be empty.
+   @param[in] ap Coefficients of the modified integrator. NULL means a pure integrator.
+   @param[in] al Additional latency in units of dt.
+   @param[in] dt Simulation time step (s), not the loop update time.
+   @param[in] ep Servo gain. May be NULL if gain is applied externally.
+   @return Newly allocated servo_t. Free with servo_free().
 */
 servo_t* servo_new(anyarray merr, const dmat* ap, real al, real dt, const dmat* ep){
 	servo_t* st=mycalloc(1, servo_t);
@@ -622,8 +714,15 @@ servo_t* servo_new(anyarray merr, const dmat* ap, real al, real dt, const dmat* 
 	return st;
 }
 /**
- * Initialize servo_t with scalar ap and ep
- * */
+   Initialize servo_t with scalar ap and ep
+
+   @param[in] merr Template measurement error used to allocate memory. May be empty.
+   @param[in] ap Coefficient of the modified integrator.
+   @param[in] al Additional latency in units of dt.
+   @param[in] dt Simulation time step (s).
+   @param[in] ep Servo gain. 0 means gain is applied externally.
+   @return Newly allocated servo_t. Free with servo_free().
+*/
 servo_t *servo_new_scalar(anyarray merr, real ap, real al, real dt, real ep){
 	dmat *ap2=dnew(1,1); P(ap2,0)=ap;
 	dmat *ep2=ep?dnew(1,1):NULL; if(ep) P(ep2,0)=ep;
@@ -632,8 +731,17 @@ servo_t *servo_new_scalar(anyarray merr, real ap, real al, real dt, real ep){
 	return st;
 }
 /**
- * Initialize servo_t with an sho
- * */
+   Initialize servo_t with an sho
+
+   @param[in] merr Template measurement error used to allocate memory. May be empty.
+   @param[in] ap Coefficients of the modified integrator. NULL means a pure integrator.
+   @param[in] al Additional latency in units of dt.
+   @param[in] dt Simulation time step (s).
+   @param[in] ep Servo gain.
+   @param[in] f0 SHO resonance frequency (Hz). SHO is not used if not positive or infinite.
+   @param[in] zeta SHO damping ratio.
+   @return Newly allocated servo_t. Free with servo_free().
+*/
 servo_t *servo_new_sho(anyarray merr, const dmat *ap, real al, real dt, const dmat *ep, real f0, real zeta){
 	servo_t *st=servo_new(merr, ap, al, dt, ep);
 	if(f0>0 && !isinf(f0)){
@@ -644,6 +752,8 @@ servo_t *servo_new_sho(anyarray merr, const dmat *ap, real al, real dt, const dm
 /**
    prepare the modified integrator by shifting commands. similar to laos.
    P(inte,0)=P(inte,0)*ap[0]+P(inte,1)*ap[1]+...
+
+   @param[in,out] st Servo struct. st->mint is shifted.
 */
 static void servo_shift_ap(servo_t* st){
 	const dmat* ap=st->ap;
@@ -662,7 +772,14 @@ static void servo_shift_ap(servo_t* st){
 	}
 	P(st->mint,0)=recycle;/*new command. */
 }
-/*A FIFO queue to add delay*/
+/**
+   A FIFO queue to add delay
+
+   @param[in,out] st Servo struct. st->merrhist is shifted.
+   @param[in] merr New measurement error. May be NULL.
+   @return The delayed measurement error: merr itself if there is no integer delay, otherwise a reference to internal
+   history. Do not free.
+*/
 static const cell* servo_shift_al(servo_t* st, const cell* merr){
 	if(!st->alint){
 		return merr;
@@ -681,8 +798,11 @@ static const cell* servo_shift_al(servo_t* st, const cell* merr){
 		return P(st->merrhist,0);
 	}
 }
-/*
-	Scale each row by each value of ep
+/**
+   Scale each row by each value of ep
+
+   @param[in,out] A Array (or cell of arrays) to scale in place.
+   @param[in] ep Scaling factor for each row.
 */
 static void scale_row_ep(cell *A, dmat *ep){
 	if(!A) return;
@@ -705,6 +825,10 @@ static void scale_row_ep(cell *A, dmat *ep){
 }
 /**
    Applies type I or type II filter based on number of entries in gain.
+
+   @param[in,out] st Servo struct.
+   @param[in] _merr Measurement error. May be empty.
+   @return 1 if the integrator is updated, 0 if there is no (delayed) measurement error yet.
 */
 int servo_filter(servo_t* st, const anyarray _merr){
 	if(!st->initialized&&_merr.c){
@@ -752,13 +876,20 @@ int servo_filter(servo_t* st, const anyarray _merr){
 }
 /**
    Adjust integrator content without shift.
+
+   @param[in,out] st Servo struct.
+   @param[in] madj Adjustment to add to the integrator.
+   @param[in] alpha Scaling factor of madj.
 */
 void servo_add(servo_t* st, const anyarray madj, real alpha){
 	dcelladd(&P(st->mint, 0), 1, madj.c, alpha);
 }
 /**
    Create servo output. It handles st->alfrac. and outputs the averaged position over the integration period.
- */
+
+   @param[in] st Servo struct. Its SHO state, if any, is updated.
+   @param[out] out_ Output. Allocated if NULL.
+*/
 void servo_output(const servo_t* st, panyarray out_){
 	cell **out=out_.c;
 	dcellscale(*out, 0);
@@ -779,6 +910,13 @@ void servo_output(const servo_t* st, panyarray out_){
 
 /**
    test type I/II filter with ideal measurement to make sure it is implemented correctly.
+
+   @param[in,out] input Input time series. Each column is a time step. Reshaped in place if it has a single column.
+   @param[in] dt Simulation time step (s).
+   @param[in] dtrat Number of time steps per loop update.
+   @param[in] sigma2n Noise covariance. Noise is not added if its norm is 0.
+   @param[in] gain Servo gain.
+   @return Newly allocated residual time series. The caller frees it.
 */
 dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
 	if(NY(input)==1){/*single mode. each column is for a mode.*/
@@ -832,6 +970,8 @@ dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
 }
 /**
    reset the data to 0.
+
+   @param[in,out] st Servo struct.
 */
 void servo_reset(servo_t* st){
 	dcellscale(st->mlead, 0);
@@ -842,6 +982,8 @@ void servo_reset(servo_t* st){
 }
 /**
    Free servo_t struct
+
+   @param[in] st Servo struct to free. May be NULL.
 */
 void servo_free(servo_t* st){
 	if(!st) return;
@@ -863,10 +1005,12 @@ void servo_free(servo_t* st){
    |x |  = |   1   0 | | x| + c2 |0 |
    where x' is dx/dt and written as dx in struct.
    we use c2*xi so that it is in the same unit and scale as x.
- */
-sho_t* sho_new(real f0,   /**<Resonance frequency*/
-	real zeta  /**<Damping*/
-	){
+
+   @param[in] f0 Resonance frequency (Hz).
+   @param[in] zeta Damping ratio.
+   @return Newly allocated sho_t, or NULL if f0 is 0 or infinite. Free with sho_free().
+*/
+sho_t* sho_new(real f0, real zeta){
 	if(!f0||isinf(f0)) return NULL;
 	sho_t* out=mycalloc(1, sho_t);
 	const real omega0=2*M_PI*f0;
@@ -876,7 +1020,10 @@ sho_t* sho_new(real f0,   /**<Resonance frequency*/
 	return out;
 }
 /**
- * */
+   Free sho_t (second order harmonic oscillator).
+
+   @param[in] sho SHO struct to free. May be NULL.
+*/
 void sho_free(sho_t *sho){
 	if(!sho) return;
 	cellfree(sho->dx);
@@ -898,7 +1045,13 @@ void sho_free(sho_t *sho){
 	//sho->x +=dt*sho->dx;//update position
 	//ddx=sho->dx*(-sho->c1)+sho->x*(-sho->c2)+xi;//update speed
 	//sho->dx+=dt*ddx;	 //update speed
- */
+
+   @param[out] xout_ Output position (or average position if avg is set). Allocated if NULL.
+   @param[in,out] sho SHO state. If NULL, xi is copied to xout_.
+   @param[in] xi_ Driving position.
+   @param[in] dt Time to advance (s).
+   @param[in] avg Whether to output the average position over dt instead of the final position.
+*/
 void sho_step(panyarray xout_, sho_t *sho, anyarray xi_, real dt, int avg){
 	cell* xi=xi_.c;
 	cell** xout=xout_.c;
@@ -926,6 +1079,8 @@ void sho_step(panyarray xout_, sho_t *sho, anyarray xi_, real dt, int avg){
 }
 /**
    Second harmonic oscillator. Reset.
+
+   @param[in,out] sho SHO state.
 */
 void sho_reset(sho_t* sho){
 	dcellscale(sho->dx, 0);
@@ -933,13 +1088,15 @@ void sho_reset(sho_t* sho){
 }
 /**
    Second harmonic oscillator. Filter a time series for testing.
+
+   @param[in] x Input time series. Each column is filtered independently. A row vector is treated as a column.
+   @param[in] dt Input time series sampling (s).
+   @param[in] f0 Resonance frequency (Hz).
+   @param[in] zeta Damping ratio.
+   @param[in] avg Average or not.
+   @return Newly allocated filtered time series. The caller frees it.
 */
-dmat* sho_filter(const dmat* x,/**<Input time series*/
-	real dt,     /**<Input time series sampling*/
-	real f0,    /**<Resonance frequency*/
-	real zeta,  /**<Damping*/
-	int avg /**<Average or not*/
-	){
+dmat* sho_filter(const dmat* x, real dt, real f0, real zeta, int avg){
 	sho_t* sho=sho_new(f0, zeta);
 	dmat* xi=dref(x);
 	if(NX(xi)==1){

@@ -21,24 +21,31 @@
 #include "libmisc.h"
 #include "cure.h"
 #include "accphi.h"
-const real AS2RAD=4.848136811095360e-06; //arcsec in unit of radian
-const real MAS2RAD=4.848136811095360e-09; //arcsec in unit of radian
-const real RAD2AS=206264.8062470964; //radian in unit of arcsec
-const real RAD2MAS=206264806.2470964; //radian to milli-arcsecond
+/**arcsec in unit of radian*/
+const real AS2RAD=4.848136811095360e-06;
+/**arcsec in unit of radian*/
+const real MAS2RAD=4.848136811095360e-09;
+/**radian in unit of arcsec*/
+const real RAD2AS=206264.8062470964;
+/**radian to milli-arcsecond*/
+const real RAD2MAS=206264806.2470964;
 
 /**
    add photon and read out noise.  pcalib part of bkgrnd is calibrated
-   out. pcalib2 part of bkgrnd2 is calibrated out.  */
-void addnoise(dmat* A,              /**<[in/out]The pixel intensity array*/
-	rand_t* rstat,        /**<[in]The random stream*/
-	const real bkgrnd,  /**<[in]Real background in PDEs per pixel per frame*/
-	const real bkgrndc, /**<[in]Removed background in PDEs per pixel per frame*/
-	const dmat* bkgrnd2,  /**<[in]Real background in PDEs of each pixel per frame.*/
-	const dmat* bkgrnd2c, /**<[in]Removed background in PDEs of each pixel per frame.*/
-	const dmat* qe,       /**<[in]Pixel dependent Quantum Efficiency*/
-	const real rne,     /**<[in]Read out noise per pixel per read*/
-	real excess   /**<[in]Excess noise factor*/
-){
+   out. pcalib2 part of bkgrnd2 is calibrated out.
+
+   @param[in,out] A The pixel intensity array
+   @param[in,out] rstat The random stream
+   @param[in] bkgrnd Real background in PDEs per pixel per frame
+   @param[in] bkgrndc Removed background in PDEs per pixel per frame
+   @param[in] bkgrnd2 Real background in PDEs of each pixel per frame. May be NULL.
+   @param[in] bkgrnd2c Removed background in PDEs of each pixel per frame. May be NULL.
+   @param[in] qe Pixel dependent Quantum Efficiency. May be NULL.
+   @param[in] rne Read out noise per pixel per read
+   @param[in] excess Excess noise factor. Values below 1 are treated as 1.
+*/
+void addnoise(dmat* A, rand_t* rstat, const real bkgrnd, const real bkgrndc, const dmat* bkgrnd2, const dmat* bkgrnd2c,
+	const dmat* qe, const real rne, real excess){
 	long np=NX(A)*NY(A);
 	assert(!bkgrnd2||NX(bkgrnd2)*NY(bkgrnd2)==np);
 	assert(!bkgrnd2c||NX(bkgrnd2c)*NY(bkgrnd2c)==np);
@@ -48,7 +55,7 @@ void addnoise(dmat* A,              /**<[in/out]The pixel intensity array*/
 		real tot=P(A,ix)+bkgrnd+(bkgrnd2?P(bkgrnd2,ix):0);
 		real corr=bkgrndc+(bkgrnd2c?P(bkgrnd2c,ix):0);
 		real scale=1;
-		if(qe){//the second qe factor is flat-field correction.
+		if(qe){//detected photons are reduced by qe. scale is the flat-field correction.
 			tot*=P(qe,ix);
 			scale=1./P(qe,ix);
 		}
@@ -57,7 +64,11 @@ void addnoise(dmat* A,              /**<[in/out]The pixel intensity array*/
 }
 /**
    Add noise to gradients according to neal, which is LL' decomposition of the sanea
- */
+
+   @param[in,out] grad Gradients of 2*nsa with all x gradients first. Noise is added to it.
+   @param[in] neal nsa*3: the xx, yy, and xy elements of the lower triangular cholesky factor of NEA (radian).
+   @param[in,out] srand The random stream.
+*/
 void addnoise_grad(dmat* grad, const dmat* neal, rand_t* srand){
 	const long nsa=NX(neal);
 	assert(nsa*2==NX(grad)*NY(grad));
@@ -83,13 +94,15 @@ void addnoise_grad(dmat* grad, const dmat* neal, rand_t* srand){
 }
 /**
    Determine the CoG on multiple locations near the nominal position.
+
+   @param[in,out] cg n*3 The determined position (in pixel) and total intensity. Allocated if NULL.
+   Position is NaN if the peak is outside of the window.
+   @param[in] im 2-d array contains the image
+   @param[in] loc n*2 array. contains the nominal position (in pixel) of each peak
+   @param[in] wsize window size
+   @return 0.
 */
-int cog_multi(
-	dmat** cg,      /**<[out]n*3 The determined position and total intensity.*/
-	const dmat* im, /**<[in] 2-d array contains the image*/
-	const dmat* loc,/**<[in] n*2 array. contains the nominal position of each peak*/
-	int wsize       /**<[in] window size*/
-){
+int cog_multi(dmat** cg, const dmat* im, const dmat* loc, int wsize){
 	if(!*cg){
 		*cg=dnew(NX(loc), 3);
 	}
@@ -139,7 +152,22 @@ int cog_multi(
 	return 0;
 }
 
-/*compute cog NEA using Monte Carlo realizations of noise*/
+/**
+   compute cog NEA using Monte Carlo realizations of noise
+
+   @param[out] nea The NEA covariance (xx, xy, yx, yy) in pixel^2.
+   @param[in] ints Noise free subaperture image.
+   @param[in] cogmask Mask for CoG computation. May be NULL.
+   @param[in] cogthres Threshold for CoG.
+   @param[in] cogoff Offset (subtracted) for CoG.
+   @param[in] ntry Number of Monte Carlo realizations.
+   @param[in,out] rstat The random stream. Reseeded with 1 at start.
+   @param[in] bkgrnd Real background in PDEs per pixel per frame.
+   @param[in] bkgrndc Removed background in PDEs per pixel per frame.
+   @param[in] bkgrnd2i Real background in PDEs of each pixel per frame. May be NULL.
+   @param[in] bkgrnd2ic Removed background in PDEs of each pixel per frame. May be NULL.
+   @param[in] rne Read out noise per pixel per read.
+*/
 void cog_nea(real* nea, const dmat* ints, const dmat* cogmask, real cogthres, real cogoff, int ntry,
 	rand_t* rstat, real bkgrnd, real bkgrndc, const dmat* bkgrnd2i, const dmat* bkgrnd2ic, real rne
 ){
@@ -169,11 +197,14 @@ void cog_nea(real* nea, const dmat* ints, const dmat* cogmask, real cogthres, re
 
 /**
    Determine the polynomial coefficients that transforms 2-d coordinate (of a grid) in to out.
+
+   @param[in] in input grid. n*2
+   @param[in] out distorted grid, n*2
+   @param[in] maxorder Maximum order. Positive to limit the total power of x and y; negative to limit the power of each.
+   @return Newly allocated nmod*4 array with the power of x, power of y, coefficient for x, and coefficient for y
+   of each term. The caller frees it.
 */
-dmat* poly2fit(const dmat* in,  /**<[in] input grid. n*2 */
-	const dmat* out, /**<[in] distorted grid, n*2 */
-	int maxorder     /**<[in] Maximum order*/
-){
+dmat* poly2fit(const dmat* in, const dmat* out, int maxorder){
 	if(!(NX(in)==NX(out)&&NY(in)==2&&NY(out)==2)){
 		error("poly2fit: in and out mismatch\n");
 		return 0;
@@ -216,11 +247,15 @@ dmat* poly2fit(const dmat* in,  /**<[in] input grid. n*2 */
 }
 /**
    Calibrate the distortion as measured using interaction matrix.
+
+   @param[in] GA Measured interaction matrix
+   @param[in,out] propdata See accphi.h. locin is the actuator grid and locout the subaperture grid.
+   Defaults are filled by prop_prep().
+   @param[in] maxorder Maximum order. See poly2fit().
+   @return Newly allocated distortion coefficients as from poly2fit(), or NULL if the layer is above the guide star.
+   The caller frees it.
 */
-dmat* loc_calib(const dsp* GA,     /**<[in] Measured interaction matrix*/
-	propdata_t *propdata,/**<in] See accphi.h */
-	int maxorder       /**<[in] Maximum power of x/y. Negative to limit total power*/
-){
+dmat* loc_calib(const dsp* GA, propdata_t *propdata, int maxorder){
 	const loc_t *aloc=propdata->locin;
 	const loc_t *saloc=propdata->locout;
 
@@ -329,11 +364,16 @@ dmat* loc_calib(const dsp* GA,     /**<[in] Measured interaction matrix*/
 
 	return coeff;
 }
-dmat* polyval(
-	const dmat *x, 	/**<[in] input vector */
-	const dmat *coeff,	/**<[in] the coefficient from polyfit*/
-	const int separate	/**<[in] if set, separately for each order*/
-){
+/**
+   Evaluate the polynomial with coefficients coeff (descending order, as from
+   polyfit) at x.
+
+   @param[in] x input vector
+   @param[in] coeff the coefficient from polyfit
+   @param[in] separate if set, separately for each order
+   @return Newly allocated column vector, or one column per term if separate is set. The caller frees it.
+*/
+dmat* polyval(const dmat *x, const dmat *coeff, const int separate){
 	int mul=separate?1:0;//column multiplier
 	long nmod=separate?PN(coeff):1;
 	dmat *out=dnew(PN(x), nmod);
@@ -352,6 +392,11 @@ dmat* polyval(
 /**
    Determine the polynomial coefficients that transforms vector in to out.
    Both column and row vectors are allowed.
+
+   @param[in] x input vector
+   @param[in] y output
+   @param[in] maxorder maximum order to fit
+   @return Newly allocated coefficients in descending order (for polyval). The caller frees it.
 */
 dmat *polyfit(const dmat *x, const dmat *y, const int maxorder){
 	if(!(PN(x)==PN(y) && (NX(x)==1 || NY(x)==1) && (NX(y)==1 || NY(y)==1))){
@@ -379,6 +424,10 @@ dmat *polyfit(const dmat *x, const dmat *y, const int maxorder){
 /**
    Wrap the index for dataset with total of n frames for continuity. For example, if n is 4, the result is 
    0 1 2 3 2 1 0 1 2 3 2 1 0 ...
+
+   @param[in] index Index to wrap. May be negative.
+   @param[in] n Total number of frames.
+   @return Wrapped index between 0 and n-1. 0 if n<2.
 */
 long wrap_seq(long index, long n){
 	if(n<2) return 0;
@@ -389,11 +438,16 @@ long wrap_seq(long index, long n){
 }
 
 /**
- * wrap val to between low and high
- * Notice the difference between remainder() and fmod().
- * remainder(a,b) wraps a to [-b/2, b/2)
- * fmod(a,b) wraps a to [-b,b)
- * */
+   wrap val to between low and high
+   Notice the difference between remainder() and fmod().
+   remainder(a,b) wraps a to [-b/2, b/2)
+   fmod(a,b) wraps a to [-b,b)
+
+   @param[in] val Value to wrap.
+   @param[in] low Lower bound.
+   @param[in] high Upper bound.
+   @return val wrapped to [low, high] (centered at (low+high)/2) where range=|high-low|; low if low==high.
+*/
 real wrap2range(real val, real low, real high){
 	if(low==high){
 		return low;
@@ -403,12 +457,13 @@ real wrap2range(real val, real low, real high){
 	return med+remainder(val-med, range);
 }
 /**
- * @brief compute p-chip interpolation weighting
- * See https://en.wikipedia.org/wiki/Cubic_Hermite_spline
- * @param i index into p[], p[i] with i from -1 to 2
- * @param u	fractional distance from i. between [0,1)
- * @return real the weighting function
- */
+   compute p-chip interpolation weighting
+   See https://en.wikipedia.org/wiki/Cubic_Hermite_spline
+
+   @param[in] i index into p[], p[i] with i from -1 to 2
+   @param[in] u fractional distance from i. between [0,1)
+   @return the weighting function
+*/
 real pchip_wt(int i, float u){
 	if(i<-1||i>2||u<0||u>1){
 		error("Invalid i=%d, u=%g\n", i, u);
@@ -428,17 +483,16 @@ real pchip_wt(int i, float u){
 	return ans;
 }
 /**
- * @brief Compute dome seeing turbulence interpolation parameters
- *
- * @param wt 	Returned weight
- * @param ips 	Current layer index
- * @param isim 	Current simulation frame index
- * @param dtrat Turbulence dtrat
- * @param natm 	Turbulence frame count
- * @param interp	Interpolation method: 0: no interpolation. 1: linear. 2: sin^2. 3: p-chip.
- *
- * @return int 	Turbulence frame to use
- */
+   Compute dome seeing turbulence interpolation parameters
+
+   @param[out] wt Returned weight
+   @param[in] ips Current layer index
+   @param[in] isim Current simulation frame index
+   @param[in] dtrat Turbulence dtrat
+   @param[in] natm Turbulence frame count
+   @param[in] interp Interpolation method: 0: no interpolation. 1: linear. 2: sin^2. 3: p-chip.
+   @return Turbulence frame to use
+*/
 int atm_interp(real *wt, int ips, int isim, int dtrat, int natm, int interp){
 	if(interp==3) ips=ips-1;
 	int iframe=(int)wrap_seq(isim/dtrat+ips, natm);
@@ -455,16 +509,30 @@ int atm_interp(real *wt, int ips, int isim, int dtrat, int natm, int interp){
 	if(ips==0&&interp<3) *wt=1.-*wt;
 	return iframe;
 }
+/**
+   Compare the first element of two double pairs for qsort in ascending order.
+
+   @param[in] a Pointer to the first pair.
+   @param[in] b Pointer to the second pair.
+   @return -1, 0, or 1 if the first element of a is less than, equal to, or greater than that of b.
+*/
 static int compare_dbl2_ascend(const void *a, const void *b){
 	const real va=((const real *)a)[0];
 	const real vb=((const real *)b)[0];
 	return (va>vb)-(va<vb);
 }
 /**
- * Prepare data structure to plot WFE vs field angle.
- * Use together with wfe_fov_fill()
- * @param npath Number of simulation directories
- * */
+   Prepare data structure to plot WFE vs field angle.
+   Use together with wfe_fov_fill()
+
+   @param[in] thetax Field angle along x of each evaluation direction.
+   @param[in] thetay Field angle along y of each evaluation direction.
+   @param[in] unit Scaling to convert field angle to the plotting unit.
+   @param[in] npath Number of simulation directories
+   @param[in] nwvl Number of wavelengths for Strehl plotting. 0 to skip.
+   @return Newly allocated cell with sorted direction index, and radius vs WFE (total and high order) and Strehl
+   for each path, or NULL if there is only one direction. The caller frees it.
+*/
 dccell *wfe_fov_prep(const dmat *thetax, const dmat *thetay, real unit, int npath, int nwvl){
 	const int nevl=(int)PN(thetax);
 	if(nevl<=1) return NULL;
@@ -496,9 +564,14 @@ dccell *wfe_fov_prep(const dmat *thetax, const dmat *thetay, real unit, int npat
 	return reseach;
 }
 /**
- * Compute RMS WFE for each direction.
- * Use together with wfe_fov_prep()
- * */
+   Compute RMS WFE for each direction.
+   Use together with wfe_fov_prep()
+
+   @param[in,out] reseach Data structure from wfe_fov_prep(). The WFE (nm) of path ipath is filled.
+   @param[in] clep Closed loop wavefront error time history of each direction.
+   @param[in] ipath Index of the simulation directory.
+   @param[in] isim Number of time steps to use. 0 or negative to use all.
+*/
 void wfe_fov_fill(dccell *reseach, const dcell *clep, int ipath, int isim){
 	if(!reseach || !clep) return;
 	if(isim<=0) isim=(int)NY(P(clep,0));

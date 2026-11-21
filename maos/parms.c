@@ -27,6 +27,7 @@
 #include "../cuda/gpu.h"
 #endif
 /**
+   \file maos/parms.c
    Read in configuration parameters and check for consistence.
 */
 extern int use_cuda;
@@ -37,6 +38,11 @@ extern int use_cuda;
   This file contains necessary routines to read parametes for
   WFS, DM and wavefront reconstruction.  */
 
+/**
+   Free the arrays and strings in powfs_cfg_t.
+
+   @param[in,out] powfscfg The powfs configuration whose members are freed. The struct itself is not freed.
+*/
 void free_powfs_cfg(powfs_cfg_t *powfscfg){
 	dfree(powfscfg->wvl);
 	dfree(powfscfg->wvlwts);
@@ -75,6 +81,11 @@ void free_powfs_cfg(powfs_cfg_t *powfscfg){
 	free(powfscfg->qe);
 	dfree(powfscfg->siglevs);
 }
+/**
+   Free the arrays in dm_cfg_t.
+
+   @param[in,out] dmcfg The DM configuration whose members are freed. The struct itself is not freed.
+*/
 void free_dm_cfg(dm_cfg_t *dmcfg){
 	dfree(dmcfg->actstuck);
 	dfree(dmcfg->actfloat);
@@ -83,6 +94,8 @@ void free_dm_cfg(dm_cfg_t *dmcfg){
 }
 /**
    Free the parms struct.
+
+   @param[in] parms The parameter struct to free, including the struct itself.
 */
 void free_parms(parms_t *parms){
 	dfree(parms->atm.ht);
@@ -252,8 +265,16 @@ static inline int sum_dblarr(int n, real *a){
 		free(strtmp[i]); strtmp[i]=NULL;\
     }}//else{dbg("Empty array for powfs." #B"\n");}
 
+/**
+   Convert pixtheta to radian and do sanity check. A value <=0 is a ratio to
+   lambda/dsa, <1e-4 is radian, >10 is mas, and otherwise arcsec.
+
+   @param[in,out] theta The value to convert; replaced by the value in radian.
+   @param[in] name Name of the parameter, for printing.
+   @param[in] wvl Wavelength (m) used when theta is a ratio to lambda/dsa.
+   @param[in] dsa Subaperture size (m) used when theta is a ratio to lambda/dsa.
+*/
 static void convert_theta(real *theta, const char *name, real wvl, real dsa){
-	/*Convert pixtheta to radian and do senity check*/
 	real val=*theta;
 	const char *tmp=NULL;
 	if(*theta<=0){//minus means ratio to lambda/dsa
@@ -273,6 +294,8 @@ static void convert_theta(real *theta, const char *name, real wvl, real dsa){
 /**
    Read wfs geometry. powfs stands for physical optics wfs,
    it is used to represent the types of WFS.
+
+   @param[in,out] parms The parameter struct. Its npowfs and powfs[] are allocated and filled.
 */
 static void readcfg_powfs(parms_t *parms){
 	int   npowfs;
@@ -664,6 +687,11 @@ static void readcfg_powfs(parms_t *parms){
 	free(dbltmp);
 	free(strtmp);
 }
+/**
+   Remove powfs that have no WFS and renumber wfs[].powfs accordingly.
+
+   @param[in,out] parms The parameter struct. powfs[] and npowfs are updated.
+*/
 static void remove_empty_powfs(parms_t *parms){
 	int ipowfs=0;//valid powfs index
 	for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++){
@@ -712,6 +740,8 @@ static void remove_empty_powfs(parms_t *parms){
     }}//else{dbg("Empty array for wfs." #B"\n");}
 /**
    Read in parameters of wfs, excluding signal level.
+
+   @param[in,out] parms The parameter struct. Its nwfs and wfs[] are allocated and filled.
 */
 static void readcfg_wfs(parms_t *parms){
 	int i;
@@ -838,7 +868,15 @@ static void readcfg_wfs(parms_t *parms){
 	}
 }
 /**
- * Compute photon flux for a given magnitude.
+   Compute photon flux for a given magnitude.
+
+   @param[in] bzero 2xn array of zero magnitude flux. Row 0 is wavelength (m or um) and row 1 is the photon flux (per m^2 per second).
+   @param[in] wvl Wavelength (m).
+   @param[in] thruput Throughput.
+   @param[in] dsa Subaperture size (m).
+   @param[in] dtref Integration time (s).
+   @param[in] mag Magnitude of the star.
+   @return Number of photons per subaperture per dtref.
 */
 static real calc_flux(const dmat *bzero, real wvl, real thruput, real dsa, real dtref, real mag){
 	if(NX(bzero)!=2){
@@ -865,6 +903,8 @@ static real calc_flux(const dmat *bzero, real wvl, real thruput, real dsa, real 
 }
 /**
    Read in signal level parameters of wfs.
+
+   @param[in,out] parms The parameter struct. Signal levels of powfs[] and wfs[] are filled.
 */
 static void readcfg_siglev(parms_t *parms){
 	int wfs_wvl_tot=0;
@@ -1079,6 +1119,8 @@ static void readcfg_siglev(parms_t *parms){
     }
 /**
    Read in deformable mirror parameters.
+
+   @param[in,out] parms The parameter struct. Its ndm and dm[] are allocated and filled.
 */
 static void readcfg_dm(parms_t *parms){
 	int ndm,i;
@@ -1198,6 +1240,8 @@ static void readcfg_dm(parms_t *parms){
     }
 /**
    Read in MOAO parameters.
+
+   @param[in,out] parms The parameter struct. Its nmoao and moao[] are allocated and filled.
 */
 static void readcfg_moao(parms_t *parms){
 	int nmoao=readcfg_peek_n("moao.dx");
@@ -1231,6 +1275,8 @@ static void readcfg_moao(parms_t *parms){
 }
 /**
    Read in atmosphere parameters.
+
+   @param[in,out] parms The parameter struct. Its atm member is filled.
 */
 static void readcfg_atm(parms_t *parms){
 	READ_DBL(atm.r0z);
@@ -1278,6 +1324,8 @@ static void readcfg_atm(parms_t *parms){
 }
 /**
    Read in atmosphere reconstruction parameters.
+
+   @param[in,out] parms The parameter struct. Its atmr member is filled. Uses values in atm as default.
 */
 static void readcfg_atmr(parms_t *parms){
 	READ_DBL(atmr.r0z);
@@ -1311,6 +1359,8 @@ static void readcfg_atmr(parms_t *parms){
 
 /**
    Read in aperture definitions.
+
+   @param[in,out] parms The parameter struct. Its aper member is filled.
 */
 static void readcfg_aper(parms_t *parms){
 	real *dtmp;
@@ -1364,12 +1414,17 @@ static void readcfg_aper(parms_t *parms){
 
 }
 /**
- * check and scale thetax and thetay to match fov in diameter. If thetax and
- * thetay have only a single on axis point, will make a grid of points
- * sufficient pacing. The unit of thetax, thetay, fov are in arcsec. 
- * no change if fov is 0 or 1. 
- * Returns the effective fov diameter.
- * */
+   check and scale thetax and thetay to match fov in diameter. If thetax and
+   thetay have only a single on axis point, will make a grid of points
+   sufficient pacing. The unit of thetax, thetay, fov are in arcsec.
+   no change if fov is 0 or 1.
+
+   @param[in,out] thetax Field point x coordinates (arcsec). Scaled or replaced by a grid.
+   @param[in,out] thetay Field point y coordinates (arcsec). Scaled or replaced by a grid.
+   @param[in,out] wt Weight of each field point. Replaced when a grid is made.
+   @param[in] fov Field of view diameter (arcsec). 0 or 1 means no change.
+   @return The effective fov diameter (arcsec).
+*/
 static real scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 	if(PN(thetax)!=PN(thetay)||PN(thetax)!=PN(wt)){
 		error("thetax, thetay, and wt mismatch in dimensions:%ld, %ld, %ld\n", PN(thetax), PN(thetay), PN(wt));
@@ -1422,6 +1477,13 @@ static real scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 	}
 	return fov;
 }
+/**
+   Return the name of the photometric band (U, B, ..., L) closest to wvl.
+   wvl may be in m, um, or nm. The returned string is static.
+
+   @param[in] wvl Wavelength in m, um, or nm.
+   @return Static string of the band name. Do not free.
+*/
 const char *wvl2name(real wvl){
 	if(wvl<0.01){
 		wvl*=1e6; //m -> um
@@ -1441,8 +1503,14 @@ const char *wvl2name(real wvl){
 	return n[j];
 }
 /**
- * Read thetax, thetay, and wt definition. Support both a list of points and a string description.
- * */
+   Read thetax, thetay, and wt definition. Support both a list of points and a string description.
+
+   @param[out] thetax Field point x coordinates. Newly allocated.
+   @param[out] thetay Field point y coordinates. Newly allocated.
+   @param[out] wt Weight of each field point. Newly allocated.
+   @param[in] prefix Prefix of the configuration keys, e.g., "evl" or "fit".
+   @return The effective fov diameter (arcsec).
+*/
 static real readcfg_fov(dmat **thetax, dmat **thetay, dmat **wt, const char *prefix){
 	const char *thetax_input=readcfg_raw("%s.thetax", prefix);
 	const char *thetay_input=readcfg_raw("%s.thetay", prefix);
@@ -1517,6 +1585,8 @@ static real readcfg_fov(dmat **thetax, dmat **thetay, dmat **wt, const char *pre
 }
 /**
    Read in performance evaluation science point parameters.
+
+   @param[in,out] parms The parameter struct. Its evl member is filled.
 */
 static void readcfg_evl(parms_t *parms){
 	parms->evl.fovas=readcfg_fov(&parms->evl.thetax, &parms->evl.thetay, &parms->evl.wt, "evl");
@@ -1570,6 +1640,8 @@ static void readcfg_evl(parms_t *parms){
 }
 /**
    Read in turbulence tomography parameters.
+
+   @param[in,out] parms The parameter struct. Its tomo member is filled.
 */
 static void readcfg_tomo(parms_t *parms){
 	READ_INT(tomo.pos);
@@ -1598,7 +1670,10 @@ static void readcfg_tomo(parms_t *parms){
 }
 
 /**
-   Read in DM fit parameters. MOAO is specified elsewhere in readcfg_moao() */
+   Read in DM fit parameters. MOAO is specified elsewhere in readcfg_moao()
+
+   @param[in,out] parms The parameter struct. Its fit member is filled.
+*/
 static void readcfg_fit(parms_t *parms){
 	parms->fit.fovas=readcfg_fov(&parms->fit.thetax, &parms->fit.thetay, &parms->fit.wt, "fit");
 	parms->fit.nfit=(int)PN(parms->fit.thetax);//maybe changed by scale_fov
@@ -1692,6 +1767,8 @@ static void readcfg_fit(parms_t *parms){
 }
 /**
    Read LSR parameters.
+
+   @param[in,out] parms The parameter struct. Its lsr member is filled.
 */
 static void readcfg_lsr(parms_t *parms){
 	READ_DBL(lsr.tikcr);
@@ -1708,6 +1785,8 @@ static void readcfg_lsr(parms_t *parms){
 }
 /**
    Read general reconstruction parameters
+
+   @param[in,out] parms The parameter struct. Its recon member is filled.
 */
 static void readcfg_recon(parms_t *parms){
 	READ_INT(recon.alg);
@@ -1738,6 +1817,8 @@ static void readcfg_recon(parms_t *parms){
 }
 /**
    Read in simulation parameters
+
+   @param[in,out] parms The parameter struct. Its sim member is filled.
 */
 static void readcfg_sim(parms_t *parms){
 	READ_DBL(sim.fcfocus);
@@ -1802,6 +1883,11 @@ static void readcfg_sim(parms_t *parms){
 	READ_INT(sim.mvmngpu);
 	READ_STR(sim.dmadd);
 }
+/**
+   Read in NCPA calibration parameters.
+
+   @param[in,out] parms The parameter struct. Its ncpa member is filled.
+*/
 static void readcfg_ncpa(parms_t *parms){
 	READ_INT(ncpa.calib);
 	READ_INT(ncpa.ttr);
@@ -1824,6 +1910,8 @@ static void readcfg_ncpa(parms_t *parms){
 }
 /**
    Read in parameters for Cn2 estimation.
+
+   @param[in,out] parms The parameter struct. Its cn2 member is filled.
 */
 static void readcfg_cn2(parms_t *parms){
 /*for Cn2 Estimation. */
@@ -1848,6 +1936,8 @@ static void readcfg_cn2(parms_t *parms){
 
 /**
    Specify which variables to plot
+
+   @param[in,out] parms The parameter struct. Its plot member is filled.
 */
 static void readcfg_plot(parms_t *parms){
 	READ_INT(plot.setup);
@@ -1872,6 +1962,8 @@ static void readcfg_plot(parms_t *parms){
 
 /**
    Read in debugging parameters
+
+   @param[in,out] parms The parameter struct. Its dbg member is filled.
 */
 static void readcfg_dbg(parms_t *parms){
 	READ_DMAT(dbg.atm); if(dsumabs(parms->dbg.atm)==0){ dfree(parms->dbg.atm); parms->dbg.atm=NULL; }
@@ -1902,6 +1994,8 @@ static void readcfg_dbg(parms_t *parms){
 }
 /**
    Read in GPU options
+
+   @param[in,out] parms The parameter struct. Its gpu member is filled.
 */
 static void readcfg_gpu(parms_t *parms){
 	READ_INT(gpu.wfs);
@@ -1914,6 +2008,8 @@ static void readcfg_gpu(parms_t *parms){
 }
 /**
    Specify which variables to save
+
+   @param[in,out] parms The parameter struct. Its save member is filled.
 */
 static void readcfg_save(parms_t *parms){
 	READ_INT(save.extra);
@@ -1996,6 +2092,12 @@ static void readcfg_save(parms_t *parms){
 	READ_INT(save.mvmf);
 	READ_INT(save.mvm);
 }
+/**
+   Read in distortion (misregistration) parameters. Must be called after nwfs,
+   ndm, and evl.nevl are known.
+
+   @param[in,out] parms The parameter struct. Its distortion member is filled.
+*/
 static void readcfg_distortion(parms_t *parms){
 	readcfg_strarr(&parms->distortion.tel2wfs,parms->nwfs,1,"distortion.tel2wfs");
 	readcfg_strarr(&parms->distortion.dm2wfs,parms->ndm*parms->nwfs,1,"distortion.dm2wfs");
@@ -2003,7 +2105,10 @@ static void readcfg_distortion(parms_t *parms){
 }
 /**
    Specify which variables to load from saved files (Usually from LAOS
-   simulations) */
+   simulations)
+
+   @param[in,out] parms The parameter struct. Its load member is filled.
+*/
 static void readcfg_load(parms_t *parms){
 
 	READ_STR(load.atm);
@@ -2039,6 +2144,8 @@ static void readcfg_load(parms_t *parms){
 
    DM conjugation range is not changed!
    2012-04-07: Relocated to beginning
+
+   @param[in,out] parms The parameter struct. Heights and related parameters are scaled for zenith angle.
 */
 static void setup_parms_postproc_za(parms_t *parms){
 	real cosz=cos(parms->sim.za);
@@ -2089,6 +2196,8 @@ static void setup_parms_postproc_za(parms_t *parms){
 }
 /**
    Process simulation parameters to find incompatibility.
+
+   @param[in,out] parms The parameter struct. Simulation flags are checked and adjusted.
 */
 static void setup_parms_postproc_sim(parms_t *parms){
 	if(parms->sim.skysim){
@@ -2213,6 +2322,8 @@ static void setup_parms_postproc_sim(parms_t *parms){
    -# whether doing phy.
    -# which wfs belongs to which powfs.
    -# necessary adjustments if outputing WFS PSF.
+
+   @param[in,out] parms The parameter struct. WFS parameters are checked and adjusted.
 */
 static void setup_parms_postproc_wfs(parms_t *parms){
 	if(parms->sim.evlol||parms->sim.idealtomo){
@@ -2665,6 +2776,8 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 
 /**
    The siglev is always specified in sim.dtref. If sim.dt is different, rescale the siglev.
+
+   @param[in,out] parms The parameter struct. The signal levels are rescaled.
 */
 static void setup_parms_postproc_dtref(parms_t *parms){
 	real sigscale=parms->sim.dt>0?(parms->sim.dt/parms->sim.dtref):1;
@@ -2693,6 +2806,8 @@ static void setup_parms_postproc_dtref(parms_t *parms){
    postproc atmosphere parameters.
    1) drop weak layers.
    2) find ground layer
+
+   @param[in,out] parms The parameter struct. The atm member is adjusted.
 */
 static void setup_parms_postproc_atm(parms_t *parms){
 	/*
@@ -2857,6 +2972,13 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		parms->sim.dt=0;
 	}
 }
+/**
+   Collect beam directions of WFS, fitting, evaluation, and NCPA calibration.
+
+   @param[in] parms The parameter struct.
+   @param[in] recon_only If set, only include reconstruction WFS (wfsr, excluding low order WFS in split tomography) and fitting directions.
+   @return 4xn array of thetax, thetay, hs, hc for each direction. Newly allocated; the caller frees it.
+*/
 static dmat* make_dirs(parms_t *parms, int recon_only){
 	const int ndir=(recon_only?parms->nwfsr:parms->nwfs)+parms->fit.nfit+(recon_only?0:(parms->evl.nevl+(parms->ncpa.calib?parms->ncpa.ndir:0)));
 	dmat *dirs=dnew(4, ndir);
@@ -2910,6 +3032,12 @@ static dmat* make_dirs(parms_t *parms, int recon_only){
 	dresize(dirs,4,count);
 	return dirs;
 }
+/**
+   Collect all beam directions into parms->dirs and parms->dirrecon and determine
+   the maximum field of view.
+
+   @param[in,out] parms The parameter struct.
+*/
 static void setup_parms_postproc_dirs(parms_t *parms){
 	//Collect all beam directions
 	parms->dirs=make_dirs(parms, 0);
@@ -2935,6 +3063,8 @@ static void setup_parms_postproc_dirs(parms_t *parms){
    compute minimum size of atm screen to cover all the beam path. same for
    all layers.  todo:may need to consider L0 Must be after
    setup_parms_postproc_za.
+
+   @param[in,out] parms The parameter struct. The atmosphere screen size is updated.
 */
 static void setup_parms_postproc_atm_size(parms_t *parms){
 	const int nps=parms->atm.nps;
@@ -3010,6 +3140,7 @@ static int arrind(real *arr, int *n, real val){
    to match LGS WFS in a reduce sampling depending on the DM altitude and guide
    star range..
 
+   @param[in,out] parms The parameter struct. DM parameters are adjusted.
 */
 static void setup_parms_postproc_dm(parms_t *parms){
 	/*disable cache for low order systems. */
@@ -3053,6 +3184,8 @@ static void setup_parms_postproc_dm(parms_t *parms){
    Setting up the cone coordinate for MCAO LGS
    simulation. First find out the guide star conjugate. Only 1
    altitude is allowed.
+
+   @param[in,out] parms The parameter struct. Reconstruction parameters are adjusted.
 */
 static void setup_parms_postproc_recon(parms_t *parms){
 	{
@@ -3482,6 +3615,13 @@ static void setup_parms_postproc_recon(parms_t *parms){
 	}
 }
 
+/**
+   Check which seeds still need to run, lock them, and remove from the list seeds
+   that are already done or are running.
+
+   @param[in,out] parms The parameter struct. sim.seeds, sim.nseed, fdlock, and fnlock are updated.
+   @param[in] override If set, remove existing Res_*.done files and run those seeds again.
+*/
 static void setup_parms_postproc_seeds(parms_t *parms, int override){
 	if(disable_save) return;//do not check if not saved
 	if(parms->sim.end>parms->sim.start){
@@ -3550,6 +3690,8 @@ static void setup_parms_postproc_seeds(parms_t *parms, int override){
 }
 /**
    postproc misc parameters.
+
+   @param[in,out] parms The parameter struct. Miscellaneous parameters are checked and adjusted.
 */
 static void setup_parms_postproc_misc(parms_t *parms){
 	if(disable_save){
@@ -3604,6 +3746,15 @@ static void setup_parms_postproc_misc(parms_t *parms){
 		}
 	}
 }
+/**
+   Print a description of the reconstruction algorithm.
+
+   @param[in] bgs Whether block Gauss Seidel is used.
+   @param[in] alg Algorithm (ALG_CBS, ALG_CG, ALG_SVD).
+   @param[in] maxit Maximum number of CG iterations.
+   @param[in] precond CG preconditioner. 0: none, 1: Fourier domain.
+   @param[in] svdthres SVD threshold.
+*/
 static void print_alg(int bgs, int alg, int maxit, int precond, real svdthres){
 	if(bgs){
 		info2("Block Gauss Seidel (BGS) with ");
@@ -3630,6 +3781,8 @@ static void print_alg(int bgs, int alg, int maxit, int precond, real svdthres){
 
 /**
    Selectively print out parameters for easy diagnose of possible mistakes.
+
+   @param[in] parms The parameter struct.
 */
 static void print_parms(const parms_t *parms){
 
@@ -3847,8 +4000,13 @@ static void print_parms(const parms_t *parms){
 /**
    This routine calles other routines in this file to setup the parms parameter
    struct parms and check for possible errors. parms is kept constant after
-   returned from setup_parms. 
-   */
+   returned from setup_parms.
+
+   @param[in] mainconf The main .conf file. If NULL or empty, use ~/.aos/default.conf or default.conf.
+   @param[in] extraconf Additional .conf files or lines that override the main configuration. May be NULL.
+   @param[in] override If set, rerun seeds that are already done.
+   @return The parameter struct. Newly allocated; free it with free_parms().
+*/
 parms_t *setup_parms(const char *mainconf, const char* extraconf, int override){
 	char *config_path=find_config("maos");
 	/*Setup PATH and result directory so that the config_path is in the back of path */
@@ -3940,6 +4098,10 @@ parms_t *setup_parms(const char *mainconf, const char* extraconf, int override){
 /**
    Additional setup_parms code to run when maos is running. It only contains GPU
    initialization code for the moment.
+
+   @param[in,out] parms The parameter struct. GPU flags are adjusted.
+   @param[in] gpus List of GPU indices to use.
+   @param[in] ngpu Number of GPUs to use.
 */
 void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
 #if USE_CUDA

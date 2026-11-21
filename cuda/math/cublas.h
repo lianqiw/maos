@@ -24,9 +24,22 @@
 */
 void cuspmul(curmat &y, const cusp &A, const curmat &x, long ncol, char trans, Real alpha, stream_t &stream);
 //int cusvd(curmat &U, curmat &S, curmat &VT, curmat &A);
-/**<
- * C=A*diag(x)
- * */
+/**
+   Templated cublas dgmm: C=A*diag(x) or C=diag(x)*A depending on mode.
+   Specialized for float, double, float2, and double2 in cublas.cu.
+
+   @param[in] handle cublas handle.
+   @param[in] mode CUBLAS_SIDE_RIGHT for A*diag(x), CUBLAS_SIDE_LEFT for diag(x)*A.
+   @param[in] m Number of rows of A and C.
+   @param[in] n Number of columns of A and C.
+   @param[in] A Input matrix.
+   @param[in] lda Leading dimension of A.
+   @param[in] x Diagonal vector.
+   @param[in] incx Stride of x.
+   @param[out] C Output matrix.
+   @param[in] ldc Leading dimension of C.
+   @return cublas status.
+*/
 template<typename T>
 cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
                           int m, int n,
@@ -35,13 +48,26 @@ cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
                           T *C, int ldc);
 
 /**
- * C=A*S
- * Sd=diagonal(S)
+   Multiply a matrix by a diagonal matrix: C=A*diag(Sd).
+
+   @param[out] C Output matrix, preallocated with the same size as A. May be A itself.
+   @param[in] A Input matrix.
+   @param[in] Sd Diagonal of the diagonal matrix. Must have at least A.Ny() elements.
+   @param[in] stream Stream to run in.
 */
 template<typename T>
 void cudgmm(NumArray<T, Gpu>C, NumArray<T, Gpu>A, NumArray<T, Gpu>Sd, stream_t &stream){
     DO(cublasGdgmm(stream.blas(), CUBLAS_SIDE_RIGHT, A.Nx(), A.Ny(), A(), A.Nx(), Sd(), 1, C(), C.Nx()));
 }
+/**
+   Multiply a matrix by a diagonal matrix of different type: C=A*diag(Sd). Sd is
+   first converted to the type of A.
+
+   @param[out] C Output matrix, preallocated with the same size as A. May be A itself.
+   @param[in] A Input matrix.
+   @param[in] Sd Diagonal of the diagonal matrix. Must have at least A.Ny() elements.
+   @param[in] stream Stream to run in.
+*/
 template<typename T, typename TS>
 void cudgmm(NumArray<T, Gpu>C, NumArray<T, Gpu>A, NumArray<TS, Gpu>Sd, stream_t &stream){
 	NumArray<T, Gpu>Sd2;
@@ -49,8 +75,25 @@ void cudgmm(NumArray<T, Gpu>C, NumArray<T, Gpu>A, NumArray<TS, Gpu>Sd, stream_t 
 	DO(cublasGdgmm(stream.blas(), CUBLAS_SIDE_RIGHT, A.Nx(), A.Ny(), A(), A.Nx(), Sd2(), 1, C(), C.Nx()));
 }
 /**
- * C=alpha*op(A)*op(B)+beta*C
- * */
+   Templated cublas gemm: C=alpha*op(A)*op(B)+beta*C. Specialized for float,
+   double, float2, and double2 in cublas.cu.
+
+   @param[in] handle cublas handle.
+   @param[in] transa Operation on A.
+   @param[in] transb Operation on B.
+   @param[in] m Number of rows of op(A) and C.
+   @param[in] n Number of columns of op(B) and C.
+   @param[in] k Number of columns of op(A) and rows of op(B).
+   @param[in] alpha Scaling factor of the product (host or device pointer).
+   @param[in] A Input matrix.
+   @param[in] lda Leading dimension of A.
+   @param[in] B Input matrix.
+   @param[in] ldb Leading dimension of B.
+   @param[in] beta Scaling factor of C (host or device pointer).
+   @param[in,out] C Output matrix.
+   @param[in] ldc Leading dimension of C.
+   @return cublas status.
+*/
 template<typename T>
 cublasStatus_t cublasGgemm(cublasHandle_t handle,
                            cublasOperation_t transa, cublasOperation_t transb,
@@ -62,7 +105,16 @@ cublasStatus_t cublasGgemm(cublasHandle_t handle,
                            T *C, int ldc);
 
 /**
-   Computes C = beta * C + alpha * op(A) * B ;
+   Computes C = beta * C + alpha * op(A) * op(B).
+
+   @param[in,out] C Output matrix. Allocated if empty, otherwise accumulated into.
+   @param[in] beta Scaling factor of C.
+   @param[in] A Input matrix.
+   @param[in] B Input matrix.
+   @param[in] trans Two characters selecting op for A and B: 't'/'T' for
+   transpose, 'c'/'C' for conjugate transpose, otherwise none.
+   @param[in] alpha Scaling factor of the product.
+   @param[in] stream Stream to run in.
 */
 template<typename T>
 void cugemm(NumArray<T, Gpu> &C, T beta, const NumArray<T, Gpu> &A, const NumArray<T, Gpu> &B, const char trans[2], T alpha, stream_t &stream){
@@ -95,10 +147,6 @@ void cugemm(NumArray<T, Gpu> &C, T beta, const NumArray<T, Gpu> &A, const NumArr
     DO(cublasGgemm(stream.blas(), transa, transb, m, n, k,
                    &alpha, A(), A.Nx(), B(), B.Nx(), &beta, C(), C.Nx()));
 }
-/**
- * SVD decomposition of a dense matrix using QR algorithm. Deprecated
- * A = U * S * Vt
- * */
 #if CUDA_VERSION >= 10000
 #define CHECK(status)\
 	switch(status){\
@@ -113,6 +161,18 @@ void cugemm(NumArray<T, Gpu> &C, T beta, const NumArray<T, Gpu> &A, const NumArr
 			error("Unknown error happened: %d\n", (int) status); break;\
 	}\
 
+/**
+   SVD decomposition of a dense matrix using QR algorithm (cusolverDnXgesvd):
+   A = U * S * Vt.
+
+   @param[out] U Left singular vectors (A.Nx()*A.Nx()). Reallocated.
+   @param[out] S Singular values in descending order (min(A.Nx(), A.Ny())). Reallocated.
+   @param[out] Vt Transpose of right singular vectors (A.Ny()*A.Ny()). Reallocated.
+   @param[in,out] A Input matrix. Its content is destroyed.
+   @param[in] stream Stream whose cusolver handle is used.
+   @return cusolver info: 0 for success, -i if the i-th parameter is wrong, or
+   the number of superdiagonals that did not converge.
+*/
 template<typename T, typename R>
 int cusvd(NumArray<T, Gpu> &U, NumArray<R, Gpu> &S, NumArray<T, Gpu> &Vt, NumArray<T, Gpu> &A, stream_t &stream){
     cusolverDnParams_t params; cusolverDnCreateParams(&params);
@@ -144,21 +204,29 @@ int cusvd(NumArray<T, Gpu> &U, NumArray<R, Gpu> &S, NumArray<T, Gpu> &Vt, NumArr
     return ans;
 }
 /**
- * SVD decomposition of a dense matrix using polar decomposition. It is much
- * faster than QR algorithm.
- *
- * A = U * S * Vt
- *
- * cusolverDnXgesvdp combines polar decomposition in [14] and cusolverDnXsyevd
- * to compute SVD. It is much faster than cusolverDnXgesvd which is based on QR
- * algorithm. However polar decomposition in [14] may not deliver a full unitary
- * matrix when the matrix A has a singular value close to zero. To workaround
- * the issue when the singular value is close to zero, we add a small
- * perturbation so polar decomposition can deliver the correct result. The
- * consequence is inaccurate singular values shifted by this perturbation. The
- * output parameter h_err_sigma is the magnitude of this perturbation. In other
- * words, h_err_sigma shows the accuracy of SVD.
- * */
+   SVD decomposition of a dense matrix using polar decomposition. It is much
+   faster than QR algorithm.
+
+   A = U * S * V'
+
+   cusolverDnXgesvdp combines polar decomposition in [14] and cusolverDnXsyevd
+   to compute SVD. It is much faster than cusolverDnXgesvd which is based on QR
+   algorithm. However polar decomposition in [14] may not deliver a full unitary
+   matrix when the matrix A has a singular value close to zero. To workaround
+   the issue when the singular value is close to zero, we add a small
+   perturbation so polar decomposition can deliver the correct result. The
+   consequence is inaccurate singular values shifted by this perturbation. The
+   magnitude of this perturbation (h_err_sigma) is printed as a warning if
+   nonzero; it shows the accuracy of SVD.
+
+   @param[out] U Left singular vectors (A.Nx()*A.Nx()). Reallocated.
+   @param[out] S Singular values (min(A.Nx(), A.Ny())). Reallocated.
+   @param[out] V Right singular vectors (A.Ny()*A.Ny()). Reallocated.
+   @param[in,out] A Input matrix. Its content may be destroyed.
+   @param[in] stream Stream whose cusolver handle is used.
+   @return cusolver info: 0 for success, -i if the i-th parameter is wrong,
+   positive for failure to converge.
+*/
 template<typename T, typename TS>
 int cusvdp(NumArray<T, Gpu> &U, NumArray<TS, Gpu> &S, NumArray<T, Gpu> &V, NumArray<T, Gpu> &A, stream_t &stream){
     cusolverDnParams_t params; cusolverDnCreateParams(&params);
@@ -195,9 +263,18 @@ int cusvdp(NumArray<T, Gpu> &U, NumArray<TS, Gpu> &S, NumArray<T, Gpu> &V, NumAr
     return ans;
 }
 /**
- * Use SVD decomposition to compute power (usually inverse) of A. 
- * A=U*S*Vt --> A^-1 = Vt'*S^-1*U'
- * */
+   Use SVD decomposition to compute power (usually inverse) of A in place.
+   A=U*S*Vt --> A^-1 = Vt'*S^-1*U'. Singular values are set to 0 starting from
+   the first one (other than the first) that is below thres1*S[0] or below
+   thres2 times the previous one.
+
+   @param[in,out] A Input square matrix, replaced by the result.
+   @param[in] power Power to apply to the singular values (-1 for inverse).
+   @param[in] thres1 Threshold relative to the largest singular value.
+   @param[in] thres2 Threshold relative to the previous singular value.
+   @param[in] stream Stream to run in.
+   @return Always 0.
+*/
 template<typename T, typename ST>
 int cusvd_pow(NumArray<T, Gpu> &A, ST power, ST thres1, ST thres2, stream_t &stream){
     if(A.Nx()!=A.Ny()){

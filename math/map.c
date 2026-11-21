@@ -18,11 +18,12 @@
 #include "mathdef.h"
 #include "map.h"
 /**
- * @brief Convert a dmat in place to map object. Ensure that the type is properly initialized
- * 
- * @param A 	input dmat object. will be changed in place.
- * @return map_t* 
- */
+   Convert a dmat in place to map object. Ensure that the type is properly
+   initialized. Keywords, if present, are parsed into the map fields.
+
+   @param[in,out] A Input dmat object. It is reallocated in place and must no longer be used.
+   @return The converted map_t, which takes over A; NULL if A is NULL or not a real matrix.
+*/
 map_t* map_convert(dmat *A){
 	if(!A || A->id!=M_REAL) return NULL;
 	map_t* map=myrecalloc(A, dmat, map_t);
@@ -42,11 +43,12 @@ cell* map_convert_cell(cell* A){
 }
 
 /**
- * @brief Convert a dmat in place to rmap object. Ensure that the type is properly initialized
- * 
- * @param A 	input dmat object. will be changed in place.
- * @return map_t* 
- */
+   Convert a dmat in place to rmap object. Ensure that the type is properly
+   initialized. Keywords, if present, are parsed into the rmap fields.
+
+   @param[in,out] A Input dmat object. It is reallocated in place and must no longer be used.
+   @return The converted rmap_t, which takes over A; NULL if A is NULL or not a real matrix.
+*/
 rmap_t* rmap_convert(dmat* A){
 	if(!A || A->id!=M_REAL) return NULL;
 	rmap_t* map=myrecalloc(A, dmat, rmap_t);
@@ -56,7 +58,13 @@ rmap_t* rmap_convert(dmat* A){
 	return map;
 }
 /**
-   create a new map_t object.
+   create a new map_t object with zero data and origin at the center.
+
+   @param[in] nx Number of points along x.
+   @param[in] ny Number of points along y.
+   @param[in] dx Sampling along x (m).
+   @param[in] dy Sampling along y (m).
+   @return Newly allocated map; the caller frees it with mapfree().
 */
 map_t* mapnew(long nx, long ny, real dx, real dy){
 	map_t* map=map_convert(dnew(nx, ny));
@@ -73,7 +81,11 @@ map_t* mapnew(long nx, long ny, real dx, real dy){
 	return map;
 }
 /**
-   ceate a new map_t object from existing one. P is left empty.
+   ceate a new map_t object from existing one. The metadata is copied and the
+   data is set to zero.
+
+   @param[in] A Map to copy dimension and metadata from.
+   @return Newly allocated map; the caller frees it with mapfree(). NULL if A is empty.
 */
 map_t* mapnew2(map_t* A){
 	if(isempty(A)) return NULL;
@@ -88,12 +100,25 @@ map_t* mapnew2(map_t* A){
 	map->aoi=A->aoi;
 	return map;
 }
+/**
+   Create a new map_t that references (shares) the data of in and copies its
+   metadata. Free with mapfree().
+
+   @param[in] in Map to reference.
+   @return Newly allocated map header sharing data with in; NULL if in is empty.
+*/
 map_t* mapref(const map_t* in){
 	if(isempty(in)) return NULL;
 	map_t* out=map_convert(dref(in->dmat));
 	memcpy((char*)out+sizeof(dmat), (char*)in+sizeof(dmat), sizeof(map_t)-sizeof(dmat));
 	return out;
 }
+/**
+   Create a deep copy of map_t, including data and metadata.
+
+   @param[in] in Map to copy.
+   @return Newly allocated map; the caller frees it with mapfree(). NULL if in is empty.
+*/
 map_t* mapdup(const map_t* in){
 	if(isempty(in)) return NULL;
 	map_t* out=map_convert(ddup(in->dmat));
@@ -102,7 +127,11 @@ map_t* mapdup(const map_t* in){
 }
 
 /**
-   Create a circular aperture on map_t.
+   Create a circular aperture centered on the origin of map_t.
+
+   @param[in,out] map Map to add the circle to.
+   @param[in] r Radius of the circle (m).
+   @param[in] val Value to add inside the circle.
 */
 void mapcircle(map_t* map, real r, real val){
 	if(isempty(map)) return;
@@ -111,6 +140,10 @@ void mapcircle(map_t* map, real r, real val){
 
 /**
    Find the inner and outer diameter of an amplitude map contained in map_t.
+
+   @param[in] map Amplitude map.
+   @param[out] d Outer diameter (m).
+   @param[out] din Inner diameter (m).
 */
 void map_d_din(map_t* map, real* d, real* din){
 	if(isempty(map)||!d||!din) return;
@@ -138,23 +171,25 @@ void map_d_din(map_t* map, real* d, real* din){
    0: there is a point on the origin.
    1/2: the closest point to origin is 1/2 pixel.
 
-   pad!=0: round nx, ny to power of 2.  */
+   pad!=0: round nx, ny to power of 2.
 
-void create_metapupil(map_t** mapout,/**<[out] map*/
-	long* nxout,  /**<[out] nx*/
-	long* nyout,  /**<[out] ny*/
-	dmat* dirs,   /**<[in] All Directions to cover (thetax, thetay, hs, hc)*/
-	real D,     /**<[in] Diameter (meter)*/
-	real ht0,   /**<[in] Conjugation Height (meter)*/
-	real dx,    /**<[in] Sampling along x (meter)*/
-	real dy,    /**<[in] Sampling along y (meter)*/
-	real offset,/**<[in] Fractional offset of point closet from origin. between [0, 1)*/
-	real guard, /**<[in] Width of guard area, in meter*/
-	long ninx,    /**<[in] Suggested size along x*/
-	long niny,    /**<[in] Suggested size along y*/
-	int pad,      /**<[in] Increase nx, ny to power of 2*/
-	int square    /**<[in] 1: Full square/rectangular grid, 2: circular, 0: minimal*/
-){
+   @param[out] mapout Newly allocated map with 1 inside the covered area; the caller frees it. Skipped if NULL.
+   @param[out] nxout Number of points along x. Skipped if NULL.
+   @param[out] nyout Number of points along y. Skipped if NULL.
+   @param[in] dirs All directions to cover, with rows (thetax, thetay, hs, hc). Required if ht0 is not 0.
+   @param[in] D Diameter (m).
+   @param[in] ht0 Conjugation height (m).
+   @param[in] dx Sampling along x (m).
+   @param[in] dy Sampling along y (m).
+   @param[in] offset Fractional offset of point closest from origin, between [0, 1).
+   @param[in] guard Width of guard area (m).
+   @param[in] ninx Suggested size along x. 0 to use the minimal size.
+   @param[in] niny Suggested size along y. 0 to use the minimal size.
+   @param[in] pad Increase nx, ny to power of 2.
+   @param[in] square 1: Full square grid, 2: circular, 0: minimal.
+*/
+void create_metapupil(map_t** mapout, long* nxout, long* nyout, dmat* dirs, real D, real ht0, real dx, real dy,
+	real offset, real guard, long ninx, long niny, int pad, int square){
 	const real R=D/2;
 	real ox=0, oy=0;
 	long nx, ny;
@@ -271,6 +306,8 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
    - frozen flow speed (vx, vy)
    - origin (ox, oy; will use nx/2*dx or ny/2*dy if not specified)
    - for DM grid only: inter-actuator-coupling (iac)
+
+   @param[in,out] map Map whose fields are set from its keywords.
 */
 void map_parse_keywords(map_t* map){
 	if(!map || map->id!=M_MAP || !map->keywords) return;
@@ -320,6 +357,8 @@ void map_parse_keywords(map_t* map){
 	- ftel:  focal length of the telescope
 	- fexit: distance from exit pupil to focus
 	- fsurf  distance from surface to focu
+
+   @param[in,out] map Map whose fields are set from its keywords.
 */
 void rmap_parse_keywords(rmap_t* map){
 	if(!map || map->id!=M_RMAP || !map->keywords) return;
@@ -339,7 +378,9 @@ void rmap_parse_keywords(rmap_t* map){
 }
 
 /**
-	convert fields to keyword string
+   convert fields to keyword string
+
+   @param[in,out] p map_t whose keywords are regenerated. Ignored if not a map_t.
 */
 void map_make_keywords(cell* p){
 	if(!p || p->id!=M_MAP) return;
@@ -362,7 +403,9 @@ void map_make_keywords(cell* p){
 }
 
 /**
- * convert fields to keyword string
+   convert fields to keyword string
+
+   @param[in,out] p rmap_t whose keywords are regenerated. Ignored if not a rmap_t.
 */
 void rmap_make_keywords(cell* p){
 	if(!p || p->id!=M_RMAP) return;

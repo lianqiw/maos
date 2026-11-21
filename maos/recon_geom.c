@@ -32,7 +32,11 @@
 
 /**
    Setting up PLOC grid, which is a coarse sampled (usually halves the
-   subaperture spacing) grid that defines the circular aperture for tomography.*/
+   subaperture spacing) grid that defines the circular aperture for tomography.
+
+   @param[in,out] recon The reconstruction struct. recon->ploc and related data are set.
+   @param[in] parms The parameter struct.
+*/
 static void
 setup_recon_ploc(recon_t* recon, const parms_t* parms){
 	real dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
@@ -142,6 +146,9 @@ void shwfs_gloc_gamp(loc_t** pgloc, dmat** gamp, const parms_t* parms, const map
 
 /**
    Like ploc, but for DM fitting
+
+   @param[in,out] recon The reconstruction struct. recon->floc and related data are set.
+   @param[in] parms The parameter struct.
 */
 static void
 setup_recon_floc(recon_t* recon, const parms_t* parms){
@@ -207,6 +214,9 @@ setup_recon_floc(recon_t* recon, const parms_t* parms){
 
 /**
    Setup the tomography grids xloc which is used for Tomography.
+
+   @param[in,out] recon The reconstruction struct. recon->xloc and related data are set.
+   @param[in] parms The parameter struct.
 */
 static void
 setup_recon_xloc(recon_t* recon, const parms_t* parms){
@@ -315,6 +325,12 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 		writebin(recon->xloc, "xloc");
 	}
 }
+/**
+   Count the number of nonzero elements.
+
+   @param[in] in The array. May be NULL.
+   @return The number of nonzero elements in in (0 if in is NULL).
+*/
 long count_nonzero(const lmat* in){
 	long count=0;
 	if(in){
@@ -328,6 +344,9 @@ long count_nonzero(const lmat* in){
 }
 /**
    Setup the deformable mirrors grid aloc. This is used for DM fitting.
+
+   @param[in,out] recon The reconstruction struct. recon->aloc and related data are set.
+   @param[in] parms The parameter struct.
 */
 static void
 setup_recon_aloc(recon_t* recon, const parms_t* parms){
@@ -469,11 +488,11 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 	}
 }
 /**
- * @brief Setup amod. Creates full set of modes here. Clip happens in setup_recon_GA to facilitate GA caching.
- * 
- * @param recon 
- * @param parms 
- */
+   Setup amod. Creates full set of modes here. Clip happens in setup_recon_GA to facilitate GA caching.
+
+   @param[in,out] recon The reconstruction struct. recon->amod and recon->anmod are set.
+   @param[in] parms The parameter struct.
+*/
 static void
 setup_recon_amod(recon_t* recon, const parms_t* parms){
 	const int ndm=parms->ndm;
@@ -584,6 +603,11 @@ void setup_recon_HXW(recon_t* recon, const parms_t* parms, mapcell *atm){
 
 /**
    Setup gradient operator from ploc to wavefront sensors.
+
+   @param[in,out] recon The reconstruction struct. recon->GP is set.
+   @param[in] parms The parameter struct.
+   @param[in] aper The telescope aperture amplitude map.
+   @param[in] powfs The powfs struct array.
 */
 static void
 setup_recon_GP(recon_t* recon, const parms_t* parms, const map_t *aper, const powfs_t *powfs){
@@ -675,6 +699,10 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const map_t *aper, const po
 
 /**
    Setup gradient operator form aloc for wfs by using GP.
+
+   @param[in,out] recon The reconstruction struct. recon->GA and related data are set.
+   @param[in] parms The parameter struct.
+   @param[in] powfs The powfs struct array.
 */
 void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	if(parms->nwfsr==0) return;
@@ -883,6 +911,9 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 }
 /**
    Crate the xloc to wfs gradient operator.
+
+   @param[in,out] recon The reconstruction struct. recon->GX is set.
+   @param[in] parms The parameter struct.
 */
 static void
 setup_recon_GX(recon_t* recon, const parms_t* parms){
@@ -922,7 +953,10 @@ setup_recon_GX(recon_t* recon, const parms_t* parms){
 
 /**
    From focus mode to gradients. This acts on WFS, not WFSR.
- */
+
+   @param[in,out] recon The reconstruction struct. recon->GFall and related data are set.
+   @param[in] parms The parameter struct.
+*/
 void setup_recon_GF(recon_t* recon, const parms_t* parms){
 	recon->GFall=dcellnew(parms->nwfs, 1);
 	recon->GFngs=dcellnew(parms->nwfs, 1);
@@ -944,7 +978,10 @@ void setup_recon_GF(recon_t* recon, const parms_t* parms){
 }
 /**
    Tilt removal from DM command. Used by filter.c
- */
+
+   @param[in,out] recon The reconstruction struct. recon->DMTT and recon->DMPTT are set.
+   @param[in] parms The parameter struct.
+*/
 static void 
 setup_recon_dmttr(recon_t* recon, const parms_t* parms){
 	recon->DMTT=dcellnew(parms->ndm, 1);
@@ -1046,7 +1083,11 @@ setup_recon_FF(recon_t* recon, const parms_t* parms){
 }
 /**
    Dither using command path (DM) aberration
- */
+
+   @param[in,out] recon The reconstruction struct. The dither_* members are set.
+   @param[in] powfs The powfs struct array.
+   @param[in] parms The parameter struct.
+*/
 void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
 	int any=0;
 	int dither_mode=0;
@@ -1193,7 +1234,12 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
    will not be updated when estimated WFS measurement noise changes.
 
    This can be used to do NCPA calibration.
- */
+
+   @param[in] parms The parameter struct.
+   @param[in] aper The telescope aperture amplitude map.
+   @param[in] powfs The powfs struct array.
+   @return The reconstruction struct. Newly allocated; free it with free_recon().
+*/
 recon_t* setup_recon_prep(const parms_t* parms, const map_t* aper, const powfs_t* powfs){
 	info_green("\nSetting up reconstruction geometry.\n\n");
 	recon_t* recon=mycalloc(1, recon_t);

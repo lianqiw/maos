@@ -27,6 +27,9 @@
 #include "genotf.h"
 /**
    see genseotf. Check whether cells are different.
+
+   @param[in] opdbias Cell array to check. May be NULL.
+   @return 1 if all cells are similar to the first one (or opdbias is NULL), otherwise the number of cells.
 */
 static int count_unique(const dcell* opdbias){
 	if(!opdbias) return 1;
@@ -39,9 +42,21 @@ static int count_unique(const dcell* opdbias){
 	}
 	return 1;
 }
-static cccell* genseotf_do(const pts_t* pts,
-	const cell* amp, const dcell* opdbias,
-	const cell* saa, const dmat* wvl, real r0, real L0, int embfac){
+/**
+   Generates short exposure OTF for each unique opdbias/amp and wavelength by calling genotf().
+
+   @param[in] pts Subaperture low left coordinate.
+   @param[in] amp Amplitude map. Can be dcell or dmat.
+   @param[in] opdbias OPD bias for otf. May be NULL.
+   @param[in] saa List of subaperture area. Can be dcell or dmat.
+   @param[in] wvl List of wavelength (m).
+   @param[in] r0 Fried parameter (m).
+   @param[in] L0 Outer scale (m).
+   @param[in] embfac Embedding factor, normally 2.
+   @return Newly allocated notf*nwvl cell of OTFs. The caller frees it.
+*/
+static cccell* genseotf_do(const pts_t* pts, const cell* amp, const dcell* opdbias, const cell* saa, const dmat* wvl,
+	real r0, real L0, int embfac){
 
 	/*create a grid representing a sub-aperture. */
 	loc_t* loc=mksqloc_auto(pts->nxsa, pts->nxsa, pts->dx, pts->dy);
@@ -77,16 +92,20 @@ static cccell* genseotf_do(const pts_t* pts,
 }
 /**
    Generates short exposure OTF by calling genotf() with p/t/t removal set.
+   The result is cached in the SEOTF folder.
+
+   @param[in] pts subaperture low left coordinate
+   @param[in] amp_ amplitude map. can be dcell or dmat
+   @param[in] opdbias opd bias for otf.
+   @param[in] saa_ list of subaperture area, can be dcell or dmat
+   @param[in] wvl list of wavelength
+   @param[in] r0 Fried parameter
+   @param[in] L0 Outer scale
+   @param[in] embfac Embedding factor, normally 2
+   @return Newly allocated notf*nwvl cell of OTFs. The caller frees it.
 */
-cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
-				const_anyarray amp_, /**<[in] amplitude map. can be dcell or dmat*/
-				const dcell* opdbias, /**<[in] opd bias for otf.*/
-				const_anyarray saa_, /**<[in] list of subaperture area, can be dcell or dmat*/
-				const dmat* wvl, /**<[in] list of wavelength*/
-				const real r0, /**<[in] Fried parameter*/
-				const real L0, /**<[in] Outer scale*/
-				const int embfac/**<[in] Embedding factor, normally 2*/
-){
+cccell* genseotf(const pts_t* pts, const_anyarray amp_, const dcell* opdbias, const_anyarray saa_, const dmat* wvl,
+	const real r0, const real L0, const int embfac){
 	uint32_t key=0;
 	const cell *amp=amp_.c;
 	const cell *saa=saa_.c;
@@ -132,15 +151,18 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
    OTF and uplink OTF. Not including detector or elongation characteristics.  
    otfs and lotf must have the same sampling, but may have different dimension.
    Assumes that the otfs have peak in center.
-   */
-void gensepsf(dccell** psepsfs, /**<[out] PSF. The sampling depends on sampling of OTF and notfx*/
-	const cccell* otfs, /**<[in] OTFs of down link*/
-	const cccell* lotf, /**<[in] OTFs of uplink, optional*/
-	const_anyarray saa_, /**<[in] subaperture area, optional*/
-	const dmat* wvl, /**<[in] wavelength*/
-	long npsfx,/**<[in] PSF x dimension. optional. If specified, the psf will be padded by 0 or truncated*/
-	long npsfy/**<[in] PSF y dimension. optional. If specified, the psf will be padded by 0 or truncated*/
-){
+
+   @param[in,out] psepsfs PSF. The sampling depends on sampling of OTF and notfx. Initialized if NULL;
+   otherwise each PSF is reallocated.
+   @param[in] otfs OTFs of down link
+   @param[in] lotf OTFs of uplink, optional
+   @param[in] saa_ subaperture area, optional
+   @param[in] wvl wavelength
+   @param[in] npsfx PSF x dimension. optional. If specified, the psf will be padded by 0 or truncated
+   @param[in] npsfy PSF y dimension. optional. If specified, the psf will be padded by 0 or truncated
+*/
+void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf, const_anyarray saa_, const dmat* wvl,
+	long npsfx, long npsfy){
 	const int nwvl=(int)PN(wvl);
 	const long nsa=NX(P(otfs, 0, 0));
 	const int nlotf=lotf?(int)NX(lotf):0;
@@ -210,7 +232,25 @@ void gensepsf(dccell** psepsfs, /**<[out] PSF. The sampling depends on sampling 
 /**
    generate subaperture short exposure average pixel intensities sampled on
    detector from short expsoure PSF, the elongation transfer function of the
-   sodium layer, and the detector transfer function. */
+   sodium layer, and the detector transfer function.
+
+   @param[in,out] pi0 If not NULL, the nsa*ni0 average pixel intensities. Reallocated if NULL or
+   mismatch in size; otherwise zeroed and recomputed.
+   @param[in,out] pgx If not NULL, derivative of i0 along x (or radial direction if gxyrot is set). Same handling as pi0.
+   @param[in,out] pgy If not NULL, derivative of i0 along y (or azimuthal direction if gxyrot is set). Same handling as pi0.
+   @param[in,out] pfotf If not NULL, the existing content is freed and replaced by the newly allocated
+   OTF (including elongation) of each subaperture and wavelength.
+   @param[in] sepsfs Short exposure PSF, from gensepsf().
+   @param[in] dtf Detector transfer function, one per wavelength.
+   @param[in] etf Elongation transfer function, one per wavelength. NULL for none.
+   @param[in] saa Subaperture area. Used when i0scale is set.
+   @param[in] gxyrot If not NULL, angle (radian) of each subaperture to compute the derivative in rotated coordinate.
+   @param[in] siglev Signal level.
+   @param[in] wvlwts Wavelength weights.
+   @param[in] goff If not NULL, gradient offset (radian) to shift the PSF by.
+   @param[in] i0scale Whether to scale i0 to match the subaperture area.
+   @param[in] shift2center Whether to shift the PSF to be centered. Cannot be used with goff.
+*/
 void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 	const dccell* sepsfs, const dtf_t* dtf, const etf_t* etf, const dcell* saa,
 	const dcell* gxyrot, const dmat* siglev, const dmat* wvlwts, const dcell* goff,

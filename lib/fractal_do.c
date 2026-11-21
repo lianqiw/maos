@@ -35,6 +35,18 @@
 #endif
 
 
+/**
+   Apply the fractal operator (forward, inverse, transpose, or inverse transpose
+   depending on INVERSE and TRANSPOSE) in place on the square screen p0 with
+   sampling dx for turbulence of r0 and L0. The size of p0 must be (ninit-1)*2^n+1,
+   where ninit is the size of the initial coarse grid.
+
+   @param[in,out] p0 Square screen, transformed in place.
+   @param[in] dx Sampling (m).
+   @param[in] r0 Fried parameter (m).
+   @param[in] L0 Outer scale (m).
+   @param[in] ninit Size of the initial coarse grid.
+*/
 void FRACTAL(dmat* p0, real dx, real r0, real L0, long ninit){
 	const long nx=NX(p0);
 	const long ny=NY(p0);

@@ -44,16 +44,23 @@ const char* myasctime(void){
 	st[strlen(st)-1]='\0';
 	return st;
 }
+/**
+   Test whether a file exists.
+
+   @param[in] fn File name.
+   @return 1 if the file exists, 0 otherwise.
+*/
 static int exist(const char* fn){
-	/**
-	   Test whether a file exists.
-	*/
 	struct stat buf;
 	return !stat(fn, &buf);
 }
 /**
    Compare two strings upto the length of b. if length of a is less than b,
    return false. 1 means not equal.
+
+   @param[in] a String to compare.
+   @param[in] b Reference string; its length sets the number of characters compared.
+   @return 0 if the first strlen(b) characters of a equal b; nonzero otherwise (also when either is NULL or empty or a is shorter).
  */
 static int mystrcmp(const char* a, const char* b){
 	if(!a||!b) return 1;
@@ -67,6 +74,10 @@ static int mystrcmp(const char* a, const char* b){
 }
 /**
    Check the suffix of a file.
+
+   @param[in] fn File name.
+   @param[in] suffix Suffix to check.
+   @return 1 if fn ends with suffix, 0 otherwise.
 */
 static int check_suffix(const char* fn, const char* suffix){
 	if(!fn||!suffix) return 0;
@@ -82,6 +93,8 @@ static int check_suffix(const char* fn, const char* suffix){
 
 /**
    Make dirs recursively. like mkdir -p in bash
+
+   @param[in,out] fn Directory path. Trailing slashes are removed in place; the string is temporarily modified during recursion.
 */
 void mymkdir(char* fn){
 	if(!fn) return;
@@ -103,7 +116,10 @@ void mymkdir(char* fn){
 	}
 }
 /**
-   Obtain the dirname of a path. See mybasename().
+   Obtain the dirname of a path.
+
+   @param[in] fn Path.
+   @return Newly allocated directory part ("." if fn has no '/'), or NULL if fn is NULL or empty. The caller frees it.
 */
 char* mydirname(const char* fn){
 	if(!fn||strlen(fn)==0) return NULL;
@@ -122,12 +138,24 @@ char* mydirname(const char* fn){
 }
 /**
    Test whether fn is a symbolic link
+
+   @param[in] fn File name.
+   @return 1 if fn is a symbolic link, 0 otherwise.
 */
 static int islink(const char* fn){
 	if(!fn) return 0;
 	struct stat buf;
 	return !lstat(fn, &buf)&&S_ISLNK(buf.st_mode);
 }
+/**
+   Process a file name for opening: expand leading ~, append .bin if no known
+   suffix. For reading, try alternatives with or without .gz and .fits. For
+   writing, remove an existing symbolic link or create the parent directory.
+
+   @param[in] fn File name.
+   @param[in] mod Open mode: "r", "a", or "w".
+   @return Newly allocated processed file name, or NULL if the file is not found (read) or cannot be prepared (write). The caller frees it.
+*/
 static char* procfn(const char* fn, const char* mod){
 	if(!fn){
 		dbg("fn is empty\n");
@@ -192,7 +220,15 @@ static char* procfn(const char* fn, const char* mod){
 	}
 	return fn2;
 }
-/*stripped down version of io.c*/
+/**
+   Open a file for reading or writing. Stripped down version of io.c. Files are
+   gzip compressed when writing unless the name ends with .fits. When reading,
+   gzip is detected from the magic number.
+
+   @param[in] fn File name.
+   @param[in] mod Open mode: "r", "w", or "a".
+   @return Newly allocated file handle, or NULL on failure. Close it with zfclose().
+*/
 file_t* zfopen(const char* fn, const char* mod){
 	char* fn2=procfn(fn, mod);
 	if(!fn2){
@@ -270,6 +306,11 @@ file_t* zfopen(const char* fn, const char* mod){
 	free(fn2);
 	return fp;
 }
+/**
+   Close the file and free fp.
+
+   @param[in] fp File handle; freed on return. NULL is ignored.
+*/
 void zfclose(file_t* fp){
 	if(!fp) return;
 	if(fp->isgzip){
@@ -281,6 +322,14 @@ void zfclose(file_t* fp){
 	}
 	free(fp);
 }
+/**
+   Write raw data with gzwrite or fwrite. Closes the file and aborts on failure.
+
+   @param[in] ptr Data to write.
+   @param[in] size Size of each element in bytes.
+   @param[in] nmemb Number of elements.
+   @param[in,out] fp File handle.
+*/
 static inline void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	if(fp->isgzip){
 		if(gzwrite((gzFile)fp->p, ptr, size*nmemb)!=(long)(size*nmemb)){
@@ -298,7 +347,15 @@ static inline void zfwrite_do(const void* ptr, const size_t size, const size_t n
 }
 /**
    Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
-   fwrite. Follows the interface of fwrite.
+   fwrite. Follows the interface of fwrite. For fits files, data is converted to
+   big endian and written in blocks of 2880 bytes padded with zeros. Complex
+   numbers must be written with size of each real component and twice the
+   number of elements so that both components are byte swapped separately.
+
+   @param[in] ptr Data to write.
+   @param[in] size Size of each element in bytes.
+   @param[in] nmemb Number of elements.
+   @param[in,out] fp File handle.
  */
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
@@ -373,7 +430,14 @@ static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, fi
 /**
    Read from the file. if in gzip mode, calls gzread, otherwise calls
    fread. follows the interface of fread. It does byte ordering from big endian
-   to small endian in case we are reading fits file.  */
+   to small endian in case we are reading fits file.
+
+   @param[out] ptr Buffer to receive the data.
+   @param[in] size Size of each element in bytes.
+   @param[in] nmemb Number of elements.
+   @param[in,out] fp File handle.
+   @return 0 on success, -1 on failure or end of file.
+*/
 int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
 	if(fp->isfits&&size>1){/*need to do byte swapping.*/
@@ -427,7 +491,13 @@ int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 }
 
 /**
-   Move the current position pointer, like fseek
+   Move the current position pointer, like fseek. For fits files, offset is
+   rounded up to a multiple of 2880 bytes.
+
+   @param[in,out] fp File handle.
+   @param[in] offset Offset in bytes.
+   @param[in] whence SEEK_SET, SEEK_CUR, or SEEK_END.
+   @return 0 on success, -1 on failure.
 */
 int zfseek(file_t* fp, long offset, int whence){
 	if(fp->isfits){/*in fits, we need to offset integer block of 2880.*/
@@ -441,6 +511,12 @@ int zfseek(file_t* fp, long offset, int whence){
 		return fseek((FILE*)fp->p, offset, whence);
 	}
 }
+/**
+   Return the current position in the file, like ftell.
+
+   @param[in] fp File handle.
+   @return Current position in bytes (uncompressed position for gzip files), or -1 on error.
+*/
 long zftell(file_t* fp){
 	if(fp->isgzip){
 		return gztell((gzFile)fp->p);
@@ -448,11 +524,20 @@ long zftell(file_t* fp){
 		return ftell((FILE*)fp->p);
 	}
 }
+/**
+   Test end of file by seeking forward by one byte.
+
+   @param[in,out] fp File handle. The position is advanced on success.
+   @return Nonzero if the seek fails, 0 otherwise.
+*/
 int zfeof(file_t* fp){
 	return zfseek(fp, 1, SEEK_CUR);
 }
 /**
    Write the magic into file. Also write a dummy header to make data alignment to 8 bytes.
+
+   @param[in] magic Magic number identifying the data type.
+   @param[in,out] fp File handle. Must not be a fits file.
 */
 static void write_bin_magic(uint32_t magic, file_t* fp){
 	if(fp->isfits){
@@ -471,7 +556,11 @@ static void write_bin_magic(uint32_t magic, file_t* fp){
    the file and also to verify that what we are reading are indeed header. The
    header may be written multiple times. They will be concatenated when
    read. The header should contain key=value entries just like the configuration
-   files. The entries should be separated by new line charactor. */
+   files. The entries should be separated by new line charactor.
+
+   @param[in] keywords Header string. Nothing is written if NULL.
+   @param[in,out] fp File handle. Must not be a fits file.
+*/
 static void write_bin_header(const char* keywords, file_t* fp){
 	if(!keywords) return;
 	if(fp->isfits){
@@ -502,7 +591,12 @@ static void write_bin_header(const char* keywords, file_t* fp){
 
 /**
    Obtain the current magic number. If it is a header, read it out if output of
-header is not NULL.  The header will be appended to the output header.*/
+   header is not NULL.  The header will be appended to the output header.
+
+   @param[in,out] fp File handle. Must not be a fits file.
+   @param[in,out] pkeywords If not NULL, headers read are appended to *pkeywords (allocated if NULL). The caller frees it.
+   @return The magic number of the next data block, or 0 at end of file.
+*/
 uint32_t read_bin_magic(file_t* fp, char** pkeywords){
 	uint32_t magic, magic2;
 	uint64_t nlen, nlen2;
@@ -545,7 +639,13 @@ uint32_t read_bin_magic(file_t* fp, char** pkeywords){
 	}/*while*/
 }
 /**
-   Write fits header. extra is extra header that will be put in fits comment
+   Write fits header.
+
+   @param[in,out] fp File handle. fp->isfits is incremented after the primary HDU.
+   @param[in] str Extra header that will be put in fits comment. May be NULL.
+   @param[in] magic Magic number identifying the data type.
+   @param[in] ndim Number of dimensions.
+   @param[in] dims Dimensions of length ndim.
 */
 static void
 write_fits_header(file_t* fp, const char* str, uint32_t magic, uint64_t ndim, mwSize* dims){
@@ -633,7 +733,14 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, uint64_t ndim, mw
 }
 
 /**
-   Read fits header
+   Read fits header of the next HDU.
+
+   @param[in,out] fp File handle.
+   @param[in,out] str Non-standard keywords and comments are appended to *str (allocated if NULL). The caller frees it.
+   @param[out] magic Data type magic number.
+   @param[out] ndim Number of dimensions.
+   @param[out] dims Dimensions; newly allocated when ndim>0. The caller frees it.
+   @return 0 on success, -1 at end of file or on error.
  */
 int read_fits_header(file_t* fp, char** str, uint32_t* magic, uint64_t* ndim, mwSize** dims){
 	char line[82];//extra space for \n and \0
@@ -748,7 +855,11 @@ int read_fits_header(file_t* fp, char** str, uint32_t* magic, uint64_t* ndim, mw
 
 /**
    Write multiple long numbers into the file. To write three numbers, a, b, c,
-call with zfwritelarr(fp, 3, &a, &b, &c); */
+   call with zfwritelarr(fp, 3, &a, &b, &c);
+
+   @param[in,out] fp File handle.
+   @param[in] count Number of uint64_t pointers that follow.
+*/
 void zfwritelarr(file_t* fp, int count, ...){
 	va_list ap;
 	int i;
@@ -762,6 +873,9 @@ void zfwritelarr(file_t* fp, int count, ...){
 /**
    Read multiple long numbers from the file. To read three numbers, a, b, c,
    call with zfreadlarr(fp, 3, &a, &b, &c);
+
+   @param[in,out] fp File handle.
+   @param[in] count Number of uint64_t pointers that follow.
  */
 void zfreadlarr(file_t* fp, int count, ...){
 	va_list ap;
@@ -774,8 +888,12 @@ void zfreadlarr(file_t* fp, int count, ...){
 	va_end(ap);                       /* Clean up.  */
 }
 /**
-  A unified header writing routine for .bin and .fits files. It write the array
-information and string header if any.  */
+   A unified header writing routine for .bin and .fits files. It write the array
+   information and string header if any.
+
+   @param[in] header Header with magic, dimensions, and string header.
+   @param[in,out] fp File handle.
+*/
 void write_header(const header_t* header, file_t* fp){
 	if(fp->isfits){
 		if(!iscell(header->magic)){
@@ -799,7 +917,12 @@ void write_header(const header_t* header, file_t* fp){
 }
 /**
    A unified header reading routine for .bin and .fits files. It read the array
-information and string header if any.  Return error signal.*/
+   information and string header if any.
+
+   @param[out] header Receives magic, ndim, dims, ntot, and str. header->str is reset and newly allocated; dims is allocated if NULL. The caller frees them.
+   @param[in,out] fp File handle.
+   @return 0 on success (magic is 0 at end of a bin file), -1 on fits read error.
+*/
 int read_header2(header_t* header, file_t* fp){
 	int ans;
 	header->str=NULL;
@@ -824,7 +947,11 @@ int read_header2(header_t* header, file_t* fp){
 	return ans;
 }
 /**
-   calls read_header2 and abort if error happens.*/
+   calls read_header2 and abort if error happens.
+
+   @param[out] header Receives the header. See read_header2().
+   @param[in,out] fp File handle.
+*/
 void read_header(header_t* header, file_t* fp){
 	if(read_header2(header, fp)){
 		zfclose(fp);
@@ -833,6 +960,10 @@ void read_header(header_t* header, file_t* fp){
 }
 /**
    Parse an integer from header str
+
+   @param[in] str Header string.
+   @param[in] name Keyword including the separator, e.g. "Sparse=".
+   @return The integer following name, or 0 if not found or str or name is NULL.
  */
 int search_keyword_int(const char* str, const char* name){
 	if(!str||!name) return 0;
@@ -844,7 +975,11 @@ int search_keyword_int(const char* str, const char* name){
 	}
 }
 /**
-   Parse an integer from header str
+   Parse a floating point number from header str
+
+   @param[in] str Header string.
+   @param[in] name Keyword including the separator.
+   @return The number following name, or 0 if not found.
 */
 double search_keyword_dbl(const char* str, const char* name){
 	const char* tmp=strstr(str, name);

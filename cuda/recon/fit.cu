@@ -20,6 +20,16 @@
 #include "fit.h"
 
 
+/**
+   Set up DM fitting in GPU: ray tracing operators from the tomography grid
+   (HXp) and DM grid (HA) to the fitting directions, with optional caching
+   (fit.cachex, fit.cachedm), low rank terms (NW), actuator slaving, and fitting
+   weights. Requires fit.square=1.
+
+   @param[in] parms Simulation parameters. If NULL, an empty object is created.
+   @param[in] recon Reconstruction data. If NULL, an empty object is created.
+   @param[in] _grid Reconstruction geometry on GPU. Kept as a reference.
+*/
 cufit_grid::cufit_grid(const parms_t* parms, const recon_t* recon, const curecon_geom* _grid)
 	:cusolve_cg(parms?parms->fit.maxit:0, parms?parms->fit.cgwarm:0), grid(_grid),
 	nfit(0), dir(0){
@@ -100,7 +110,12 @@ cufit_grid::cufit_grid(const parms_t* parms, const recon_t* recon, const curecon
 */
 
 /**
-   do HXp operation, opdfit+=Hxp*xin*/
+   Do HXp operation, opdfit=Hxp*xin. With idealtomo, opdfit is instead
+   obtained by ray tracing the atmosphere directly and xin is not used.
+
+   @param[in] xin Tomography layers.
+   @param[in] stream CUDA stream.
+*/
 void cufit_grid::do_hxp(const curcell& xin, stream_t& stream){
 	cuzero(opdfit.M(), stream);
 	if(idealtomo){//DM fiting from turbulence directly (bypasses tomography)
@@ -120,7 +135,14 @@ void cufit_grid::do_hxp(const curcell& xin, stream_t& stream){
 	}
 }
 /**
-   do HXp' operation, xout+=alpha*Hxp'*opdfit2*/
+   Do HXp' operation, xout+=alpha*Hxp'*W*opdfit2 where W is the fitting
+   direction weight.
+
+   @param[in,out] xout Tomography layers to accumulate into (the cell is const
+   but its data is modified).
+   @param[in] alpha Scaling factor.
+   @param[in] stream CUDA stream.
+*/
 void cufit_grid::do_hxpt(const curcell& xout, Real alpha, stream_t& stream){
 	if(xcache){
 		cuzero(xcache.M(), stream);
@@ -132,7 +154,11 @@ void cufit_grid::do_hxpt(const curcell& xout, Real alpha, stream_t& stream){
 }
 
 /**
-   opdfit+=Ha*xin;
+   opdfit=HA*xin: ray trace DM commands xin to the fitting directions, through
+   dmcache if enabled.
+
+   @param[in] xin DM commands.
+   @param[in] stream CUDA stream.
 */
 void cufit_grid::do_ha(const curcell& xin, stream_t& stream){
 	cuzero(opdfit.M(), stream);
@@ -149,7 +175,13 @@ void cufit_grid::do_ha(const curcell& xin, stream_t& stream){
 }
 
 /**
-   xout+=alpha*HA'*opdfit2*/
+   Do HA' operation, xout+=alpha*HA'*W*opdfit2 where W is the fitting direction
+   weight.
+
+   @param[in,out] xout DM commands to accumulate into.
+   @param[in] alpha Scaling factor.
+   @param[in] stream CUDA stream.
+*/
 void cufit_grid::do_hat(curcell& xout, Real alpha, stream_t& stream){
 	if(dmcache){
 		/*opdfit2->dmcache*/
@@ -163,8 +195,15 @@ void cufit_grid::do_hat(curcell& xout, Real alpha, stream_t& stream){
 	}
 }
 
-/*
-  Right hand side operator.
+/**
+   Right hand side operator: xout=xout*beta+alpha*HA'*W*HXp*xin, mapping
+   tomography layers xin to DM space. xout is allocated if empty.
+
+   @param[in,out] xout Output. Allocated if empty, otherwise scaled by beta and accumulated into.
+   @param[in] beta Scaling factor of existing xout.
+   @param[in] xin Input tomography layers.
+   @param[in] alpha Scaling factor of the operator.
+   @param[in] stream CUDA stream.
 */
 void cufit_grid::R(curcell& xout, Real beta, curcell& xin, Real alpha, stream_t& stream){
 	if(!xout){
@@ -187,6 +226,16 @@ void cufit_grid::R(curcell& xout, Real beta, curcell& xin, Real alpha, stream_t&
 	do_hat(xout, alpha, stream);//opdfit2->xout. 390 us
 	//cuwrite(xout, stream, "GPU_FitR_x3");
 }
+/**
+   Transpose of the right hand side operator: xout=xout*beta+alpha*HXp'*W*HA*xin,
+   mapping DM commands xin to tomography layers. xout is allocated if empty.
+
+   @param[in,out] xout Output. Allocated if empty, otherwise scaled by beta and accumulated into.
+   @param[in] beta Scaling factor of existing xout.
+   @param[in] xin Input DM commands.
+   @param[in] alpha Scaling factor of the operator.
+   @param[in] stream CUDA stream.
+*/
 void cufit_grid::Rt(curcell& xout, Real beta, const curcell& xin, Real alpha, stream_t& stream){
 	if(!xout){
 		xout=curcell(grid->npsr, 1, grid->xnx, grid->xny);
@@ -197,6 +246,16 @@ void cufit_grid::Rt(curcell& xout, Real beta, const curcell& xin, Real alpha, st
 	grid->W01.apply(opdfit2, opdfit, stream);
 	do_hxpt(xout, alpha, stream);
 }
+/**
+   Left hand side operator: xout=xout*beta+alpha*(HA'*W*HA+NW*NW'+actslave)*xin.
+   xout is allocated if empty.
+
+   @param[in,out] xout Output. Allocated if empty, otherwise scaled by beta and accumulated into.
+   @param[in] beta Scaling factor of existing xout.
+   @param[in] xin Input DM commands.
+   @param[in] alpha Scaling factor of the operator.
+   @param[in] stream CUDA stream.
+*/
 void cufit_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, stream_t& stream){
 	const int ndm=grid->ndm;
 	ctoc_init(10);

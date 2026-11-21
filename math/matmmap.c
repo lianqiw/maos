@@ -20,7 +20,15 @@
 #include "defs.h"
 
 /**
-   Create a new X(mat) matrix object, mmapped from file. The file is truncated if already exists in rw mode.*/
+   Create a new X(mat) matrix object, mmapped from file. The file is truncated if already exists in rw mode. If the
+   file name is empty, starts with '-', or saving is disabled (except for shared memory), anonymous memory is used.
+
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @param[in] keywords Keywords to save in the header. Can be NULL.
+   @param[in] format printf style format of the file name, followed by its arguments.
+   @return The zero initialized matrix, or NULL if nx or ny is 0 or mmap failed. Newly allocated; the caller frees it.
+*/
 X(mat)* X(new_mmap)(long nx, long ny, const char* keywords, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
@@ -47,9 +55,17 @@ X(mat)* X(new_mmap)(long nx, long ny, const char* keywords, const char* format, 
 /**
    Create a new dense matrix cell object, mmapped from file. The file is
    truncated if already exists.
+
+   @param[in] nx Number of rows of the cell.
+   @param[in] ny Number of columns of the cell.
+   @param[in] nnx Number of rows of each block. If the pointer value is negative, its negation is used for all blocks.
+   @param[in] nny Number of columns of each block, with the same convention as nnx. If NULL, 1 is used.
+   @param[in] keywords Keywords to save in the header. Can be NULL.
+   @param[in] format printf style format of the file name, followed by its arguments.
+   @return The cell with zero initialized blocks, or NULL if nx or ny is 0 or mmap failed. Newly allocated; the
+   caller frees it.
 */
-X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
-	const char* keywords, const char* format, ...){
+X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny, const char* keywords, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
@@ -92,9 +108,18 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
 /**
    Create a new dense matrix cell object, with identical blocks, mmapped from
    file. be aware that the data is not 8-byte aligned. The file is truncated if
-   already exists.  */
-X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char* keywords,
-	const char* format, ...){
+   already exists.
+
+   @param[in] nx Number of rows of the cell.
+   @param[in] ny Number of columns of the cell.
+   @param[in] mx Number of rows of each block.
+   @param[in] my Number of columns of each block.
+   @param[in] keywords Keywords to save in the header. Can be NULL.
+   @param[in] format printf style format of the file name, followed by its arguments.
+   @return The cell with zero initialized blocks, or NULL if nx or ny is 0 or mmap failed. Newly allocated; the
+   caller frees it.
+*/
+X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char* keywords, const char* format, ...){
 	format2fn;
 	return X(cellnew_mmap)(nx, ny, (long*)-mx, (long*)-my, keywords, fn?"%s":NULL, fn);
 }
@@ -123,6 +148,9 @@ static X(mat*) X(readdata_mmap)(char** map, mem_t* mem){
 }
 /**
    Map the file to memory in read only, shared mode.
+
+   @param[in] format printf style format of the file name, followed by its arguments.
+   @return The matrix referencing the mapped data, or NULL if mmap failed. Newly allocated; the caller frees it.
 */
 X(mat*) X(read_mmap)(const char* format, ...){
 	format2fn;
@@ -138,6 +166,10 @@ X(mat*) X(read_mmap)(const char* format, ...){
 
 /**
    Map the file to memory in read only, shared mode.
+
+   @param[in] format printf style format of the file name, followed by its arguments.
+   @return The cell array with blocks referencing the mapped data, or NULL if mmap failed. Newly allocated; the
+   caller frees it.
 */
 X(cell)* X(cellread_mmap)(const char* format, ...){
 	format2fn;

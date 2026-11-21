@@ -82,7 +82,16 @@ typedef struct{
 	cudaEvent_t event_mvm;
 #endif
 }gpu_data_t;
-/*Does matched filter*/
+/**
+   Does matched filter. blockDim.x is 32 and handles a third of the pixels;
+   blockDim.y handles subapertures.
+
+   @param[in] mtch Matched filter, pixpsa values per gradient, gradients ordered xyxy.
+   @param[in] pix Pixel intensities, pixpsa values per subaperture.
+   @param[out] grad Gradients of length 2*nsa, ordered xyxy.
+   @param[in] pixpsa Number of pixels per subaperture (the kernel assumes 90).
+   @param[in] nsa Number of subapertures.
+*/
 static void __global__ mtch_do(const Real* mtch, const Real* pix, Real* grad, int pixpsa, int nsa){
 	extern __shared__ Real cum[];//for cumulation and reduction
 	Real* cumi=cum+threadIdx.y*blockDim.x;//2 padding for easy reduction
@@ -116,6 +125,11 @@ static void __global__ mtch_do(const Real* mtch, const Real* pix, Real* grad, in
    1) Only page locked host memory can do async memcpy that overallps with computation
    2) Has to be Portable for multiple GPUs to do async memcpy concurrently.
 
+   Timing results are saved to files.
+
+   @param[in] gpus List of GPU indices.
+   @param[in] ngpu Number of GPUs to use.
+   @param[in] nstep Number of time steps.
 */
 void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 	dbg("Using %d gpus. nstep=%d\n", ngpu, nstep);

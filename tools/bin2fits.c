@@ -22,6 +22,16 @@
 
 #include "../lib/aos.h"
 
+/**
+   Convert each .bin file given on the command line to a .fits file with the
+   same base name. Usage: bin2fits [gc] file1.bin file2.bin ...
+   With the leading "gc" argument, Galactic Center PSF header keywords are
+   attached to the 25 cells of each file before writing.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments.
+   @return 0 on completion.
+*/
 int main(int argc, char* argv[]){
 	if(argc==1){
 		dbg("Usage: %s file1.bin file2.bin \n", argv[0]);

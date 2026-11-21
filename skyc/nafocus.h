@@ -17,9 +17,6 @@
 */
 #ifndef SKYC_NAFOCUS_H
 #define SKYC_NAFOCUS_H
-/**
-   Compute sodium power spectrum density. alpha, beta are the parameters of the
-   sodium power spectrum obtained by fitting measurement data at UBC. */
 real nafocus_residual(real fs, real tau, real f_zc, real zeta, 
 			real D, real hs, real alpha, real beta);
 dmat* nafocus_time(real alpha, real beta, real dt, long nstep, rand_t *rstat);

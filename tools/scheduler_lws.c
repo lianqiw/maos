@@ -46,12 +46,13 @@ static struct lws_context *context=0;
 const int tx_buffer_size=65536;
 static int lws_forward_tcp(int fd, int nlen, int mode, void *userdata);
 /**
- * @brief Register with listen_socket to handle lws clients
- *
- * @param pollfd
- * @param flag
- * @return int
- */
+   Responder registered with listen_port() to service libwebsockets file
+   descriptors.
+
+   @param[in] pollfd Poll entry of the lws socket.
+   @param[in] flag -1 destroys the lws context.
+   @return Result of lws_service_fd(), or 0 if there is no context or it is destroyed.
+*/
 static int
 lws_respond(struct pollfd *pollfd, int flag){
 	if(!context) return 0;
@@ -66,11 +67,16 @@ lws_respond(struct pollfd *pollfd, int flag){
 	}
 }
 /**
-   Contains code for handling websocket connection using libwebsockets. Part of
-   the code is copied from test-server.c in libwebsockets
+   libwebsockets callback for the http protocol. Adds, changes, or removes lws
+   file descriptors in listen_port() (external poll) and passes other reasons to
+   lws_callback_http_dummy().
 
-   Upon conection, existing job list is converted to payload list and send to the new client.
-   Upon job status change, job info is converted to payload ringbuffer and send to all the clients.
+   @param[in] wsi The lws connection.
+   @param[in] reason Callback reason.
+   @param[in,out] user Per session user data.
+   @param[in] in Reason dependent data (struct lws_pollargs for poll reasons).
+   @param[in] nin Length of in.
+   @return 0 on success, or the result of lws_callback_http_dummy().
 */
 static int
 callback_http(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t nin){
@@ -113,6 +119,22 @@ struct protocol_t{//per client
 	int p_drop;
 };
 
+/**
+   libwebsockets callback for the monitor and drawdaemon protocols. Contains code
+   for handling websocket connection using libwebsockets. Part of the code is
+   copied from test-server.c in libwebsockets.
+
+   Upon connection of a monitor client, the existing job list is requested. Client
+   messages are handled by ws_proxy_command(). Queued payloads are written when
+   the connection is writable, fragmented into 64 kB frames.
+
+   @param[in] wsi The lws connection.
+   @param[in] reason Callback reason.
+   @param[in,out] user Per session data (struct protocol_t).
+   @param[in,out] in Received message for LWS_CALLBACK_RECEIVE.
+   @param[in] nin Length of in.
+   @return 0 on success, -1 if writing to the client fails.
+*/
 static int
 callback_maos(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t nin){
 	struct protocol_t *pss=(struct protocol_t *)user;
@@ -220,11 +242,12 @@ static const struct lws_http_mount mount={
 };
 
 /**
- * @brief Called by scheduler to start lws web server
- *
- * @param port
- * @return int
- */
+   Called by scheduler to start the lws web server, which serves files from the
+   source tools directory and the websocket protocols.
+
+   @param[in] port Port to listen on.
+   @return 0 on success or if already started, -1 on failure.
+*/
 int start_lws(short port){
 	if(context) return 0;
 	struct lws_context_creation_info info;
@@ -244,14 +267,15 @@ int start_lws(short port){
 	return 0;
 }
 /**
- * @brief Read TCP data and forward to websocket clients
- *
- * @param fd 	File descriptor to read from
- * @param nlen 	Length of data to read
- * @param mode 	text (0) or binary (1) mode
- * @param userdata 	lws context
- * @return int 	return -1 to indicate error
- */
+   Read TCP data and queue it for sending to the websocket client. When too many
+   messages are pending, the last queued message is replaced.
+
+   @param[in] fd File descriptor to read from.
+   @param[in] nlen Length of data to read.
+   @param[in] mode 0: text, 1: binary (LWS_WRITE_TEXT or LWS_WRITE_BINARY).
+   @param[in,out] userdata Per session data (struct protocol_t) of the client.
+   @return 0 on success, -1 if reading fails.
+*/
 static int
 lws_forward_tcp(int fd, int nlen, int mode, void *userdata){
 	struct protocol_t *pss=(struct protocol_t *)userdata;

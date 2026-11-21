@@ -25,7 +25,10 @@
 	Math routines that are not applicable to integers and therefore not included in mat.c
 */
 /**
-   scale each element of A by w.
+   Scale each element of A by w.
+
+   @param[in,out] A The matrix to scale in place.
+   @param[in] w The scaling factor.
 */
 void X(scale)(X(mat)* A, R w){
 	if(!A || !check_mat(A)) return;
@@ -39,22 +42,29 @@ void X(scale)(X(mat)* A, R w){
 	}
 }
 /**
- * @brief normalize the sum of A to sum.
- *
- */
+   Normalize the sum of A to sum.
+
+   @param[in,out] A The matrix to normalize in place.
+   @param[in] sum The target sum.
+*/
 void X(normalize_sum)(X(mat) *A, T sum){
 	if(A) X(scale)(A, REAL(sum/X(sum)(A)));
 }
 /**
- * @brief normalize the sum of abs(A) to sum.
- *
- */
+   Normalize the sum of abs(A) to sum.
+
+   @param[in,out] A The matrix to normalize in place.
+   @param[in] sum The target sum of absolute values.
+*/
 void X(normalize_sumabs)(X(mat) *A, R sum){
 	if(A) X(scale)(A, sum/X(sumabs)(A));
 }
 /**
- * Check for NaN in elements
- */
+   Check for NaN in elements.
+
+   @param[in] A The matrix.
+   @return 1 if any element (real part) is NaN, 0 otherwise or if A is invalid.
+*/
 int X(isnan)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	for(long i=0; i<A->nx*A->ny; i++){
@@ -65,14 +75,20 @@ int X(isnan)(const X(mat)* A){
 	return 0;
 }
 /**
-   compute the norm(2) of A
+   Compute the 2-norm of A divided by sqrt of number of columns, i.e., sqrt(sum(abs(A).^2)/ny).
+
+   @param[in] A The matrix.
+   @return sqrt(sum(abs(A).^2)/ny), or 0 if A is invalid.
 */
 R X(norm)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	return sqrt(X(sumsq)(A)/A->ny);
 }
 /**
-   compute the standard deviation of A
+   Compute the (sample) standard deviation of all elements of A.
+
+   @param[in] A The matrix.
+   @return The standard deviation, or 0 if A is invalid.
 */
 R X(std)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
@@ -82,7 +98,11 @@ R X(std)(const X(mat)* A){
 	return sqrt(var);
 }
 /**
-   Fill A with random uniform numbers between [0, 1]*max
+   Fill A with random uniform numbers between [0, 1)*max.
+
+   @param[out] A The matrix to fill.
+   @param[in] max The upper bound.
+   @param[in,out] rstat The random stream.
 */
 void X(randu)(X(mat)* A, const T max, rand_t* rstat){
 	if(!check_mat(A)){
@@ -96,6 +116,10 @@ void X(randu)(X(mat)* A, const T max, rand_t* rstat){
 /**
    Fill A with random normal distribution numbers with
    standard deviation of sigma.
+
+   @param[out] A The matrix to fill.
+   @param[in] sigma The standard deviation.
+   @param[in,out] rstat The random stream.
 */
 void X(randn)(X(mat)* A, const T sigma, rand_t* rstat){
 	if(!check_mat(A)){
@@ -130,7 +154,12 @@ T X(dot)(const X(mat)* A, const X(mat)* B){
 }
 
 /**
-   compute weighted dot product a'*(w*b)
+   Compute weighted dot product a'*(w*b).
+
+   @param[in] a The left vector of length w->nx.
+   @param[in] w The weighting matrix.
+   @param[in] b The right vector of length w->ny.
+   @return a'*w*b, or 0 if input is invalid.
 */
 T X(wdot)(const T* a, const X(mat)* w, const T* b){
 	if(!check_mat(w)||!a||!b) return 0;
@@ -152,6 +181,9 @@ T X(wdot)(const T* a, const X(mat)* w, const T* b){
 
 /**
    Compute component wise multiply A=A.*B
+
+   @param[in,out] A The matrix to multiply in place.
+   @param[in] B The multiplier. Must match A in size.
 */
 void X(cwm)(X(mat)* restrict A, const X(mat)* restrict B){
 	if(!check_mat(A, B)||!check_match(A, B)){
@@ -230,6 +262,9 @@ OMP_SIMD()
 /**
    Component-wise multiply each column of A with B
    A(:,i)=A(:,i).*B;
+
+   @param[in,out] A The matrix to multiply in place.
+   @param[in] B The column vector. Must have A->nx rows. Nothing is done if it does not match.
 */
 void X(cwmcol)(X(mat)* restrict A, const X(mat)* restrict B){
 	if(check_mat(A, B)&&A->nx==B->nx&&B->ny==1){
@@ -314,7 +349,10 @@ void X(cwmcol)(X(mat)* restrict A, const X(mat)* restrict B){
 }*/
 /**
    Component wise multiply each row of A with B.
-   A(i,:)=A(i,:)*B
+   A(i,:)=A(i,:).*B'
+
+   @param[in,out] A The matrix to multiply in place.
+   @param[in] B The column vector with A->ny elements. Element i multiplies column i of A.
 */
 void X(cwmrow)(X(mat)* restrict A, const X(mat)* restrict B){
 	if(!A||!B||!check(A->ny==B->nx&&B->ny==1)){
@@ -367,7 +405,11 @@ void X(cwmrow)(X(mat)* restrict A, const X(mat)* restrict B){
 }
 */
 /**
-   Component wise division B=B./A. 0/0 is replace by 'value';
+   Component wise division B=B./A. NaN results (e.g., 0/0) are replaced by 'value'.
+
+   @param[in,out] B The numerator, replaced by the result.
+   @param[in] A The denominator.
+   @param[in] value The value to use when the result is NaN (e.g., 0/0).
 */
 void X(cwdiv)(X(mat)* B, const X(mat)* A, T value){
 	if(!check_match(A, B)){
@@ -383,9 +425,13 @@ void X(cwdiv)(X(mat)* B, const X(mat)* A, T value){
 /**
    multiply a X(mat) matrix with a vector and accumulate to y:
    y+=A*x*alpha
+
+   @param[in,out] y The output vector of length A->nx, accumulated into.
+   @param[in] A The matrix.
+   @param[in] x The input vector of length A->ny.
+   @param[in] alpha The scaling factor.
 */
-void X(mulvec)(T* restrict y, const X(mat)* restrict A,
-	const T* restrict x, const T alpha){
+void X(mulvec)(T* restrict y, const X(mat)* restrict A, const T* restrict x, const T alpha){
 	if(!check(y&&x&&A)){
 		warning("input is not valid\n");
 		return;
@@ -399,8 +445,11 @@ void X(mulvec)(T* restrict y, const X(mat)* restrict A,
 }
 
 /**
-   T matrix vector multiply optimized for just
-   three values.  y=A*x;
+   Matrix vector multiply optimized for 3x3 matrix. y=A*x;
+
+   @param[out] y The output vector of length 3.
+   @param[in] A The 3x3 matrix.
+   @param[in] x The input vector of length 3.
 */
 void X(mulvec3)(T* y, const X(mat)* A, const T* x){
 	if(!check_mat(A)||!check(A->nx==3&&A->ny==3)){
@@ -414,7 +463,11 @@ void X(mulvec3)(T* y, const X(mat)* A, const T* x){
 }
 
 /**
-   compute (A'*W*A); where diag(W)=wt
+   Compute (A'*W*A), where diag(W)=wt. No conjugation is applied.
+
+   @param[in] A The matrix.
+   @param[in] wt The weighting vector of length A->nx.
+   @return The A->ny by A->ny result, or NULL if input is invalid. Newly allocated; the caller frees it.
 */
 X(mat)* X(mcc)(const X(mat)* A, const X(mat)* wt){
 	if(!check_mat(A)||!check(A->nx==wt->nx&&wt->ny==1)) return NULL;
@@ -438,7 +491,11 @@ X(mat)* X(mcc)(const X(mat)* A, const X(mat)* wt){
 }
 
 /**
-   compute (A*W*A'); where diag(W)=wt
+   Compute (A*W*A'), where diag(W)=wt. No conjugation is applied.
+
+   @param[in] A The matrix.
+   @param[in] wt The weighting vector of length A->ny.
+   @return The A->nx by A->nx result, or NULL if input is invalid. Newly allocated; the caller frees it.
 */
 X(mat)* X(tmcc)(const X(mat)* A, const X(mat)* wt){
 	if(!check_mat(A)||!check(A->ny==wt->nx&&wt->ny==1)) return NULL;
@@ -461,8 +518,12 @@ X(mat)* X(tmcc)(const X(mat)* A, const X(mat)* wt){
 }
 
 /**
-   compute the relative difference betwee two vectors.
-   sqrt(||A-B||/||A||) using norm2. for debugging purpose.
+   Compute the relative difference between two matrices as
+   sqrt(sum(abs(A-B).^2)*2/(X(norm)(A)+X(norm)(B))). For debugging purpose.
+
+   @param[in] A The first matrix.
+   @param[in] B The second matrix.
+   @return The relative difference, or -1 if A and B do not match or the result is NaN.
 */
 T X(diff)(const X(mat)* A, const X(mat)* B){
 	if(!check_match(A, B)) return -1;
@@ -475,6 +536,15 @@ T X(diff)(const X(mat)* A, const X(mat)* B){
    sampling effect.  The Center and Radius cx,cy,r are in unit of meter, The
    sampling dx,dy specify spacing of the points in meter along x or y dimension.
    Each full point received value of 'val'
+
+   @param[in,out] A The map to accumulate into.
+   @param[in] cx Center x coordinate (m).
+   @param[in] cy Center y coordinate (m).
+   @param[in] dx Sampling along x (m).
+   @param[in] dy Sampling along y (m).
+   @param[in] r Radius (m).
+   @param[in] val Value of fully covered points.
+   @return 0 if succeeded, -1 if input is invalid.
 */
 int X(circle)(X(mat)* A, R cx, R cy, R dx, R dy, R r, T val){
 	if(!check_mat(A)||r<0){
@@ -522,9 +592,18 @@ OMP_SIMD()
 /**
    Generate a new gray pixel map based on bilinear influence functions used in
    mkw.  It creates slightly larger map than an filled rectangle to account for
-   the sampling effect.  The Center and half width cx,cy,rx,ry are in unit of
-   meter, The sampling dx,dy specify spacing of the points in meter along x or y
-   dimension. Each full point received value of 'val'
+   the sampling effect. The rectangle is rotated by theta. The center and half
+   width cx,cy,rx,ry are in unit of pixel. Each full point received value of
+   'val', which is added to A.
+
+   @param[in,out] A The map to accumulate into.
+   @param[in] cx Center x coordinate (pixel).
+   @param[in] cy Center y coordinate (pixel).
+   @param[in] rx Half width along x before rotation (pixel).
+   @param[in] ry Half width along y before rotation (pixel).
+   @param[in] theta Rotation angle (radian).
+   @param[in] val Value of fully covered points.
+   @return 0 if succeeded, -1 if input is invalid.
 */
 int X(rectangle)(X(mat) *A, R cx, R cy, R rx, R ry, R theta, T val){
 	if(!check_mat(A)||rx<0||ry<0){
@@ -578,6 +657,9 @@ int X(rectangle)(X(mat) *A, R cx, R cy, R rx, R ry, R theta, T val){
 /**
    rotate the column vectors CCW, equivalent as rotate coordinate theta CW.
    A is nx2 while A(:,0) is x, A(:,1) is y.
+
+   @param[in,out] A The nx2 matrix of vectors, rotated in place.
+   @param[in] theta The rotation angle (radian).
 */
 void X(rotvec)(X(mat)* A, const R theta){
 	if(!check_mat(A)||A->ny!=2){
@@ -597,6 +679,9 @@ void X(rotvec)(X(mat)* A, const R theta){
 /**
    rotate the row vectors CCW. same as rotate coordinate theta CW.
    A is 2xn A(0, :) is x, A(1, :) is y.
+
+   @param[in,out] A The 2xn matrix of vectors, rotated in place.
+   @param[in] theta The rotation angle (radian).
 */
 void X(rotvect)(X(mat)* A, const R theta){
 	if(!check_mat(A)||A->nx!=2){
@@ -617,6 +702,10 @@ void X(rotvect)(X(mat)* A, const R theta){
    rotate a 2x2 covariance matrix A by theta CCW
    (coordinate rotate -theta CCW) or from ra to xy
    coordinate.  R*A*R';
+
+   @param[in,out] B0 The 2x2 output matrix. Allocated if NULL. Overwritten.
+   @param[in] A The 2x2 input matrix.
+   @param[in] theta The rotation angle (radian).
 */
 void X(rotvecnn)(X(mat)** B0, const X(mat)* A, R theta){
 	if(!check_mat(A)||!check(A->nx==2&&A->ny==2)){
@@ -643,8 +732,13 @@ void X(rotvecnn)(X(mat)** B0, const X(mat)* A, R theta){
 }
 
 /**
-   Compute the correlation matrix.
- */
+   Compute the 2D cross-correlation of A and B, out(offx,offy)=sum(A(x,y)*B(x-offx,y-offy)), with zero
+   offset at the center of out.
+
+   @param[in,out] pout The correlation output with odd dimensions. Allocated as (2nx-1)x(2ny-1) if NULL. Overwritten.
+   @param[in] A The first matrix.
+   @param[in] B The second matrix. Must match A in size.
+*/
 void X(corr)(X(mat)** pout, const X(mat)* A, const X(mat)* B){
 	if(!check_match(A, B)){
 		warning("Empty matrix or mismatch\n");
@@ -682,6 +776,9 @@ void X(corr)(X(mat)** pout, const X(mat)* A, const X(mat)* B){
 }
 /**
    Compute the parabolic fit center using 3x3 points around the peak.
+
+   @param[out] grad The peak location (x, y) relative to the center of corr (pixel).
+   @param[in] corr The correlation map.
 */
 void X(para3)(R* grad, const X(mat)* corr){
 	R valmax=0;
@@ -720,10 +817,19 @@ void X(para3)(R* grad, const X(mat)* corr){
    is absolute value. bkgrnd is removed from i0 when
    computing cog.  offset is the offset of the reference
    point (cog=0) from the physical center.
-   all length are given in terms of pixel.
+   all length are given in terms of pixel. grad is set to 0 if
+   the sum is not above thres.
+
+   @param[out] grad The computed CoG (x, y) (pixel).
+   @param[in] im The image.
+   @param[in] offsetx Offset of the reference point along x (pixel).
+   @param[in] offsety Offset of the reference point along y (pixel).
+   @param[in] thres The absolute threshold applied to the background removed image. Ignored if mask is set.
+   @param[in] bkgrnd The background to remove from each pixel.
+   @param[in] flux If nonzero, used instead of the sum of the image as the denominator to linearize CoG.
+   @param[in] mask Optional weighting mask. Can be NULL.
 */
-void X(cog)(R* grad, const X(mat)* im, R offsetx, R offsety,
-	R thres, R bkgrnd, R flux, const X(mat) *mask){
+void X(cog)(R* grad, const X(mat)* im, R offsetx, R offsety, R thres, R bkgrnd, R flux, const X(mat) *mask){
 	R sum=0, sumx=0, sumy=0;
 	R iI;
 	if(mask){
@@ -769,6 +875,10 @@ void X(cog)(R* grad, const X(mat)* im, R offsetx, R offsety,
 /**
    Shift the image in A to center on physical
    center+[offsetx,offsety] using cog and fft.
+
+   @param[in,out] A The image, shifted in place.
+   @param[in] offsetx Target offset along x (pixel).
+   @param[in] offsety Target offset along y (pixel).
 */
 void X(shift2center)(X(mat)* A, R offsetx, R offsety){
 	R grad[2];
@@ -807,6 +917,9 @@ void X(shift2center)(X(mat)* A, R offsetx, R offsety){
    OrthNormalize column vector in Mod, with weighting from vector amp.
    <Mod|wt|Mod> is equal to sum(wt).
    2010-07-21: Bug found: The result was not orthonormal. cause: nonvalid was not initialized to 0.
+
+   @param[in,out] Mod The column vectors, orthonormalized in place.
+   @param[in] amp The weighting vector of length Mod->nx. Can be NULL for uniform weighting.
 */
 void X(gramschmidt)(X(mat)*restrict Mod, R* restrict amp){
 	const long nmod=Mod->ny;
@@ -859,6 +972,11 @@ void X(gramschmidt)(X(mat)*restrict Mod, R* restrict amp){
 
 /**
    Limit numbers in A to within [min, max]. used for DM clipping.
+
+   @param[in,out] A The matrix to clip in place. Only the real part is compared.
+   @param[in] min The lower limit.
+   @param[in] max The upper limit.
+   @return The number of elements clipped.
 */
 int X(clip)(X(mat)* restrict A, R min, R max){
 	if(!A) return 0;
@@ -884,7 +1002,10 @@ int X(clip)(X(mat)* restrict A, R min, R max){
 }
 
 /**
-   A=A*B, where diag(B)=s
+   A=A*B, where diag(B)=s.
+
+   @param[in,out] A The matrix to multiply in place.
+   @param[in] s The diagonal of B with A->ny elements.
 */
 void X(muldiag)(X(mat) *restrict A, const XR(mat) *restrict s){
 	assert(A->ny==s->nx&&s->ny==1);
@@ -897,7 +1018,10 @@ void X(muldiag)(X(mat) *restrict A, const XR(mat) *restrict s){
 	}
 }
 /**
-   Raise all elements to power 'power'
+   Raise all elements to power 'power'.
+
+   @param[in,out] A The matrix, modified in place.
+   @param[in] power The exponent.
 */
 void X(cwpow)(X(mat)* A, R power){
 	if(!A) return;
@@ -908,7 +1032,10 @@ void X(cwpow)(X(mat)* A, R power){
 }
 
 /**
-   compute exponential of all elements after scaling by alpha
+   Compute exponential of all elements after scaling by alpha.
+
+   @param[in,out] A The matrix, modified in place.
+   @param[in] alpha The scaling factor.
 */
 void X(cwexp)(X(mat)* A, R alpha){
 	if(!A) return;
@@ -920,6 +1047,10 @@ void X(cwexp)(X(mat)* A, R alpha){
 
 /**
    Raise all elements above thres*maxabs(A) to pow power. Set others to zero.
+
+   @param[in,out] A The matrix, modified in place.
+   @param[in] power The exponent.
+   @param[in] thres The threshold relative to the maximum absolute value.
 */
 void X(cwpow_thres)(X(mat)* restrict A, R power, R thres){
 	thres*=X(maxabs)(A);
@@ -933,7 +1064,10 @@ void X(cwpow_thres)(X(mat)* restrict A, R power, R thres){
 	}
 }
 /**
-   Compute polynomial functional value inplace
+   Compute polynomial functional value inplace: A=p(0)*A^(np-1)+...+p(np-1).
+
+   @param[in,out] A The input values, replaced by the polynomial value.
+   @param[in,out] p The polynomial coefficients, highest order first. Reshaped in place to a column vector if it is a row vector.
 */
 void X(polyval)(X(mat)* A, XR(mat)* p){
 	if(p->nx==1&&p->ny>1){
@@ -951,7 +1085,10 @@ void X(polyval)(X(mat)* A, XR(mat)* p){
 	}
 }
 /**
-   add val to diagonal values of A.
+   Add val to diagonal values of A.
+
+   @param[in,out] A The matrix, modified in place.
+   @param[in] val The value to add.
 */
 void X(addI)(X(mat)*restrict A, T val){
 	if(!A) return;
@@ -966,6 +1103,11 @@ void X(addI)(X(mat)*restrict A, T val){
 /**
    compute B=bc*B+ac*A
    behavior changed on 2009-11-02. if A is NULL, don't do anything.
+
+   @param[in,out] B0 The matrix B. Allocated if NULL.
+   @param[in] bc The scaling factor of B.
+   @param[in] A The matrix to add. Nothing is done if it is NULL or empty.
+   @param[in] ac The scaling factor of A. If it is 0, B is only scaled by bc.
 */
 void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 	if(A&&A->nx){
@@ -1004,8 +1146,14 @@ void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 	}
 }
 /**
- * Compute B[:,icol]=bc*B[:,icol]+ac*A where A is vector.
- * */
+   Compute B[:,icol]=bc*B[:,icol]+ac*A where A is vector.
+
+   @param[in,out] B The matrix B. Must already exist.
+   @param[in] icol The column index of B.
+   @param[in] bc The scaling factor of B[:,icol].
+   @param[in] A The column vector with B->nx elements.
+   @param[in] ac The scaling factor of A. Nothing is done if it is zero.
+*/
 void X(addcol)(X(mat) *B, long icol, T bc, const X(mat) *A, const T ac){
 	if(NX(A)&&ac!=(T)0){
 		if(!B||NY(A)>1||icol<0){
@@ -1037,8 +1185,13 @@ void X(addcol)(X(mat) *B, long icol, T bc, const X(mat) *A, const T ac){
 	}
 }
 /**
-   compute B=bc*B+ac*A. Use smallest dimension of both.
-   behavior changed on 2009-11-02. if A is NULL, don't do anything.
+   Compute B=bc*B+ac*A. Use smallest dimension of both.
+   behavior changed on 2009-11-02. if A is NULL or ac is 0, don't do anything.
+
+   @param[in,out] B0 The matrix B. Allocated if NULL.
+   @param[in] bc The scaling factor of B.
+   @param[in] A The matrix to add.
+   @param[in] ac The scaling factor of A.
 */
 void X(add_relax)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 	if(A&&A->nx&&ac!=(T)0){
@@ -1058,7 +1211,10 @@ void X(add_relax)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 	}
 }
 /**
-   Add a scalar to matrix
+   Add a scalar to each element of matrix.
+
+   @param[in,out] A The matrix, modified in place.
+   @param[in] ac The scalar to add.
 */
 void X(adds)(X(mat)*restrict A, const T ac){
 	if(!A||!A->nx||ac==(T)0) return;
@@ -1070,6 +1226,11 @@ void X(adds)(X(mat)*restrict A, const T ac){
 
 /**
    Create log spaced vector.
+
+   @param[in] emin log10 of the first value.
+   @param[in] emax log10 of the last value.
+   @param[in] n Number of values.
+   @return The nx1 vector 10.^linspace(emin, emax, n). Newly allocated; the caller frees it.
 */
 X(mat)* X(logspace)(R emin, R emax, long n){
 	X(mat)* out=X(new)(n, 1);
@@ -1083,6 +1244,11 @@ X(mat)* X(logspace)(R emin, R emax, long n){
 
 /**
    Create linearly spaced vector.
+
+   @param[in] min The first value.
+   @param[in] dx The spacing.
+   @param[in] n Number of values.
+   @return The nx1 vector min+dx*(0:n-1). Newly allocated; the caller frees it.
 */
 X(mat)* X(linspace)(R min, R dx, long n){
 	X(mat)* out=X(new)(n, 1);
@@ -1094,7 +1260,10 @@ X(mat)* X(linspace)(R min, R dx, long n){
 }
 #ifndef COMP_COMPLEX
 /**
-   Check whether xin is linearly spaced
+   Check whether xin is linearly spaced. Only the first two values and the last value are checked.
+
+   @param[in] xin The vector of coordinates. May be increasing or decreasing.
+   @return The spacing (negative for decreasing) if linearly spaced, 0 otherwise.
 */
 static R X(islinear)(const X(mat)* xin){
 	if(!xin||xin->nx<2) return 0;
@@ -1110,7 +1279,10 @@ static R X(islinear)(const X(mat)* xin){
 	}
 }
 /**
-   Check whether xin is logrithmically spaced
+   Check whether xin is logarithmically spaced. Only the first two values and the last value are checked.
+
+   @param[in] xin The vector of coordinates. May be increasing or decreasing.
+   @return The spacing in log10 (negative for decreasing) if logarithmically spaced, 0 otherwise.
 */
 static R X(islog)(const X(mat)* xin){
 	if(!xin||xin->nx<2) return 0;
@@ -1154,6 +1326,13 @@ static X(mat)* X(interp_check_y)(const X(mat)* xin, const X(mat)* yin_){
 /**
    Interpolate using linear interp. xin is the coordinate of yin. xnew is the
    coordinate of the output.
+
+   @param[in] xin The linearly spaced (increasing or decreasing) coordinate in the first column. If yin_ is
+   NULL, the other columns are the function values.
+   @param[in] yin_ The function values with the same number of rows as xin. Each column is a function. Can be NULL.
+   @param[in] xnew The new coordinates. Only the first column is used.
+   @param[in] ydefault The value for points outside of xin. If NaN, the nearest end value is used.
+   @return The interpolated values, xnew->nx by the number of functions. Newly allocated; the caller frees it. NULL if input is invalid.
 */
 X(mat)* X(interp1linear)(const X(mat)* xin, const X(mat)* yin_, const X(mat)* xnew, T ydefault){
 	if(!xin||!xnew||NX(xin)<2) return NULL;
@@ -1194,6 +1373,13 @@ X(mat)* X(interp1linear)(const X(mat)* xin, const X(mat)* yin_, const X(mat)* xn
 /**
    Interpolate using log(xin) and log(xnew)
    xin is the coordinate of yin. xnew is the coordinate of the output.
+
+   @param[in] xin The logarithmically spaced (increasing or decreasing) coordinate in the first column. If yin_
+   is NULL, the other columns are the function values.
+   @param[in] yin_ The function values with the same number of rows as xin. Each column is a function. Can be NULL.
+   @param[in] xnew The new coordinates. Only the first column is used.
+   @param[in] ydefault The value for points outside of xin. If NaN, the nearest end value is used.
+   @return The interpolated values, xnew->nx by the number of functions. Newly allocated; the caller frees it. NULL if input is invalid.
 */
 X(mat)* X(interp1log)(const X(mat)* xin, const X(mat)* yin_, const X(mat)* xnew, T ydefault){
 	if(!xin||!xnew||NX(xin)<2) return NULL;
@@ -1231,8 +1417,15 @@ X(mat)* X(interp1log)(const X(mat)* xin, const X(mat)* yin_, const X(mat)* xnew,
 	return ynew;
 }
 /**
-   Interpolation of 1d array
- */
+   Interpolation of 1d array. Uses X(interp1linear) or X(interp1log) if xin is linearly or logarithmically
+   spaced, otherwise searches the bin for each point.
+
+   @param[in] xin The coordinate in the first column. If yin_ is NULL, the other columns are the function values.
+   @param[in] yin_ The function values with the same number of rows as xin. Each column is a function. Can be NULL.
+   @param[in] xnew The new coordinates. Only the first column is used.
+   @param[in] ydefault The value for points outside of xin. If NaN, values are extrapolated (linear or log spacing uses the end values instead).
+   @return The interpolated values, xnew->nx by the number of functions. Newly allocated; the caller frees it. NULL if input is invalid.
+*/
 X(mat)* X(interp1)(const X(mat)* xin, const X(mat)* yin_, const X(mat)* xnew, T ydefault){
 	if(!xin||!xnew||NX(xin)<2) return NULL;
 	X(mat)* restrict ynew=NULL;
@@ -1278,9 +1471,15 @@ X(mat)* X(interp1)(const X(mat)* xin, const X(mat)* yin_, const X(mat)* xnew, T 
 
 #endif
 #ifndef COMP_COMPLEX
-/**blend B into center of A with width of overlap. The center
-  (size is B->nx-overlap, B->ny-overlap) of A is replaced by
-  center of B . The overlapping area is blended*/
+/**
+   Blend B into center of A with width of overlap. The center
+   (size is B->nx-overlap, B->ny-overlap) of A is replaced by
+   center of B. The overlapping area is blended.
+
+   @param[in,out] A The destination matrix.
+   @param[in] B The matrix to blend in. Not modified.
+   @param[in] overlap Width of the overlapping area (pixel).
+*/
 void X(blend)(X(mat)* restrict A, X(mat)* restrict B, int overlap){
 	const long ninx=B->nx;
 	const long niny=B->ny;
@@ -1327,9 +1526,15 @@ void X(blend)(X(mat)* restrict A, X(mat)* restrict B, int overlap){
 }
 /**
    For each entry in A, call repeatly to collect its histogram, centered at
-   center, spaced by spacing, for n bins in total. center if at bin n/2.  */
-void X(histfill)(X(mat)** out, const X(mat)* A,
-	R center, R spacing, int n){
+   center, spaced by spacing, for n bins in total. center is at bin n/2.
+
+   @param[in,out] out The n by numel(A) histogram, accumulated into. Allocated if NULL.
+   @param[in] A The values. Each element has its own histogram column.
+   @param[in] center The value at the center bin n/2.
+   @param[in] spacing The bin spacing.
+   @param[in] n Number of bins. Values outside are put in the end bins.
+*/
+void X(histfill)(X(mat)** out, const X(mat)* A, R center, R spacing, int n){
 	if(!A||!P(A)) return;
 	long nn=A->nx*A->ny;
 	if(X(init)(out, n, nn)) return;
@@ -1352,7 +1557,7 @@ void X(histfill)(X(mat)** out, const X(mat)* A,
    if x has two columns: first column is the coordinate, y is null.
 
    It is upto the user to make sure that the coordinate is increasingly ordered
-   and evenly spaced .
+   and evenly spaced.
 
    If the values of a function \f$f(x)\f$ and its derivative are know at x=0,
    and x=1 (normalized coordinate), then the function can be interpolated on the
@@ -1364,12 +1569,12 @@ void X(histfill)(X(mat)** out, const X(mat)* A,
    f(x)=ax^3+bx^2+cx+d
    \f]
    \f[
-   f(x)=3ax^3+2bx+c
+   f^\prime(x)=3ax^2+2bx+c
    \f]
    The coefficients can be derived from the value and derivatives:
    \f{eqnarray*}{
    a&=&2f(0)-2f(1)+f^\prime (0)+f^\prime(1)\\
-   b&=&-3f(0)+3f(1)-2f^\prime(0)-f^\prime(0)\\
+   b&=&-3f(0)+3f(1)-2f^\prime(0)-f^\prime(1)\\
    c&=&f^\prime(0)\\
    d&=&f(0)\\
    \f}
@@ -1391,7 +1596,12 @@ void X(histfill)(X(mat)** out, const X(mat)* A,
    \f[f^\prime(0)=(f(1)-f(0))\f]
    Otehr type of boundaries are handled in the same way.
 
-   see www.paulinternet.nl/?page=bicubicx */
+   see www.paulinternet.nl/?page=bicubicx
+
+   @param[in] x The coordinate vector, or two columns of coordinate and function value.
+   @param[in] y The function value. Must be NULL if x has two columns.
+   @return The 4xnx coefficients (a, b, c, d) of each interval. Newly allocated; the caller frees it.
+*/
 X(mat)* X(spline_prep)(X(mat)* x, X(mat)* y){
 	T* px, * py;
 	if(!x) return NULL;
@@ -1446,7 +1656,12 @@ X(mat)* X(spline_prep)(X(mat)* x, X(mat)* y){
 	return coeff;
 }
 /**
-   Evluate the cubic spline represented by nx5 matrix coeff, at location array xnew.
+   Evaluate the cubic spline represented by 4xnx matrix coeff, at location array xnew.
+
+   @param[in] coeff The 4xnx coefficients from X(spline_prep).
+   @param[in] x The original coordinate vector.
+   @param[in] xnew The coordinate to evaluate at.
+   @return The values at xnew with the shape of xnew. Newly allocated; the caller frees it.
 */
 X(mat)* X(spline_eval)(X(mat)* coeff, X(mat)* x, X(mat)* xnew){
 	assert(coeff->nx==4);
@@ -1469,7 +1684,12 @@ X(mat)* X(spline_eval)(X(mat)* coeff, X(mat)* x, X(mat)* xnew){
 	return out;
 }
 /**
-   Do 1D cubic spline all at once by calling X(spline_prep) and X(spline_evald)
+   Do 1D cubic spline all at once by calling X(spline_prep) and X(spline_eval).
+
+   @param[in] x The coordinate vector, or two columns of coordinate and function value.
+   @param[in] y The function value. Must be NULL if x has two columns.
+   @param[in] xnew The coordinate to evaluate at.
+   @return The values at xnew. Newly allocated; the caller frees it.
 */
 X(mat)* X(spline)(X(mat)* x, X(mat)* y, X(mat)* xnew){
 	X(mat)* coeff=X(spline_prep)(x, y);
@@ -1480,6 +1700,8 @@ X(mat)* X(spline)(X(mat)* x, X(mat)* y, X(mat)* xnew){
 #endif
 /**
    Do a component wise log10 on each element of A.
+
+   @param[in,out] A The matrix, modified in place.
 */
 void X(cwlog10)(X(mat)* A){
 	R ratio=1./log(10);
@@ -1489,7 +1711,9 @@ void X(cwlog10)(X(mat)* A){
 	}
 }
 /**
-   Do a component wise log10 on each element of A.
+   Do a component wise natural log on each element of A.
+
+   @param[in,out] A The matrix, modified in place.
 */
 void X(cwlog)(X(mat)* A){
 	OMP_SIMD()
@@ -1554,18 +1778,26 @@ if(theta==0){/*no rotation.*/ \
 	}\
 }
 /**
-   Embed a ninx*niny matrix in into A with optional rotation by theta CCW
+   Embed a ninx*niny matrix in into out with optional rotation by theta CCW
    (output points are rotated by theta -CCW) around the fft center. Used to rotate the PSF
-   from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger
-   or smaller than B.
+   from x-y to radial-azimuthal coordinate in radial format CCD. out may be bigger
+   or smaller than in.
+
+   @param[out] out The output matrix. Zeroed first.
+   @param[in] in The input matrix.
+   @param[in] theta The rotation angle (radian).
 */
 void X(embed)(X(mat)* restrict out, const X(mat)* restrict in, const R theta){
 	EMBED_OP(out, in, theta, );
 }
 /**
-   embed a ninx*niny matrix in into A with optional rotation by -theta CCW
+   Embed a real ninx*niny matrix in into out with optional rotation by -theta CCW
    (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF
-   from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B.
+   from x-y to radial-azimuthal coordinate in radial format CCD. out may be bigger or smaller than in.
+
+   @param[out] out The output matrix. Zeroed first.
+   @param[in] in The real input matrix.
+   @param[in] theta The rotation angle (radian).
 */
 void X(embedd)(X(mat)* restrict out, const XR(mat)* restrict in, const R theta){
 	EMBED_OP(out, in, theta, )
@@ -1574,7 +1806,11 @@ void X(embedd)(X(mat)* restrict out, const XR(mat)* restrict in, const R theta){
    Calculate number of pixels having values larger than or equal to half of
    maximum and convert to diameter.
 
-   For more accurate calculation of Gaussian beams, use the 2*sqrt(2*log(2))*X(gauss_sigma).*/
+   For more accurate calculation of Gaussian beams, use the 2*sqrt(2*log(2))*X(gauss_sigma).
+
+   @param[in] A The image.
+   @return The FWHM diameter (pixel), or 0 if A is NULL.
+*/
 R X(fwhm)(X(mat)* A){
 	if(!A) return 0;
 	R hm=0.5*X(max)(A);
@@ -1589,18 +1825,19 @@ R X(fwhm)(X(mat)* A){
 }
 
 /**
- * Calculate D4s width of Gaussian 2D function
- * */
-void X(gauss_fit)(
-	R* mr, /**<Equivalent radius of the same area*/
-	R* ma, /**<major axis*/
-	R* mb, /**<minor axi*/
-	R* angle, /**<angle*/
-	R* amp, /**<Amplitude*/
-	X(mat)**img, /**<Return the fitting image */
-	X(mat)*A, /**<The irradiance (intensity)*/
-	R thres  ///The threshold relative to peak.
-	){
+   Fit a 2D Gaussian function by computing the first and second moments of A. All outputs are set to 0
+   if the sum of A is 0.
+
+   @param[out] mr Equivalent sigma, (det(C))^(1/4) where C is the second moment matrix (pixel). Can be NULL.
+   @param[out] ma Sigma along the major axis (pixel). Can be NULL.
+   @param[out] mb Sigma along the minor axis (pixel). Can be NULL.
+   @param[out] angle Angle of the major axis (radian). Can be NULL.
+   @param[out] amp Peak amplitude of the fitted Gaussian. Can be NULL, but is required if img is set.
+   @param[in,out] img Returns the fitted Gaussian image. Allocated if NULL. Can be NULL to skip.
+   @param[in] A The irradiance (intensity).
+   @param[in] thres The threshold relative to peak for computing the second moments.
+*/
+void X(gauss_fit)(R* mr, R* ma, R* mb, R* angle, R* amp, X(mat)**img, X(mat)*A, R thres){
 	long ny=NY(A);
 	long nx=NX(A);
 
@@ -1670,16 +1907,23 @@ void X(gauss_fit)(
 	}
 }
 /**
- * Determine the sigma_r of 2d gauss function.
- * */
+   Determine the sigma_r of 2d gauss function using X(gauss_fit).
+
+   @param[in] A The image.
+   @param[in] thres The threshold relative to peak.
+   @return The equivalent sigma (pixel).
+*/
 R X(gauss_sigma)(X(mat)*A, R thres){
 	R mr;
 	X(gauss_fit)(&mr, 0, 0, 0, 0, NULL, A, thres);
 	return mr;
 }
 /**
- * Use gauss fit to compute fwhm
- * */
+   Use gauss fit to compute fwhm.
+
+   @param[in] A The image.
+   @return The FWHM (pixel) as 2*sqrt(2*log(2)) times the equivalent sigma.
+*/
 R X(fwhm_gauss)(X(mat)* A){
 	return X(gauss_sigma)(A, 0.01)*2*1.17741;
 }
@@ -1691,6 +1935,12 @@ struct enc_t{
 	int type;
 };
 
+/**
+   Thread worker for X(enc). Computes the result for a range of entries of dvec.
+
+   @param[in,out] pdata The thread data with range of dvec indices and struct enc_t, whose enc is accumulated into.
+   @return Always NULL.
+*/
 static void* X(enc_thread)(thread_t* pdata){
 	struct enc_t* data=(struct enc_t*)pdata->data;
 	const X(mat)* dvec=data->dvec;
@@ -1761,12 +2011,14 @@ static void* X(enc_thread)(thread_t* pdata){
 }
 /**
    Compute the enclosed energy or azimuthal average of a.
+
+   @param[in] psf The input array.
+   @param[in] dvec The diameter for enclosed energy, or radius for azimuthal average.
+   @param[in] type The type. -1: azimuthal average, 0: within a square, 1: within a circle, 2: within a slit.
+   @param[in] nthread Number of CPU threads to use. NTHREAD if not positive.
+   @return The result for each entry of dvec. Newly allocated; the caller frees it.
 */
-X(mat)* X(enc)(const X(mat)* psf, /**<The input array*/
-		const X(mat)* dvec,/**<The diameter for enclosed energy, or radius for azimuthal average*/
-		int type,  /**<The type. -1: azimuthal average, 0: within a square, 1: within a circle, 2: within a slit*/
-		int nthread /**<Number of CPU threads to use.*/
-	){
+X(mat)* X(enc)(const X(mat)* psf, const X(mat)* dvec, int type, int nthread){
 	if(type<-1||type>2){
 		error("Usage: type= \n-1: azimuthal average, \n0: within a square, \n1: within a circle, \n2: within a slit\n");
 		return NULL;
@@ -1810,7 +2062,11 @@ X(mat)* X(enc)(const X(mat)* psf, /**<The input array*/
 #endif
 
 /**
-   Trapzoidal integration
+   Trapzoidal integration of each column of y. If x is NULL, unit spacing is assumed.
+
+   @param[in] x The abscissa (one column or one per column of y). Can be NULL.
+   @param[in] y The function values.
+   @return The sum of integrations over all columns.
 */
 T X(trapz)(const X(mat)* restrict x, const X(mat)* restrict y){
 	if(!y) return 0;
@@ -1851,6 +2107,9 @@ T X(trapz)(const X(mat)* restrict x, const X(mat)* restrict y){
 /**
    duplicate a X(cell) object.
    Not implemented for lmat or imat as X(cellcp) is defined in spmm.c
+
+   @param[in] in The cell to duplicate.
+   @return The deep copy. Newly allocated; the caller frees it.
 */
 X(cell)* X(celldup)(const X(cell)* in){
 	X(cell)* out=NULL;
@@ -1859,6 +2118,11 @@ X(cell)* X(celldup)(const X(cell)* in){
 }
 /**
    concatenate two cell matrices along dimenstion 'dim'.
+
+   @param[in] A The first cell.
+   @param[in] B The second cell.
+   @param[in] dim 1: along x, 2: along y.
+   @return The concatenated cell. Newly allocated; the caller frees it.
 */
 X(cell)* X(cellcat)(const X(cell)* A, const X(cell)* B, int dim){
 	if(!A){
@@ -1870,7 +2134,11 @@ X(cell)* X(cellcat)(const X(cell)* A, const X(cell)* B, int dim){
 	return out;
 }
 /**
-   concatenate two cell matrices along dimenstion 'dim'.
+   Concatenate cell B into A along dimension 'dim'.
+
+   @param[in,out] pA The cell A, extended in place. Set to a copy of B if NULL.
+   @param[in] B The cell to append. Its blocks are duplicated.
+   @param[in] dim 1: along x, 2: along y.
 */
 void X(cellcat2)(X(cell)** pA, const X(cell)* B, int dim){
 	if(!B) return;
@@ -1915,6 +2183,11 @@ void X(cellcat2)(X(cell)** pA, const X(cell)* B, int dim){
 /**
    concatenate coresponding elements of each X(cell). They must
    have the same shape.
+
+   @param[in] A The first cell.
+   @param[in] B The second cell.
+   @param[in] dim 1: along x, 2: along y.
+   @return The cell of concatenated blocks. Newly allocated; the caller frees it.
 */
 X(cell)* X(cellcat_each)(const X(cell)* A, const X(cell)* B, int dim){
 	if(!A){
@@ -1938,7 +2211,10 @@ X(cell)* X(cellcat_each)(const X(cell)* A, const X(cell)* B, int dim){
 }
 
 /**
-   compute norm2.
+   Sum of X(norm) of each cell element.
+
+   @param[in] A The cell.
+   @return The sum of X(norm) of each block.
 */
 R X(cellnorm)(const X(cell)* A){
 	R out=0;
@@ -1951,7 +2227,11 @@ R X(cellnorm)(const X(cell)* A){
 
 
 /**
-   Compute the dot produce of two dcell.
+   Compute the dot product of two cells.
+
+   @param[in] A The first cell, a column.
+   @param[in] B The second cell, a column.
+   @return The sum of X(dot) of each block, or 0 if A or B is NULL.
 */
 T X(celldot)(const X(cell)* A, const X(cell)* B){
 	if(!A||!B) return 0;
@@ -1967,8 +2247,11 @@ T X(celldot)(const X(cell)* A, const X(cell)* B){
 }
 
 /**
-   Component wise multiply of two dcell
-   B=A.*B*alpha
+   Component wise multiply of two cells.
+   B=A.*B
+
+   @param[in,out] B The cell B, modified in place.
+   @param[in] A The cell A.
 */
 void X(cellcwm)(X(cell)* B, const X(cell)* A){
 	if(!A||!B) return;
@@ -1982,7 +2265,10 @@ void X(cellcwm)(X(cell)* B, const X(cell)* A){
 }
 
 /**
-   drop empty blocks (zero). Size of B is not modified.
+   Drop empty blocks (zero). Size of B is not modified.
+
+   @param[in,out] B The cell. Blocks with all absolute values not above thres are freed.
+   @param[in] thres The threshold.
 */
 void X(celldropzero)(X(cell)* B, R thres){
 	X(cell)* Bp=B;
@@ -2007,8 +2293,12 @@ void X(celldropzero)(X(cell)* B, R thres){
 }
 
 /**
-   compute ||A-B||/||A||
-   use mean.
+   Compute the relative difference of two cells as
+   sqrt(X(cellnorm)(A-B)*2/(X(cellnorm)(A)+X(cellnorm)(B))).
+
+   @param[in] A The first cell.
+   @param[in] B The second cell.
+   @return The relative difference, or 0 if it is NaN.
 */
 R X(celldiff)(const X(cell)* A, const X(cell)* B){
 	X(cell)* C=NULL;
@@ -2020,7 +2310,12 @@ R X(celldiff)(const X(cell)* A, const X(cell)* B){
 }
 
 /**
-   clip a X(cell) array to max at 'max', min at 'min'
+   Clip a cell array to max at 'max', min at 'min'.
+
+   @param[in,out] Ac The cell, clipped in place.
+   @param[in] min The lower limit.
+   @param[in] max The upper limit.
+   @return The number of elements clipped.
 */
 int X(cellclip)(X(cell)* Ac, R min, R max){
 	if(!Ac||!P(Ac)) return 0;
@@ -2033,7 +2328,10 @@ int X(cellclip)(X(cell)* Ac, R min, R max){
 }
 
 /**
-   raise each cell in the cell array to power of power.
+   Raise each element of each block in the cell array to power of power.
+
+   @param[in,out] A The cell, modified in place.
+   @param[in] power The exponent.
 */
 void X(cellcwpow)(X(cell)* A, R power){
 	if(!A) return;
@@ -2172,7 +2470,14 @@ X(cell)* X(bspline_prep)(X(mat)* x, X(mat)* y, X(mat)* z){
 }
 
 /**
-   Evaluate 2D cubic spline at location defined 2-d arrays by xnew, ynew
+   Evaluate 2D cubic spline at location defined 2-d arrays by xnew, ynew.
+
+   @param[in] coeff The coefficients from X(bspline_prep).
+   @param[in] x The x coordinate vector of the grid.
+   @param[in] y The y coordinate vector of the grid.
+   @param[in] xnew The x coordinate of the new points.
+   @param[in] ynew The y coordinate of the new points. Must match xnew in size.
+   @return The values with the shape of xnew. Newly allocated; the caller frees it.
 */
 X(mat)* X(bspline_eval)(X(cell)* coeff, X(mat)* x, X(mat)* y, X(mat)* xnew, X(mat)* ynew){
 	const long nx=x->nx;

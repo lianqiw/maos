@@ -41,10 +41,10 @@
 static ws_proxy_t *ws_proxy=NULL;
 static int nws_proxy=0;
 /**
- * @brief Add a new proxy link. fd is websocket fd
- *
- * @param ws information for the helper routine
- */
+   Add a new proxy link, or replace the existing one with the same fd.
+
+   @param[in] ws Information for the helper routine. ws.fd is the socket to read from.
+*/
 static void ws_proxy_add(ws_proxy_t ws){
 	int jws=-1;
 	for(int iws=0; iws<nws_proxy; iws++){
@@ -72,11 +72,12 @@ static void ws_proxy_add(ws_proxy_t ws){
 	//info_time("ws_proxy_add: fd=%d for %p\n", sock_tcp, userdata);
 }
 /**
- * @brief Remove an existing proxy link
- *
- * @param userdata 	parameter to identify the proxy
- * @param toclose close the socket if set
- */
+   Remove an existing proxy link, removing its socket from listen_port and
+   closing the socket passed to maos.
+
+   @param[in] userdata Parameter to identify the proxy.
+   @param[in] toclose Close the socket if set.
+*/
 void ws_proxy_remove(void *userdata, int toclose){
 	for(int iws=0; iws<nws_proxy; iws++){
 		if(ws_proxy[iws].userdata==userdata){
@@ -96,11 +97,11 @@ void ws_proxy_remove(void *userdata, int toclose){
 	dbg_time("%p not found.\n", userdata);//ok, may not be registered yet.
 }
 /**
- * @brief Obtain the server socket number for the proxy link
- *
- * @param userdata 	parameter to identify the proxy
- * @return int  	fd for the socket
- */
+   Obtain the server socket number for the proxy link.
+
+   @param[in] userdata Parameter to identify the proxy.
+   @return fd for the socket, or -1 if not found.
+*/
 static int ws_proxy_get_fd(void *userdata){
 	for(int iws=0; iws<nws_proxy; iws++){
 		if(ws_proxy[iws].userdata==userdata){
@@ -110,12 +111,12 @@ static int ws_proxy_get_fd(void *userdata){
 	return -1;
 }
 /**
- * @brief Read from TCP server (scheduler or draw) and forward to the websocket client
- *
- * @param pfd	File descriptor
- * @param flag	Maybe set to -1 to ask the client to close the connection
- * @return int	Return -1 to indicate error, 0 Otherwise.
- */
+   Read from TCP server (scheduler or draw) and forward to the websocket client.
+
+   @param[in] pfd Poll entry of the TCP socket.
+   @param[in] flag May be set to -1 to ask the client to close the connection.
+   @return -1 to indicate error (the link is closed), 0 otherwise.
+*/
 static int ws_proxy_read(struct pollfd *pfd, int flag){
 	if(!pfd||pfd->fd==-1||(pfd->revents&POLLIN)==0) return 0;
 	if(pfd->revents&POLLHUP){
@@ -174,13 +175,15 @@ static int ws_proxy_read(struct pollfd *pfd, int flag){
 }
 
 /**
- * @brief handle requests (in text format) from websockets client. The format is
-  `PID&COMMAND_NAME;` with field separated by & and terminated by ; or \n
- *
- * @param in    The command buffer
- * @param len 	The length of the command buffer
- * @param ws 	Information for the helper function to write to websocket client
- */
+   Handle requests (in text format) from websockets client. The format is
+   `PID&COMMAND_NAME;` with field separated by & and terminated by ; or \n.
+   Supported commands are REMOVE, KILL, RESTART, MONITOR, DRAW, DRAW_FIGFN,
+   DRAW_PAUSE, DRAW_RESUME, and DRAW_SINGLE.
+
+   @param[in,out] in The command buffer. Modified in place to separate fields.
+   @param[in] len The length of the command buffer.
+   @param[in] ws Information for the helper function to write to websocket client.
+*/
 void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
 	if(in[len]){
 		warning_time("buf string is not terminated\n");

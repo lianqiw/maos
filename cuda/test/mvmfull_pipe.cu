@@ -50,7 +50,16 @@ typedef struct{
 	event_t* event_pall;
 
 }gpu_data_t;
-/*Does matched filter*/
+/**
+   Does matched filter. blockDim.x is 32 and handles a third of the pixels;
+   blockDim.y handles subapertures.
+
+   @param[in] mtch Matched filter, pixpsa values per gradient, gradients ordered xyxy.
+   @param[in] pix Pixel intensities, pixpsa values per subaperture.
+   @param[out] grad Gradients of length 2*nsa, ordered xyxy.
+   @param[in] pixpsa Number of pixels per subaperture (the kernel assumes 90).
+   @param[in] nsa Number of subapertures.
+*/
 static void __global__ mtch_do(const Real* mtch, const Real* pix, Real* grad, int pixpsa, int nsa){
 	extern __shared__ Real cum[];//for cumulation and reduction
 	Real* cumi=cum+threadIdx.y*blockDim.x;//2 padding for easy reduction
@@ -77,7 +86,18 @@ static void __global__ mtch_do(const Real* mtch, const Real* pix, Real* grad, in
 }
 
 /**
-   A standalone routine that testes applying MVM for a single WFS and update mvm.*/
+   A standalone routine that tests a pipelined matched filter and MVM for a
+   single WFS and updating the MVM. Timing and results are saved to files.
+
+   @param[in] fnmvm1 File name of the first MVM matrix.
+   @param[in] fnmvm2 File name of the second MVM matrix to switch to.
+   @param[in] fnpix1 File name of the first set of pixels.
+   @param[in] fnpix2 File name of the second set of pixels.
+   @param[in] fnmtch File name of the matched filter.
+   @param[in] gpus List of GPU indices.
+   @param[in] ngpu Number of GPUs to use.
+   @param[in] nstep Number of time steps.
+*/
 void mvmfull_pipe(const char* fnmvm1, const char* fnmvm2, const char* fnpix1, const char* fnpix2, const char* fnmtch,
 	int* gpus, int ngpu, int nstep){
 		{

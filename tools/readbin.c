@@ -17,11 +17,21 @@
 */
 #include "../lib/aos.h"
 
+/**
+   Print the usage of readbin.
+*/
 static void usage(){
 	info("Usage:\n"
 		"readbin file.bin [file2.bin ...] \n"
 	);
 }
+/**
+   Print the dimension and type of var, recursing into cell arrays. format and
+   the following arguments give the name to print.
+
+   @param[in] var The array or cell array to show. Nothing is printed if NULL.
+   @param[in] format printf style format of the name to print.
+*/
 CHECK_ARG(2)
 void cell_show(cell *var, const char* format, ...){
 	format2fn;
@@ -38,6 +48,10 @@ void cell_show(cell *var, const char* format, ...){
 }
 /**
    wrap readbin() to an executable for debugging.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments: the files to read.
+   @return 0.
 */
 int main(int argc, char *argv[]){
 	if(argc<2){

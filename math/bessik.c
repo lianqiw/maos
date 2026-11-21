@@ -76,6 +76,15 @@ static T chebev(T a, T b, const T c[], int m, T x){
 	return y*d-dd+0.5*c[0];
 }
 
+/**
+   Evaluates Gamma1 and Gamma2 by Chebyshev expansion for |x|<=1/2. Also returns 1/Gamma(1+x) and 1/Gamma(1-x).
+
+   @param[in] x Argument, |x|<=1/2.
+   @param[out] gam1 Gamma1(x).
+   @param[out] gam2 Gamma2(x).
+   @param[out] gampl 1/Gamma(1+x).
+   @param[out] gammi 1/Gamma(1-x).
+*/
 static void beschb(T x, T* gam1, T* gam2, T* gampl, T* gammi){
 	T xx;
 	static const T c1[]={
@@ -97,7 +106,14 @@ static void beschb(T x, T* gam1, T* gam2, T* gampl, T* gammi){
 #undef NUSE2
 /**
    Returns the modified Bessel functions ri = Iν , rk = Kν and their derivatives
-   rip = Iν , rkp = Kν, for positive x and for xnu = ν ≥ 0.
+   rip = I'ν , rkp = K'ν, for positive x and for xnu = ν ≥ 0.
+
+   @param[in] x Argument, must be positive.
+   @param[in] xnu Order ν, must be non-negative.
+   @param[out] ri Iν(x).
+   @param[out] rk Kν(x).
+   @param[out] rip I'ν(x).
+   @param[out] rkp K'ν(x).
 */
 void X(bessik)(T x, T xnu, T* ri, T* rk, T* rip, T* rkp){
 	int i, l, nl;

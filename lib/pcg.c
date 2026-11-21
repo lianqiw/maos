@@ -22,16 +22,19 @@
 
    ; input x is first guess if not NULL and warm==1; A is symmetric
    positive definite (SPD) matrix plus low rand terms.  x0 contains the initial
-   guess. Amul is the operator that applies A to x.  */
-real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*/
-	cgfun_t Amul,    /**<[in] The function that applies y=y+A*x*alpha: (*Amul)(&y,A,x,alpha)*/
-	const void* A, /**<[in] Contain info about the The left hand side matrix A*/
-	prefun_t Mmul,   /**<[in] The precond func that applies y=M^-1*x;*/
-	const void* M, /**<[in] Contains info about preconditioner matrix M.*/
-	const dcell* b,/**<[in] The right hand side vector to solve*/
-	int warm,      /**<[in] Use warm restart (use the value contained in px)*/
-	int maxiter    /**<[in] Max number of iterations*/
-){
+   guess. Amul is the operator that applies A to x.
+
+   @param[in,out] px The output vector. Input for warm restart. Allocated if NULL.
+   @param[in] Amul The function that applies y=y+A*x*alpha: (*Amul)(&y,A,x,alpha).
+   @param[in] A Contain info about the left hand side matrix A.
+   @param[in] Mmul The precond func that applies y=M^-1*x. NULL to disable preconditioning.
+   @param[in] M Contains info about preconditioner matrix M.
+   @param[in] b The right hand side vector to solve.
+   @param[in] warm Use warm restart (use the value contained in px).
+   @param[in] maxiter Max number of iterations.
+   @return Final residual |b-A*x|/|b| after maxiter iterations, or 0 if terminated early.
+*/
+real pcg(dcell** px, cgfun_t Amul, const void* A, prefun_t Mmul, const void* M, const dcell* b, int warm, int maxiter){
 
 	dcell* r0=NULL, * x0=NULL, * z0=NULL;
 	if(!*px){

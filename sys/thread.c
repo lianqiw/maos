@@ -29,7 +29,11 @@
 PNEW2(mutex_fftw);
 
 /**
-   Create a new thread and forget.
+   Create a new detached thread and forget.
+
+   @param[in] fun Thread function.
+   @param[in] arg Argument passed to fun.
+   @return Thread id, or 0 on failure.
 */
 pthread_t thread_new(thread_fun fun, void* arg){
 	int ans;
@@ -49,10 +53,18 @@ pthread_t thread_new(thread_fun fun, void* arg){
 	return temp;
 }
 /**
-   Break out the job to be executed by multiple threads.
+   Break out the job to be executed by multiple threads. The index range is
+   split evenly; threads beyond the range get empty ranges and NULL fun.
+   thd[0].nthread is set to the number of active threads.
+
+   @param[in] start Start index (inclusive).
+   @param[in] end End index (exclusive).
+   @param[in] nthread Number of threads.
+   @param[in] fun Function to be called by each thread.
+   @param[in] data Data shared by all threads.
+   @return Newly allocated array of nthread thread_t; the caller frees it. NULL if nthread is 0.
 */
-thread_t* thread_prep(long start, long end, long nthread,
-	thread_wrapfun fun, void* data){
+thread_t* thread_prep(long start, long end, long nthread, thread_wrapfun fun, void* data){
 	if(nthread==0) return NULL;
 	thread_t *thd=mycalloc((size_t)nthread, thread_t);
 	long nt=(end-start+nthread-1)/nthread;
@@ -96,6 +108,11 @@ void thread_block_signal(){
 	pthread_sigmask(SIG_BLOCK, &set, NULL);
 }
 #if _OPENMP
+/**
+   Return the openmp thread number of the calling thread.
+
+   @return OpenMP thread number.
+*/
 long thread_id(){
 	return (long)omp_get_thread_num();
 }
@@ -104,10 +121,20 @@ long thread_id(){
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/syscall.h>
+/**
+   Return the kernel thread id of the calling thread.
+
+   @return Kernel thread id.
+*/
 long thread_id(){
 	return (long)syscall(SYS_gettid);
 }
 #else
+/**
+   Return the pthread id of the calling thread.
+
+   @return pthread id cast to long.
+*/
 long thread_id(){
 	return (long)pthread_self();
 }

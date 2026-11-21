@@ -21,6 +21,14 @@
 #include "recon.h"
 
 
+/**
+   Copy or update the inverse block matrix Mbinv of the Fourier domain
+   preconditioner to GPU. Only the first (non-redundant) half of the blocks is
+   copied since the second half is the conjugate of the first.
+
+   @param[in] fdpcg CPU FDPCG data. Its Mbinv dimension is temporarily reduced
+   during the copy and then restored.
+*/
 void cufdpcg_t::update(fdpcg_t* fdpcg){
 	//copy or update Mb. 
 	//temporary cut size to half to avoid copying duplicate data.
@@ -38,6 +46,14 @@ void cufdpcg_t::update(fdpcg_t* fdpcg){
 		fdpcg->Mbinv->m->nx=m_nxsave;
 	}
 }
+/**
+   Set up the GPU Fourier domain preconditioner from CPU fdpcg_t: copy the
+   block matrix and permutation vector and create batched R2C/C2R FFT plans
+   for layers grouped by grid size.
+
+   @param[in] fdpcg CPU FDPCG data. If NULL, an empty object is created.
+   @param[in] _grid Reconstruction geometry. Kept as a reference.
+*/
 cufdpcg_t::cufdpcg_t(fdpcg_t* fdpcg, const curecon_geom* _grid)
 	:grid(_grid), fftnc(0), fftips(), nb(0), bs(0), nby(0), nbz(0), scale(0){
 	if(!fdpcg) return;
@@ -111,10 +127,11 @@ cufdpcg_t::cufdpcg_t(fdpcg_t* fdpcg, const curecon_geom* _grid)
 	CUDA_CHECK_ERROR;
 	delete[] FDDATA;
 }
-/*
-  2012-08-01: Have tried the following with no improvement:
-  Unroll with template.
-  Each 32 threads to handle each bs for bs<32.
+/**
+   Multiply the permuted frequency domain vector by the block diagonal matrix.
+   Each thread block row (threadIdx.y) handles one bs*bs block. Negative
+   permutation index means the input is conjugated before and the output after
+   the multiplication.
 
    2012-08-01: Have tried the following with no improvement:
    Unroll with template.
@@ -165,13 +182,31 @@ __global__ static void fdpcg_mul_block_sync_half(Comp* xout, const Comp* xin, Co
 		__syncthreads();//wait for use of vin before it is overwritten
 	}
 }
+/**
+   Scale a real number in place.
+
+   @param[in,out] a Value to scale.
+   @param[in] b Scaling factor.
+*/
 __device__ static inline void do_scale(Real& a, Real b){
 	a*=b;
 }
+/**
+   Scale a complex number in place.
+
+   @param[in,out] a Value to scale.
+   @param[in] b Scaling factor.
+*/
 __device__ static inline void do_scale(Comp& a, Real b){
 	a.x*=b;
 	a.y*=b;
 }
+/**
+   Scale each layer by its FFT normalization factor. Layer index is blockIdx.z.
+
+   @param[in] fddata Per layer dimension and scaling factor.
+   @param[in,out] xall Array of per layer data pointers, scaled in place.
+*/
 template<typename T> __global__ static void
 fdpcg_scale(gpu_fdpcg_t* fddata, T* const* xall){
 	int ips=blockIdx.z;
@@ -184,7 +219,7 @@ fdpcg_scale(gpu_fdpcg_t* fddata, T* const* xall){
 	}
 }
 
-/**
+/*
    The positive (right half) base frequency (os=1) couples to both positive and
    negative frequencies to layers with os=2. Only apply the block matrix to
    positive frequencies maynot be good.
@@ -195,6 +230,16 @@ fdpcg_scale(gpu_fdpcg_t* fddata, T* const* xall){
 
 */
 #define DBG_FD 0
+/**
+   Apply the Fourier domain preconditioner xout=F^-1*Mbinv*F*xin: FFT each
+   layer, multiply by the block diagonal matrix in frequency domain, and
+   inverse FFT. xin (and xout if not empty) must be contiguous; xout is
+   allocated if empty.
+
+   @param[in,out] xout Output vector. Allocated if empty, otherwise overwritten.
+   @param[in] xin Input vector.
+   @param[in] stream CUDA stream.
+*/
 void cufdpcg_t::Pre(curcell& xout, const curcell& xin, stream_t& stream){
 	ctoc_init(30);
 	if(!xin.M()){

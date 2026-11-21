@@ -55,8 +55,9 @@ static void dummy_loader(unsigned int depth, unsigned int n, int urgent){
 		dbg("data.tot=%u, depth=%u\n", data.tot, depth);
 	}
 }
+/** Nested thread pool jobs, urgent and not urgent, complete and each index is processed once. */
 static void test_thread_pool(void** state){
-    (void)state;
+	(void)state;
 	thread_pool_init(NTHREAD);
 	dummy_loader(100, 1000, 1);
 	dummy_loader(20, 1000, 0);

@@ -23,7 +23,18 @@
 
 /**
    Function to write dense matrix data into a file pointer. Generally used by
-   library developer */
+   library developer.
+
+   When ncol==-1, initializes asynchronous writing of A. When ncol>0 and async
+   is initialized, writes the first ncol columns (or elements for a row vector)
+   asynchronously. Otherwise writes A normally to fp. Asynchronous writing is
+   not supported for fits files: initialization does nothing and the data is
+   written synchronously when A is freed (see X(free_content)).
+
+   @param[in] fp File to write to.
+   @param[in] A Matrix to write. Its keywords and async state may be updated.
+   @param[in] ncol -1 to initialize async writing, >0 to write the first ncol columns asynchronously, 0 for normal write.
+*/
 void X(writedata)(file_t* fp, const X(mat)* A, long ncol){
 	int ans=0;
 	if(ncol==-1){//initialize async data
@@ -69,7 +80,12 @@ void X(writedata)(file_t* fp, const X(mat)* A, long ncol){
 
 /**
    Function to read dense matrix into memory from file pointer. Generally used
-   by library developer.  */
+   by library developer.
+
+   @param[in] fp File to read from.
+   @param[in,out] header Header of the array. Read from fp if NULL or its id is 0. Its keywords are taken over and it is reset after reading.
+   @return Newly allocated matrix; the caller frees it.
+*/
 X(mat)* X(readdata)(file_t* fp, header_t* header){
 	header_t header2={0,0,0,0};
 	if(!header){

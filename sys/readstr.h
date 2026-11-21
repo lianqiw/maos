@@ -35,7 +35,13 @@ static inline int is_space(char c){
     }
 }
 */
-/*Check whether the current express ends. String end or newline is treated as end.*/
+/**
+   Check whether the current express ends. String end or newline is treated as end.
+
+   @param[in] c The character.
+   @return 1 if c is '\0', '\n', or '\r', 0 otherwise.
+*/
+
 static inline int is_end(char c){
     if(c=='\0' || c=='\n' || c=='\r'){
 	return 1;

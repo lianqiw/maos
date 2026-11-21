@@ -37,25 +37,41 @@
 #include <omp.h>
 #endif
 /**
+   \file process.c
    A few routines handles process resource.
 */
+/**True number of cores*/
 int NCPU=0;
-int MAXTHREAD=0;/*MAXTHREAD=2*NCPU when hyperthreading is enabled. */
-int NTHREAD=0;//Default to MAXTHREAD
+/**Number of hyper threads. may be larger than NCPU. MAXTHREAD=2*NCPU when hyperthreading is enabled.*/
+int MAXTHREAD=0;
+/**Number of threads for simulation. Default to MAXTHREAD*/
+int NTHREAD=0;
 int TCK=0;
 int PID=0;
-long NMEM=0;/*Total memory in byte. */
+/**Total memory in byte.*/
+long NMEM=0;
+/**the user home*/
 const char* HOME=NULL;
+/**the user name*/
 const char* USER=NULL;
+/**the host name*/
 char* HOST=NULL;
-char* TEMP=NULL;//Do not put temp in /tmp as it is automatically cleaned by system.
-char* DIRBUILD=NULL;//Directory of build. Maybe different from BUILDDIR if symbolic links are used.
-char* DIRCACHE=NULL;//Directory for caching files that are expensive to compute.
-char* DIRLOCK=NULL;//Directory for caching files that are expensive to compute.
-char* DIREXE=NULL;/*absolute path of the exe.*/
-char* EXENAME=NULL;/*name of the exe.*/
-char* DIRSTART=NULL;//Start up directory. HOME is replaced by ~
-char *DIROUT=NULL;//The result directory (set by maos)
+/**the temporary folder. Do not put temp in /tmp as it is automatically cleaned by system.*/
+char* TEMP=NULL;
+/**Directory of build. Maybe different from BUILDDIR if symbolic links are used.*/
+char* DIRBUILD=NULL;
+/**Directory for caching files that are expensive to compute.*/
+char* DIRCACHE=NULL;
+/**the lock file folder*/
+char* DIRLOCK=NULL;
+/**absolute path of the exe.*/
+char* DIREXE=NULL;
+/**name of the exe.*/
+char* EXENAME=NULL;
+/**Start up directory. HOME is replaced by ~*/
+char* DIRSTART=NULL;
+/**The result directory (set by maos)*/
+char *DIROUT=NULL;
 /**
    Set the HOME, TEMP, USER names.
 */
@@ -190,6 +206,12 @@ void init_process(void){
 #endif
 	PID=(int)getpid();
 }
+/**
+   Set DIROUT, the result directory, to the absolute path of dir with the build
+   directory and HOME abbreviated.
+
+   @param[in] dir Output directory. Uses the current directory if NULL.
+*/
 void set_dirout(const char *dir){
 	if(DIROUT) free(DIROUT);
 	DIROUT=myabspath(dir);
@@ -198,8 +220,9 @@ void set_dirout(const char *dir){
 	//dbg("DIROUT=%s\n", DIROUT);
 }
 /**
- * free memory
- * */
+   Free the path strings (DIRBUILD, DIRCACHE, DIROUT, HOST, etc.) allocated by
+   init_process(). TEMP and HOME are kept.
+*/
 void free_process(){
 	//Do not free TEMP or HOME.
 	free(DIRBUILD); DIRBUILD=NULL;
@@ -212,6 +235,8 @@ void free_process(){
 }
 /**
    Obtain the current usage level of CPU, between 0 and 1.
+
+   @return Fraction of CPU time spent in user/system since the previous call (cached if called within 0.1 s).
 */
 double get_usage_cpu(void){
 	static double lasttime=0;
@@ -241,7 +266,10 @@ double get_usage_cpu(void){
 }
 /**
    Return number of idle CPUs that are available to run jobs. Do not count hyperthread cores.
+
+   @return Number of available CPUs, 0 if the load is too high.
 */
+
 int get_cpu_avail(void){
 	int avail=0;
 	double load=get_usage_load();

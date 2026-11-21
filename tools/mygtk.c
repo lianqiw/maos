@@ -16,6 +16,15 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "mygtk.h"
+/**
+   Create a flat (toggle if toggle!=0) button with icon buf, or the theme icon
+   name if buf is NULL. Creates a vertical separator instead if both are NULL.
+
+   @param[in] toggle Create a toggle button if nonzero.
+   @param[in] name Theme icon name. Used if buf is NULL.
+   @param[in] buf Icon image. Takes precedence over name.
+   @return The new widget.
+*/
 GtkWidget *tool_button_new(int toggle, const char *name, GdkPixbuf *buf){
 	GtkWidget *item=NULL;
 	if(name || buf){
@@ -54,6 +63,21 @@ GtkWidget *tool_button_new(int toggle, const char *name, GdkPixbuf *buf){
 }
 //todo: consolidate with drawdaemon_gui.new_tool()
 //toolbar is actually an hbox
+/**
+   Append item to toolbar (a box or a header bar), creating it with
+   tool_button_new() if item is NULL. callback is connected to the "clicked"
+   (or "toggled" if toggle) signal with data, and cmdname is used as tooltip.
+
+   @param[in,out] toolbar The box or header bar to append to.
+   @param[in] item The item to append. Created if NULL.
+   @param[in] toggle Create a toggle button if nonzero.
+   @param[in] iconname Theme icon name for the created button.
+   @param[in] iconbuf Icon image for the created button.
+   @param[in] cmdname Tooltip text. Not set if NULL.
+   @param[in] callback Signal handler. Not connected if NULL.
+   @param[in] data User data passed to callback.
+   @return The appended item.
+*/
 GtkWidget* new_toolbar_item(GtkWidget *toolbar, GtkWidget *item, int toggle, const char *iconname, 
 	GdkPixbuf *iconbuf, const char *cmdname, void(*callback)(GtkWidget*, gpointer data), gpointer data){
 	if(!item){
@@ -75,6 +99,20 @@ GtkWidget* new_toolbar_item(GtkWidget *toolbar, GtkWidget *item, int toggle, con
 #endif
 	return item;
 }
+/**
+   Create a spin button with range [min, max], increment step, and initial value,
+   with func connected to its "value-changed" signal. If label is not NULL,
+   returns a box containing the label and the spin button.
+
+   @param[in] label Label text. No label if NULL.
+   @param[in] value Initial value.
+   @param[in] min Minimum value.
+   @param[in] max Maximum value.
+   @param[in] step Increment.
+   @param[in] func Handler of the "value-changed" signal.
+   @param[in] data User data passed to func.
+   @return The spin button, or the box containing the label and the spin button.
+*/
 GtkWidget *new_spin_button(const char *label, double value, double min, double max, double step, void(*func)(GtkWidget *, gpointer data), gpointer data){
 	GtkWidget *spin=gtk_spin_button_new_with_range(min, max, step);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), value);

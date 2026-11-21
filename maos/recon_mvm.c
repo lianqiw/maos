@@ -28,9 +28,12 @@
 
 */
 /**
-   Use the various algorithms recon.alg to assemble a final matrix to multiply
-   to gradients to get DM commands.
- */
+   Assemble the MVM matrix for the least squares reconstructor (recon.alg is RECON_LSR).
+
+   @param[in,out] recon The reconstruction struct. recon->MVM is set.
+   @param[in] parms The parameter struct.
+   @param[in] powfs The powfs struct array.
+*/
 static void
 setup_recon_lsr_mvm(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	info("Assembling LSR MVM in CPU\n");
@@ -111,6 +114,14 @@ typedef struct{
 	long(*curp)[2];
 	long ntotact;
 }MVR_MVM_T;
+/**
+   Compute the MVM rows for a range of actuators for the minimum variance
+   reconstructor by solving the fitting and tomography equations for each
+   actuator.
+
+   @param[in] info Thread info. info->data is MVR_MVM_T and [info->start, info->end) is the range of actuators. The results are written into data->MVMt.
+   @return NULL.
+*/
 static void *
 setup_recon_mvr_mvm_iact(thread_t* info){
 	MVR_MVM_T* data=(MVR_MVM_T*)info->data;
@@ -212,9 +223,13 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 
 
 /**
-   Use the various algorithms recon.alg to assemble a final matrix to multiply
-   to gradients to get DM commands.
- */
+   Assemble the MVM matrix for the minimum variance reconstructor (recon.alg is RECON_MVR)
+   using the various algorithms set by tomo.alg and fit.alg.
+
+   @param[in,out] recon The reconstruction struct. recon->MVM is set.
+   @param[in] parms The parameter struct.
+   @param[in] powfs The powfs struct array.
+*/
 static void
 setup_recon_mvr_mvm(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	info("Assembling MVR MVM in CPU\n");

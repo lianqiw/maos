@@ -20,6 +20,18 @@
 /**
    Ray tracing from map to loc with boundary check. Real input
    This is memory bound. So increasing # of points processed does not help.
+
+   @param[in,out] out OPD at loc, accumulated into.
+   @param[in] in Input map, nx*ny.
+   @param[in] nx Map size along x.
+   @param[in] ny Map size along y.
+   @param[in] loc Coordinates of output points.
+   @param[in] nloc Number of output points.
+   @param[in] dxi Scaling of loc x to map grid index (scale/dx).
+   @param[in] dyi Scaling of loc y to map grid index (scale/dy).
+   @param[in] dispx Displacement along x in map grid index.
+   @param[in] dispy Displacement along y in map grid index.
+   @param[in] alpha Scaling factor.
 */
 __global__ void map2loc_linear(Real* restrict out, const Real* restrict in,
 	const int nx, const int ny, KARG_COMMON){
@@ -40,6 +52,18 @@ __global__ void map2loc_linear(Real* restrict out, const Real* restrict in,
 
 /**
    Ray tracing from map to loc with boundary check. Complex input
+
+   @param[in,out] out OPD at loc, accumulated into.
+   @param[in] in Input map (only the real part is used), nx*ny.
+   @param[in] nx Map size along x.
+   @param[in] ny Map size along y.
+   @param[in] loc Coordinates of output points.
+   @param[in] nloc Number of output points.
+   @param[in] dxi Scaling of loc x to map grid index (scale/dx).
+   @param[in] dyi Scaling of loc y to map grid index (scale/dy).
+   @param[in] dispx Displacement along x in map grid index.
+   @param[in] dispy Displacement along y in map grid index.
+   @param[in] alpha Scaling factor.
 */
 __global__ void map2loc_linear(Real* restrict out, const Comp* restrict in,
 	const int nx, const int ny, KARG_COMMON){
@@ -57,8 +81,20 @@ __global__ void map2loc_linear(Real* restrict out, const Comp* restrict in,
 		}
 	}
 }
-/*
-  Ray tracing from map to loc without boundary check. Real input.
+/**
+   Ray tracing from map to loc without boundary check. Real input.
+
+   @param[in,out] out OPD at loc, accumulated into.
+   @param[in] in Input map, nx*ny.
+   @param[in] nx Map size along x.
+   @param[in] ny Map size along y.
+   @param[in] loc Coordinates of output points.
+   @param[in] nloc Number of output points.
+   @param[in] dxi Scaling of loc x to map grid index (scale/dx).
+   @param[in] dyi Scaling of loc y to map grid index (scale/dy).
+   @param[in] dispx Displacement along x in map grid index.
+   @param[in] dispy Displacement along y in map grid index.
+   @param[in] alpha Scaling factor.
 */
 __global__ void map2loc_linear_nocheck(Real* restrict out, const Real* restrict in,
 	const int nx, const int ny, KARG_COMMON){
@@ -73,8 +109,20 @@ __global__ void map2loc_linear_nocheck(Real* restrict out, const Real* restrict 
 			+(in[(iy+1)*nx+ix]*(1-x)+in[(iy+1)*nx+ix+1]*x)*y);
 	}
 }
-/*
-  Ray tracing from map to loc with wrapping. Real input.
+/**
+   Ray tracing from map to loc with wrapping. Real input.
+
+   @param[in,out] out OPD at loc, accumulated into.
+   @param[in] in Input map, nx*ny.
+   @param[in] nx Map size along x.
+   @param[in] ny Map size along y.
+   @param[in] loc Coordinates of output points.
+   @param[in] nloc Number of output points.
+   @param[in] dxi Scaling of loc x to map grid index (scale/dx).
+   @param[in] dyi Scaling of loc y to map grid index (scale/dy).
+   @param[in] dispx Displacement along x in map grid index.
+   @param[in] dispy Displacement along y in map grid index.
+   @param[in] alpha Scaling factor.
 */
 __global__ void map2loc_linear_wrap(Real* restrict out, const Real* restrict in,
 	const int nx, const int ny, KARG_COMMON){
@@ -96,7 +144,24 @@ __global__ void map2loc_linear_wrap(Real* restrict out, const Real* restrict in,
 	}
 }
 
-/*This is memory bound. So increasing # of points processed does not help. */
+/**
+   Ray tracing from map to loc with cubic interpolation and boundary check.
+   Points too close to the edge are skipped.
+   This is memory bound. So increasing # of points processed does not help.
+
+   @param[in,out] out OPD at loc, accumulated into.
+   @param[in] in Input map, nx*ny.
+   @param[in] nx Map size along x.
+   @param[in] ny Map size along y.
+   @param[in] loc Coordinates of output points.
+   @param[in] nloc Number of output points.
+   @param[in] dxi Scaling of loc x to map grid index (scale/dx).
+   @param[in] dyi Scaling of loc y to map grid index (scale/dy).
+   @param[in] dispx Displacement along x in map grid index.
+   @param[in] dispy Displacement along y in map grid index.
+   @param[in] alpha Scaling factor.
+   @param[in] cc Cubic interpolation coefficients (5 elements) in device memory.
+*/
 __global__ void map2loc_cubic(Real* restrict out, const Real* restrict in,
 	const int nx, const int ny, KARG_COMMON, const Real* cc){
 	int step=blockDim.x*gridDim.x;
@@ -144,7 +209,21 @@ __global__ void map2loc_cubic(Real* restrict out, const Real* restrict in,
 }
 
 /**
-   Ray tracing of atm.
+   Ray tracing of atm: phiout+=atmalpha*atm. Layers are shifted by wind and
+   optionally interpolated in time (atm_dtrat) and scaled by cuglobal->atmscale.
+
+   @param[in,out] phiout OPD at loc, accumulated into.
+   @param[in] loc Output locations.
+   @param[in] hs Guide star height (m).
+   @param[in] hc Conjugate height of loc (m).
+   @param[in] thetax Direction along x (rad).
+   @param[in] thetay Direction along y (rad).
+   @param[in] misregx Misregistration along x (m).
+   @param[in] misregy Misregistration along y (m).
+   @param[in] dt Simulation time step (s).
+   @param[in] isim Simulation step index.
+   @param[in] atmalpha0 Scaling factor. Nothing is done if it is zero.
+   @param[in] stream CUDA stream.
 */
 void atm2loc(Real* phiout, const culoc_t& loc, Real hs, Real hc, Real thetax, Real thetay,
 	Real misregx, Real misregy, Real dt, int isim, Real atmalpha0, cudaStream_t stream){
@@ -207,6 +286,22 @@ void atm2loc(Real* phiout, const culoc_t& loc, Real hs, Real hc, Real thetax, Re
 #undef COMM
 	}
 }
+/**
+   Ray tracing from map to loc: phiout+=alpha*map evaluated at loc*scale+(dispx, dispy).
+   Uses cubic interpolation if map.cubic_cc is set (wrap not supported),
+   otherwise bilinear, with wrapping around the map if wrap is set. Does nothing if
+   scale<0. Asynchronous on stream.
+
+   @param[in] map Input map.
+   @param[in] loc Output locations.
+   @param[in,out] phiout OPD at loc, accumulated into.
+   @param[in] alpha Scaling factor.
+   @param[in] dispx Displacement along x (m).
+   @param[in] dispy Displacement along y (m).
+   @param[in] scale Scaling of loc (cone effect).
+   @param[in] wrap Whether to wrap around the map.
+   @param[in] stream CUDA stream.
+*/
 void map2loc(const cumap_t& map, const culoc_t& loc, Real* phiout,
 	Real alpha, Real dispx, Real dispy, Real scale, int wrap, cudaStream_t stream){
 	if(scale<0) return;
@@ -235,6 +330,18 @@ void map2loc(const cumap_t& map, const culoc_t& loc, Real* phiout,
 /**
    Ray tracing of dm. use a different loc for each dm. so that distortion can be
    properly accounted for. Use the other version if no distortion.
+
+   @param[in,out] phiout OPD, accumulated into.
+   @param[in] locondm Output locations for each DM, mapped onto the DM.
+   @param[in] cudm DM commands on grids.
+   @param[in] hs Guide star height (m).
+   @param[in] hc Conjugate height of the output (m).
+   @param[in] thetax Direction along x (rad).
+   @param[in] thetay Direction along y (rad).
+   @param[in] misregx Misregistration along x (m).
+   @param[in] misregy Misregistration along y (m).
+   @param[in] alpha Scaling factor.
+   @param[in] stream CUDA stream.
 */
 void mapcell2loc(Real* phiout, const Array<culoc_t>& locondm, const cumapcell& cudm, 
 	Real hs, Real hc, Real thetax, Real thetay, Real misregx, Real misregy, Real alpha, cudaStream_t stream){
@@ -247,7 +354,19 @@ void mapcell2loc(Real* phiout, const Array<culoc_t>& locondm, const cumapcell& c
 	}
 }
 /**
-   Ray tracing of dm.
+   Ray tracing of dm: phiout+=alpha*DM.
+
+   @param[in,out] phiout OPD at locout, accumulated into.
+   @param[in] locout Output locations.
+   @param[in] cudm DM commands on grids.
+   @param[in] hs Guide star height (m).
+   @param[in] hc Conjugate height of the output (m).
+   @param[in] thetax Direction along x (rad).
+   @param[in] thetay Direction along y (rad).
+   @param[in] misregx Misregistration along x (m).
+   @param[in] misregy Misregistration along y (m).
+   @param[in] alpha Scaling factor.
+   @param[in] stream CUDA stream.
 */
 void mapcell2loc(Real* phiout, const culoc_t& locout, const cumapcell& cudm, 
 	Real hs, Real hc, Real thetax, Real thetay, Real misregx, Real misregy, Real alpha, cudaStream_t stream){
@@ -260,11 +379,20 @@ void mapcell2loc(Real* phiout, const culoc_t& locout, const cumapcell& cudm,
 	}/*idm */
 }
 /**
-   Convert NGS mode vector to aperture grid for science directions.  */
-void ngsmod2loc(curmat& opd, Real(*restrict loc)[2],
-	const ngsmod_t* ngsmod, const real* mod,
-	real thetax, real thetay,
-	real alpha, cudaStream_t stream){
+   Convert NGS mode vector to aperture grid for science directions:
+   opd+=alpha*NGS modes.
+
+   @param[in,out] opd OPD, accumulated into.
+   @param[in] loc Coordinates of the OPD points in device memory.
+   @param[in] ngsmod NGS mode definition.
+   @param[in] mod NGS mode vector.
+   @param[in] thetax Direction along x (rad).
+   @param[in] thetay Direction along y (rad).
+   @param[in] alpha Scaling factor.
+   @param[in] stream CUDA stream.
+*/
+void ngsmod2loc(curmat& opd, Real(*restrict loc)[2], const ngsmod_t* ngsmod, const real* mod,
+	real thetax, real thetay, real alpha, cudaStream_t stream){
 	if(ngsmod->nmod==2){
 		curaddptt(opd, loc, 0, mod[0]*alpha, mod[1]*alpha, stream);
 	} else{

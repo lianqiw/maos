@@ -60,6 +60,9 @@
 
 /**
    Free the powfs geometric parameters
+
+   @param[in,out] powfs The powfs struct array.
+   @param[in] ipowfs Index of the powfs.
 */
 static void
 free_powfs_geom(powfs_t* powfs, int ipowfs){
@@ -83,7 +86,12 @@ free_powfs_geom(powfs_t* powfs, int ipowfs){
 	dfree(powfs[ipowfs].saasum);
 }
 /**
-   Convert amplitude map of subapertures to normalized subaperture area. Used only in setup_powfs_geom*/
+   Convert amplitude map of subapertures to normalized subaperture area. Used only in setup_powfs_geom.
+
+   @param[in] wfsamp Amplitude map of all subapertures, ordered by subaperture.
+   @param[in] npsa Number of points per subaperture.
+   @return Subaperture area normalized by the full subaperture area. Newly allocated; the caller frees it.
+*/
 static dmat* wfsamp2saa(dmat* wfsamp, long npsa){
 	real areanormfactor=1./(real)npsa;
 	long nsa=NX(wfsamp)/npsa;
@@ -99,7 +107,11 @@ static dmat* wfsamp2saa(dmat* wfsamp, long npsa){
 	return saa;
 }
 /**
-	Compute saa[isa]=max(P(P(saa, iwfs), isa)) for iwfs. Set alpha to -1 to compute minimum
+   Compute saa[isa]=max(P(P(saa, iwfs), isa)) over iwfs.
+
+   @param[in] saa Subaperture area (or any value) of each WFS.
+   @param[in] alpha 1 to compute the maximum. -1 to compute the minimum.
+   @return The element wise maximum (or minimum). Newly allocated (or a reference to saa[0] if saa has a single element); the caller frees it. NULL if saa is NULL.
 */
 dmat *dcellmax_each(dcell *saa, real alpha){
 	if(!saa) return NULL;
@@ -119,7 +131,12 @@ dmat *dcellmax_each(dcell *saa, real alpha){
 /**
    Creates WFS pupil mask that is composed of the meta pupil of high order WFS at height hmax*0.7.
    Not used.
- */
+
+   @param[in] parms The parameter struct.
+   @param[in] loc The WFS grid.
+   @param[in,out] amp Amplitude map on loc. Points outside of the mask are set to 0.
+   @param[in] iwfs Index of the WFS.
+*/
 void wfspupmask(const parms_t* parms, loc_t* loc, dmat* amp, int iwfs){
 	long nloc=loc->nloc;
 	dmat* ampmask=dnew(nloc, 1);
@@ -139,8 +156,16 @@ void wfspupmask(const parms_t* parms, loc_t* loc, dmat* amp, int iwfs){
 	}
 	dfree(ampmask);
 }
-static void
-sa_reduce(powfs_t* powfs, int ipowfs, real saat){
+/**
+   Remove subapertures with area below a threshold. Isolated subapertures with few
+   valid neighbors are also removed. pts, saloc, loc, amp, saa, and loc_tel are
+   updated, and saasum is computed.
+
+   @param[in,out] powfs The powfs struct array.
+   @param[in] ipowfs Index of the powfs.
+   @param[in] saat Threshold of normalized subaperture area.
+*/
+static void sa_reduce(powfs_t* powfs, int ipowfs, real saat){
 	dmat *saa=dcellmax_each(powfs[ipowfs].saa, 1);
 	//maximum area of all wfs for this powfs. saa is modified below.
 	if(dmax(saa)>1.01){
@@ -253,6 +278,10 @@ sa_reduce(powfs_t* powfs, int ipowfs, real saat){
    (on locm).  The subaperture selector should, however, use assumed amp
    (non-misregistered).
 
+   @param[in,out] powfs The powfs struct array.
+   @param[in] parms The parameter struct.
+   @param[in] aper The telescope aperture amplitude map.
+   @param[in] ipowfs Index of the powfs.
 */
 static void
 setup_shwfs_geom(powfs_t* powfs, const parms_t* parms, map_t* aper, int ipowfs){
@@ -508,8 +537,10 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms, map_t* aper, int ipowfs){
    reconstruction, because in real system, the subapertures are selected by
    their illumination level, and is affected by the real amplitude.
 
-
- */
+   @param[in,out] powfs The powfs struct array. loc_tel is set if telescope to WFS distortion is present.
+   @param[in] parms The parameter struct.
+   @param[in] ipowfs Index of the powfs.
+*/
 void setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	//TIC;tic;
 	//An empty distortion string is treated as no distortion. Use the same test everywhere below.
@@ -561,6 +592,17 @@ OMP_FOR(nwfsp)
 	}
 #undef HAS_TEL2WFS
 }
+/**
+   Setup the WFS pupil amplitude map powfs[ipowfs].amp by sampling aper on the
+   WFS grid, accounting for WFS misregistration and the aperture misregistration amisreg.
+   One per WFS if misregistration or loc_tel is present, otherwise shared.
+
+   @param[in,out] powfs The powfs struct array. amp is set.
+   @param[in] parms The parameter struct.
+   @param[in] aper The telescope aperture amplitude map.
+   @param[in] amisreg Aperture misregistration (m) along x and y. May be NULL.
+   @param[in] ipowfs Index of the powfs.
+*/
 void setup_powfs_amp(powfs_t* powfs, const parms_t* parms, const map_t* aper, const dmat *amisreg, int ipowfs){
 	int has_misreg=0;
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -584,6 +626,10 @@ OMP_FOR(nwfsp)
 }
 /**
    setup DM to WFS misregistration.
+
+   @param[in,out] powfs The powfs struct array. loc_dm is set if DM to WFS distortion is present.
+   @param[in] parms The parameter struct.
+   @param[in] ipowfs Index of the powfs.
 */
 void
 setup_powfs_misreg_dm(powfs_t* powfs, const parms_t* parms, int ipowfs){
@@ -621,7 +667,12 @@ OMP_FOR_COLLAPSE(2, NTHREAD)
    Creating geometric wavefront gradient operator GS0 and ZA0 from WFS OPD to
    subaperture grads. Use loc, and ampm. Do not locm. locm is only used to do
    ray tracing.  This is simulation, not RTC, so use real system distortion,
-   misregistration, etc. */
+   misregistration, etc.
+
+   @param[in,out] powfs The powfs struct array.
+   @param[in] parms The parameter struct.
+   @param[in] ipowfs Index of the powfs.
+*/
 static void
 setup_shwfs_grad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	if(parms->powfs[ipowfs].gtype_recon==GTYPE_G||parms->powfs[ipowfs].gtype_sim==GTYPE_G){
@@ -663,11 +714,12 @@ setup_shwfs_grad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	}
 }
 /**
- * @brief Set the up powfs neasim for simulations
- * 
- * @param parms 
- * @param powfs 
- */
+   Setup powfs[].neasim, the Cholesky factor of NEA used in simulations, from
+   sanea, a file, or powfs.neasim.
+
+   @param[in] parms The parameter struct.
+   @param[in,out] powfs The powfs struct array.
+*/
 void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		const long nsa=powfs[ipowfs].saloc->nloc;
@@ -737,6 +789,9 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
    \todo Make LGS number of pixels depend on subapertue elongation in radial
    coordinate CCD mode. Make notfx, notfy dependent on number of pixels for radial ccd.
 
+   @param[in,out] powfs The powfs struct array.
+   @param[in] parms The parameter struct.
+   @param[in] ipowfs Index of the powfs.
 */
 static void
 setup_shwfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
@@ -950,7 +1005,7 @@ setup_shwfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
    interpolation. When there is leaking between actuators. We can multiply the
    sinc functions with a Gaussian blurring function.
 */
-/*
+/**
    \section WFS gradient pixel offset
 
    Use powfs.pixoffx and powfs.pixoffy to set WFs gradient pix offset
@@ -961,6 +1016,9 @@ setup_shwfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 
    - If pixoffx==2: There is a global offset along x and y of pixoffy (pixel) that accounts for PCCCD geometry
 
+   @param[in,out] powfs The powfs struct array. dtf is set.
+   @param[in] parms The parameter struct.
+   @param[in] ipowfs Index of the powfs.
 */
 static void
 setup_shwfs_dtf(powfs_t* powfs, const parms_t* parms, int ipowfs){
@@ -1060,7 +1118,12 @@ setup_shwfs_dtf(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	}
 }
 /**
-   setup the range to sodium layer as an additional parameter.
+   Setup the range to sodium layer as an additional parameter. Loads the sodium
+   range time series and converts it to focus.
+
+   @param[in,out] powfs The powfs struct array. focus is set.
+   @param[in] parms The parameter struct.
+   @param[in] ipowfs Index of the powfs.
 */
 static void setup_powfs_focus(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	if(!parms->powfs[ipowfs].llt||!parms->powfs[ipowfs].llt->fnrange) return;
@@ -1089,6 +1152,9 @@ static void setup_powfs_focus(powfs_t* powfs, const parms_t* parms, int ipowfs){
    zenith angle. We preserve the sum of the sodium profile, which represents a
    scaling factor of the signal level.
 
+   @param[in,out] powfs The powfs struct array. sodium and sodiumprep are set.
+   @param[in] parms The parameter struct.
+   @param[in] ipowfs Index of the powfs.
 */
 static void setup_powfs_sodium(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	char* fnprof=parms->powfs[ipowfs].llt->fnprof;
@@ -1127,6 +1193,15 @@ static void setup_powfs_sodium(powfs_t* powfs, const parms_t* parms, int ipowfs)
 		}
 	}
 }
+/**
+   Check whether an existing ETF matches the sodium profile column and range.
+
+   @param[in] etf The ETF. May be NULL.
+   @param[in] icol Column of the sodium profile.
+   @param[in] hs Range to the sodium layer (m).
+   @param[in] thresh Tolerance of the range (m).
+   @return 1 if etf is not NULL and matches, 0 otherwise.
+*/
 static int etf_match(etf_t* etf, int icol, real hs, real thresh){
 	return (etf&&etf->icol==icol&&fabs(etf->hs-hs)<thresh);
 }
@@ -1203,10 +1278,13 @@ void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode,
 }
 
 /**
-   setting up uplink pts/amp lotf
+   Setup uplink pts, amp, and OTF of the laser launch telescope.
+
+   @param[in,out] powfs The powfs struct array. llt is set.
+   @param[in] parms The parameter struct.
+   @param[in] ipowfs Index of the powfs.
 */
-static void
-setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
+static void setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	if(!parms->powfs[ipowfs].llt) return;
 	const int nwvl=parms->powfs[ipowfs].nwvl;
 	real wvl0=P(parms->powfs[ipowfs].wvl, 0);
@@ -1360,6 +1438,10 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 }
 /**
    Setup CoG NEA for reconstruction.
+
+   @param[in] parms The parameter struct.
+   @param[in,out] powfs The powfs struct array. sanea is set.
+   @param[in] ipowfs Index of the powfs.
 */
 static void
 setup_shwfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
@@ -1436,6 +1518,10 @@ setup_shwfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
 }
 /**
    Setup cogmask for CoG calculation.
+
+   @param[in] parms The parameter struct.
+   @param[in,out] powfs The powfs struct array. intstat->cogmask is set.
+   @param[in] ipowfs Index of the powfs.
 */
 static void setup_shwfs_cog_mask(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	if(!powfs[ipowfs].intstat || !PN(powfs[ipowfs].intstat->i0)) {
@@ -1460,6 +1546,13 @@ static void setup_shwfs_cog_mask(const parms_t* parms, powfs_t* powfs, int ipowf
 		writebin(powfs[ipowfs].intstat->cogmask, "powfs%d_cogmask", ipowfs);
 	}
 }
+/**
+   Setup gradient offset for CoG so that the CoG of i0 gives zero gradient.
+
+   @param[in] parms The parameter struct.
+   @param[in,out] powfs The powfs struct array. gradoff is updated.
+   @param[in] ipowfs Index of the powfs.
+*/
 static void setup_shwfs_cog_gradoff(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	if(!powfs[ipowfs].intstat || !PN(powfs[ipowfs].intstat->i0)) {
 		error("setting up gradoff requires i0 to be available\n");
@@ -1503,6 +1596,10 @@ static void setup_shwfs_cog_gradoff(const parms_t* parms, powfs_t* powfs, int ip
 }
 /**
    Setup the (matched filter or CoG) pixel processing parameters for physical optics wfs.
+
+   @param[in,out] powfs The powfs struct array.
+   @param[in] parms The parameter struct.
+   @param[in] ipowfs Index of the powfs.
 */
 static void
 setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
@@ -1692,9 +1789,12 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	}
 }
 /**
-  Setup gradient offset for calibration. opdadd is the wavefront aberration in
-  WFS due to optics, without DM correction. opdbias is the wavefront aberration
-  in WFS after DM system flat is applied.
+   Setup gradient offset for calibration. opdadd is the wavefront aberration in
+   WFS due to optics, without DM correction. opdbias is the wavefront aberration
+   in WFS after DM system flat is applied.
+
+   @param[in] parms The parameter struct.
+   @param[in,out] powfs The powfs struct array. gradoff is computed or added to.
 */
 void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1773,6 +1873,12 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
    - Generate loc/amp externally and supply here.
    - Handle misregistration externally. Different misregisration is used in simulation and reconstruction.
    - ...
+
+   @param[in] pycfg Pyramid WFS configuration.
+   @param[in,out] powfs The powfs struct array. pywfs, saloc, saa, and sanea are set.
+   @param[in] parms The parameter struct.
+   @param[in] aper The telescope aperture amplitude map.
+   @param[in] ipowfs Index of the powfs.
 */
 void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms, map_t *aper, int ipowfs){
 	pywfs_free(powfs[ipowfs].pywfs);
@@ -1832,7 +1938,12 @@ void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 }
 /**
    Setup the powfs struct based on parms and aper. Everything about wfs are
-   setup here.  \callgraph */
+   setup here.  \callgraph
+
+   @param[in] parms The parameter struct.
+   @param[in] aper The telescope aperture amplitude map.
+   @return The powfs struct array of length npowfs. Newly allocated; free it with free_powfs().
+*/
 powfs_t* setup_powfs_init(const parms_t* parms, map_t* aper){
 	TIC;tic;
 	powfs_t* powfs=mycalloc(parms->npowfs, powfs_t);
@@ -1854,6 +1965,9 @@ powfs_t* setup_powfs_init(const parms_t* parms, map_t* aper){
 }
 /**
    Setup physical optics parameters for SHWFS, such as DTF, ETF, LLT, pixel processing.
+
+   @param[in] parms The parameter struct.
+   @param[in,out] powfs The powfs struct array.
 */
 void setup_shwfs_phy(const parms_t* parms, powfs_t* powfs){
 	TIC;tic;
@@ -1887,6 +2001,9 @@ void setup_shwfs_phy(const parms_t* parms, powfs_t* powfs){
 
 /**
    free unused parameters before simulation starts
+
+   @param[in] parms The parameter struct.
+   @param[in,out] powfs The powfs struct array.
 */
 void free_powfs_unused(const parms_t* parms, powfs_t* powfs){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1902,6 +2019,12 @@ void free_powfs_unused(const parms_t* parms, powfs_t* powfs){
 	}
 }
 
+/**
+   Free the SHWFS specific data of a powfs.
+
+   @param[in,out] powfs The powfs struct array.
+   @param[in] ipowfs Index of the powfs.
+*/
 static void free_powfs_shwfs(powfs_t* powfs, int ipowfs){
 	dtf_free(powfs[ipowfs].dtf);
 	dspcellfree(powfs[ipowfs].GS0);
@@ -1948,6 +2071,9 @@ static void free_powfs_shwfs(powfs_t* powfs, int ipowfs){
 }
 /**
    Free all parameters of powfs at the end of simulation.
+
+   @param[in] parms The parameter struct.
+   @param[in] powfs The powfs struct array to free, including the array itself.
 */
 void free_powfs(const parms_t* parms, powfs_t* powfs){
 	free_powfs_unused(parms, powfs);

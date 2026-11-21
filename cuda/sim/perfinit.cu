@@ -21,7 +21,12 @@
 #include "perf.h"
 
 /**
-   Initialize perfevl
+   Initialize performance evaluation in GPU: copy aperture loc, amplitude and
+   per-DM loc to the GPUs, create FFT plans for PSF computation, and allocate
+   per-direction accumulation arrays. Does nothing if parms->gpu.evl is not set.
+
+   @param[in] parms Simulation parameters.
+   @param[in] aper Aperture data.
 */
 void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 	if(!parms->gpu.evl){
@@ -124,8 +129,11 @@ void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 	}
 	gpu_print_mem("perf init");
 }
-/*
-  Initialize simulation data. Seed dependent. Create for the first seed and zero for the next.
+/**
+   Initialize simulation data. Seed dependent. Create for the first seed and zero for the next.
+
+   @param[in] parms Simulation parameters.
+   @param[in] aper Aperture data.
 */
 void gpu_perfevl_init_sim(const parms_t* parms, aper_t* aper){
 	const int nevl=parms->evl.nevl;

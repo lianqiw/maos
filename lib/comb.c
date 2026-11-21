@@ -19,12 +19,19 @@
 /**
    Computes the number of possibilities of selection k items from n items \f$C_n^k\f$:
    factorial(n)/(factorial(k)*factorial(n-k));
+
+   @param[in] n Total number of items.
+   @param[in] k Number of items selected.
+   @return Number of combinations.
 */
 static long comb_tot(long n, long k){
 	return (long)round(factorial(n-k+1, n)/factorial(1, k));
 }
 /**
    initialize an initial combination composed a vector of non-negative numbers 0,1,2,...
+
+   @param[in] k Number of items selected.
+   @return Newly allocated array of length k containing 0,1,...,k-1. The caller frees it.
 */
 static int* comb_init(long k){
 	int* comb=mycalloc(k, int);
@@ -34,8 +41,13 @@ static int* comb_init(long k){
 	return comb;
 }
 /**
-   Find the next combination of selecting k from n. 
- */
+   Find the next combination of selecting k from n in lexicographic order.
+
+   @param[in,out] comb Current combination of k sorted indices; updated to the next combination.
+   @param[in] n Total number of items.
+   @param[in] k Number of items selected.
+   @return 1 if a next combination is found, 0 if there is no more.
+*/
 static int comb_next(int* comb, long n, long k){
 	if(n<1||k<1){
 		return 0;
@@ -55,17 +67,18 @@ static int comb_next(int* comb, long n, long k){
 	return 1;
 }
 /**
- * @brief Determine all valid combinations of stars for all wfs. 
-	Assume that the stars are sorted in descending S/N order. 
-	valid is set to -1 for stars that need to be skipped.
-	flag=0: keep order. nstar should be equal to nwfstot. do not reorder stars. Only 1 combination.
-	flag=1: regular.
-	flag=2: make wfs[0] brighter than wfs[1] (stars are sorted from bright to dim)
-	only implemented for npowfs=1 or npowfs=2
-	@param nwfsmax 		npowfs*1 array for maximum number of wfs
-	@param starvalid 	nstar*npowfs array for validity of star at powfs mode. -1 means invalid
-	@param flag			see above
+   Determine all valid combinations of stars for all wfs.
+   Assume that the stars are sorted in descending S/N order.
+   valid is set to -1 for stars that need to be skipped.
+   Only implemented for npowfs=1 or npowfs=2. If no valid combination is found,
+   the number of wfs is reduced and the search is retried.
 
+   @param[in] nwfsmax npowfs*1 array for maximum number of wfs
+   @param[in] starvalid nstar*npowfs array for validity of star at powfs mode. -1 means invalid
+   @param[in] flag 0: keep order. nstar should be equal to nwfstot. do not reorder stars. Only 1 combination.
+   1: regular. 2: make wfs[0] brighter than wfs[1] (stars are sorted from bright to dim).
+   @return Newly allocated nwfstot*ncomb array with the star index of each wfs (wfs of powfs 0 first)
+   for each combination, or NULL if none is valid. The caller frees it.
 */
 lmat* comb_stars(lmat* nwfsmax, lmat *starvalid, int flag){
 	lmat *res=NULL;

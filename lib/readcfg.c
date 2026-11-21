@@ -44,18 +44,31 @@ typedef struct STORE_T{
 	int flag;    //-1: a replacement entry. 0: not used. 1: used once. Others: error happens.
 	int prefix;  //whether this is prefix'ed entry.
 }STORE_T;
+/**
+   Compare two STORE_T by key for the binary tree.
+
+   @param[in] a The first STORE_T.
+   @param[in] b The second STORE_T.
+   @return Negative, zero, or positive as strcmp() of the keys.
+*/
 static int key_cmp(const void* a, const void* b){
 	return strcmp(((STORE_T*)a)->key, ((STORE_T*)b)->key);
 }
 
 /*Keep record of all the strings so that we can check whether they have all been used. */
-static long nstore=0;/*number of total records */
-static long nused=0;/*number of read records */
-static int changes_loaded=0;//whether changes.conf has been loaded.
+/**number of total records*/
+static long nstore=0;
+/**number of read records*/
+static long nused=0;
+/**whether changes.conf has been loaded.*/
+static int changes_loaded=0;
 #define STRICT 1
 
 /**
-   trim the spaces before and after string. str is modified to skip leading spaces.*/
+   trim the spaces before and after string. str is modified to skip leading spaces.
+
+   @param[in,out] str The string, modified in place. Set to NULL if the result is empty.
+*/
 static void strtrim(char** str){
 	if(!*str) return;
 	long iend;
@@ -103,7 +116,11 @@ static void strtrim(char** str){
 }
 /**
    remove "" or '' around a string from config file. Accept whole string if
-quotes are not found.  */
+   quotes are not found.
+
+   @param[in] data The input string.
+   @return Newly allocated string; the caller frees it.
+*/
 static char* strextract(const char* data){
 	const char *start=data, *end=0;
 	start=trim_string(data, &end);
@@ -112,7 +129,10 @@ static char* strextract(const char* data){
 /**
    Remove comment (after #), leading spaces, and trailing line break and spaces from a
    string.
- */
+
+   @param[in,out] line The string, modified in place.
+   @return Pointer into line after leading spaces, or NULL if line is NULL or empty.
+*/
 static char* squeeze(char* line){
 	char* sline, * comment;
 	if(!line){
@@ -137,6 +157,14 @@ static char* squeeze(char* line){
 	return sline;
 }
 static FILE* fpout=NULL;
+/**
+   twalk() callback that saves each record to fpout and checks for unused or
+   multiply used records.
+
+   @param[in] key Pointer to the STORE_T pointer of the node.
+   @param[in] which The node visit order.
+   @param[in] level Unused.
+*/
 static void print_key(const void* key, VISIT which, int level){
 	const STORE_T* store=*((const STORE_T**)key);
 	(void)level;
@@ -162,6 +190,13 @@ static void print_key(const void* key, VISIT which, int level){
 		}
 	}
 }
+/**
+   twalk() callback that deletes and frees leaf records.
+
+   @param[in] key Pointer to the STORE_T pointer of the node.
+   @param[in] which The node visit order.
+   @param[in] level Unused.
+*/
 static void delete_leaf(const void* key, VISIT which, int level){
 	(void)level;
 	if(which==leaf){
@@ -172,6 +207,9 @@ static void delete_leaf(const void* key, VISIT which, int level){
 		free(store);
 	}
 }
+/**
+   Delete all configuration records and reset the readcfg state.
+*/
 void erase_config(){
 	while(MROOT){
 		twalk(MROOT, delete_leaf);
@@ -183,7 +221,9 @@ void erase_config(){
 }
 /**
    Save all configs to file and check for unused config options.
- */
+
+   @param[in] format The printf style format of the output file name, followed by its arguments. NULL to skip saving.
+*/
 void close_config(const char* format, ...){
 	format2fn;
 	const char* fnout=format?fn:NULL;
@@ -201,14 +241,14 @@ void close_config(const char* format, ...){
    Start the read config process by opening .conf files and fill the entries in
    a hash table. A key has a priority or 0 or higher. A new key with same or
    higher priority can override previous entry. priority is 0 for default configurations. -1 indicates optional configuration file that fails silently.
- */
-static void open_config_full(
-	const char* config_in,	/**<[in]The .conf file to read*/
-	const char* prefix, 	/**<[in]if not NULL, prefix the key with this.*/
-	int priority,    	/**<[in]Priorities of keys.*/
-	const int index,		/**<[in]Only when prefix is set. Initial entry index. */
-	const unsigned int level/**<[in]Embedding level */
-){
+
+   @param[in] config_in The .conf file to read, or a string of key=value entries.
+   @param[in] prefix If not NULL, prefix the key with this.
+   @param[in] priority Priorities of keys.
+   @param[in] index Only when prefix is set. Initial entry index.
+   @param[in] level Embedding level.
+*/
+static void open_config_full(const char* config_in, const char* prefix, int priority, const int index, const unsigned int level){
 	if(!config_in) return;
 	if(!changes_loaded){//on first call, load changes.conf
 		changes_loaded=1;
@@ -527,9 +567,25 @@ static void open_config_full(
 	free(config_dir);
 #undef MAXLN
 }
+/**
+   Open config_in (a .conf file or key=value string) and load the entries
+   with given priority. See open_config_full().
+
+   @param[in] config_in The .conf file to read, or a string of key=value entries.
+   @param[in] priority Priorities of keys.
+*/
 void open_config(const char *config_in, int priority){
 	open_config_full(config_in, NULL, priority, 0, 0);
 }
+/**
+   Load config_in with each key prefixed by prefix. The priority and index are
+   taken from the existing record prekey so that the new entries override in
+   the same order as prekey.
+
+   @param[in] config_in The .conf file to read, or a string of key=value entries.
+   @param[in] prefix Prefix of each key.
+   @param[in] prekey The existing key whose priority and index are used.
+*/
 void open_config_prefix(const char *config_in, const char *prefix, const char *prekey){
 	open_config_full(config_in, prefix, readcfg_peek_priority("%s",prekey), readcfg_peek_index("%s",prekey), 0);
 }
@@ -540,7 +596,11 @@ void open_config_prefix(const char *config_in, const char *prefix, const char *p
    1: mark the record as read.
    0: do not mark or check record existance
    -1:do not mark but error if record is not found.
- */
+
+   @param[in,out] key The key. Trimmed in place.
+   @param[in] mark See above.
+   @return Reference to the internal record (following ref: references), or NULL if not found. Do not free.
+*/
 static const STORE_T* getrecord(char* key, int mark){
 	STORE_T store;
 	void* found=NULL;
@@ -569,13 +629,23 @@ static const STORE_T* getrecord(char* key, int mark){
 	}
 	return found?(*(STORE_T**)found):0;
 }
+/**
+   Get the value of a key. See getrecord().
+
+   @param[in,out] key The key. Trimmed in place.
+   @param[in] mark See getrecord().
+   @return Reference to the internal value string, or NULL if not found. Do not free.
+*/
 static char *getrecord_data(char* key, int mark){
 	const STORE_T *record=getrecord(key, mark);
 	return record?record->data:0;
 }
 /**
    Check whether a have a record of a key.
- */
+
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return 1 if the key exists, 0 otherwise.
+*/
 int readcfg_peek(const char* format, ...){
 	/*Check whether key exists */
 	format2key;
@@ -583,6 +653,9 @@ int readcfg_peek(const char* format, ...){
 }
 /**
    Check the size of an array input
+
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return Number of entries in the value, or 0 if the key does not exist.
 */
 int readcfg_peek_n(const char* format, ...){
 	format2key;
@@ -610,8 +683,10 @@ int readcfg_peek_n(const char* format, ...){
 	return count;
 }
 /**
- * Ignore an entry and do not warn if it does not exist.
- * */
+   Ignore an entry and do not warn if it does not exist.
+
+   @param[in] format The printf style format of the key, followed by its arguments.
+*/
 void readcfg_ignore(const char *format, ...){
 	format2key;
 	if(getrecord(key,0)){
@@ -620,13 +695,20 @@ void readcfg_ignore(const char *format, ...){
 }
 /**
    Return priority value of the record
+
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return The priority, or 0 if the key does not exist.
 */
 int readcfg_peek_priority(const char *format, ...){
 	format2key;
 	const STORE_T *store=getrecord(key, 0);
 	return store?store->priority:0;
-}/**
+}
+/**
    Return index value of the record
+
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return The input order index, or 0 if the key does not exist.
 */
 int readcfg_peek_index(const char *format, ...){
 	format2key;
@@ -635,7 +717,10 @@ int readcfg_peek_index(const char *format, ...){
 }
 /**
    Obtain a raw value from the key.
- */
+
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return Reference to the internal value string with surrounding quotes and spaces skipped (the end is not truncated), or NULL if not found. Do not free.
+*/
 const char* readcfg_raw(const char* format, ...){
 	format2key;
 	const STORE_T* store=getrecord(key, 1);
@@ -643,7 +728,10 @@ const char* readcfg_raw(const char* format, ...){
 }
 /**
    Obtain a string value from the key.
- */
+
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return Newly allocated string with surrounding quotes removed, or NULL if not found or empty; the caller frees it.
+*/
 char* readcfg_str(const char* format, ...){
 	format2key;
 	char* data=NULL;
@@ -657,7 +745,12 @@ char* readcfg_str(const char* format, ...){
 
 /**
    Read as an lmat.
- */
+
+   @param[in] n Number of elements requested. 0 means no limit.
+   @param[in] relax Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last.
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return Newly allocated lmat, or NULL if not found or empty; the caller frees it.
+*/
 lmat *readcfg_lmat(int n, int relax, const char *format, ...){
 	format2key;
 	long* val=NULL;
@@ -676,12 +769,14 @@ lmat *readcfg_lmat(int n, int relax, const char *format, ...){
 }
 /**
    Read as a dmat. It can be a file name or an array.
- */
-dmat* readstr_dmat(int n, ///<[in]Number of elements requested
-				int relax, ///<[in]1: allow fewer values and fill the rest
-				const char *key, ///<[in] the key that needs the value.
-				const char *str///<[in]input
-				){
+
+   @param[in] n Number of elements requested. 0 means no limit.
+   @param[in] relax Whether fewer entries are permitted and filled with the last value: 0 no, 1 only if a single entry is given, 2 any number.
+   @param[in] key The key that needs the value. Used for error messages.
+   @param[in] str The input value string.
+   @return Newly allocated dmat, or NULL if str is NULL or empty; the caller frees it.
+*/
+dmat* readstr_dmat(int n, int relax, const char *key, const char *str){
 	if(!str){
 		return NULL;
 	}
@@ -717,7 +812,12 @@ dmat* readstr_dmat(int n, ///<[in]Number of elements requested
 
 /**
    Read as a dmat. It can be a file name or an array.
- */
+
+   @param[in] n Number of elements requested. 0 means no limit.
+   @param[in] relax Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last.
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return Newly allocated dmat, or NULL if not found or empty; the caller frees it.
+*/
 dmat* readcfg_dmat(int n, int relax, const char* format, ...){
 	format2key;
 	return readstr_dmat(n, relax, key, getrecord_data(key, 1));
@@ -725,6 +825,12 @@ dmat* readcfg_dmat(int n, int relax, const char* format, ...){
 
 /**
    Read string array of len elements
+
+   @param[in,out] ret The string array. If len is nonzero and *ret is set, it is pre-allocated with len entries; otherwise it is allocated. The caller frees it.
+   @param[in] len Max number of values to read. 0 means no limit.
+   @param[in] relax Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last.
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return Number of entries read, not including those copied when relax is set.
 */
 int readcfg_strarr(char*** ret, int len, int relax, const char* format, ...){
 	format2key;
@@ -733,6 +839,12 @@ int readcfg_strarr(char*** ret, int len, int relax, const char* format, ...){
 
 /**
    Read integer array of len elements
+
+   @param[in,out] ret The integer array. If len is nonzero, it may be pre-allocated with len entries; otherwise it is allocated. The caller frees it.
+   @param[in] len Max number of values to read. 0 means no limit.
+   @param[in] relax Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last.
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return Number of values in *ret, including those filled when relax is set, or -1 on error.
 */
 int readcfg_intarr(int** ret, int len, int relax, const char* format, ...){
 	format2key;
@@ -740,14 +852,24 @@ int readcfg_intarr(int** ret, int len, int relax, const char* format, ...){
 
 }
 /**
-   Read integer array of len elements
+   Read real array of len elements
+
+   @param[in,out] ret The real array. If len is nonzero, it may be pre-allocated with len entries; otherwise it is allocated. The caller frees it.
+   @param[in] len Max number of values to read. 0 means no limit.
+   @param[in] relax Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last.
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return Number of values in *ret, including those filled when relax is set, or -1 on error.
 */
 int readcfg_dblarr(real **ret, int len, int relax, const char *format, ...){
 	format2key;
 	return readstr_numarr((void **)ret, NULL, NULL, len, relax, M_REAL, key, getrecord_data(key, 1));
 }
 /**
-   Read integer
+   Read integer value of the key specified by format. Warns and returns 0 if not found.
+   Errors if the value is not an integer.
+
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return The integer value.
 */
 int readcfg_int(const char* format, ...){
 	format2key;
@@ -764,7 +886,10 @@ int readcfg_int(const char* format, ...){
 	return (int)ans;
 }
 /**
-   Read real
+   Read real value of the key specified by format. Warns and returns 0 if not found.
+
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return The real value.
 */
 real readcfg_dbl(const char* format, ...){
 	format2key;
@@ -781,7 +906,11 @@ real readcfg_dbl(const char* format, ...){
 }
 
 /**
-   Read dcell
+   Read dcell from the file whose name is the value of the key specified by
+   format. Returns NULL if the key does not exist.
+
+   @param[in] format The printf style format of the key, followed by its arguments.
+   @return Newly allocated dcell, or NULL; the caller frees it.
 */
 dcell* readcfg_dcell(const char* format, ...){
 	format2key;

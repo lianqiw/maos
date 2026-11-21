@@ -29,6 +29,10 @@
    Records the cpu consumption of a process.
 
    Usage: record_cpu pid
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments: PID and the optional sampling interval in seconds (default 0.1).
+   @return 0 on success, 1 if the process stat file cannot be opened.
 */
 int main(int argc, char** argv){
 	if(argc<2){

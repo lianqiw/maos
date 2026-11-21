@@ -87,7 +87,7 @@ extern "C"{
 }
 #endif
 #endif
-/*
+/**
   contains information about opened files.
 */
 struct file_t{
@@ -102,7 +102,7 @@ struct file_t{
 	int err;   /**<error happened. 1: eof, 2: other error*/
 	int mode;  /**<0: read, 1: write*/
 };
-/*
+/**
   Describes the information about mmaped data. Don't unmap a segment of mmaped
   memory, which causes the whole page to be unmapped. Instead, reference count
   the mmaped file and unmap the segment when the nref dropes to 1.
@@ -116,6 +116,15 @@ struct mem_t{
 };
 #define FITS_BS 2880 /*fits block size*/
 #define FITS_NH 36   /*number of headers in a block*/
+/**
+   Swap the byte order of an array of bytes length whose elements are size
+   (1, 2, 4, or 8) bytes each. out and in may be the same for in place swapping.
+
+   @param[out] out Output array.
+   @param[in] in Input array.
+   @param[in] bytes Total number of bytes.
+   @param[in] size Size of each element in bytes (1, 2, 4, or 8; others treated as 8).
+*/
 void swap_array(char* out, const char* in, long bytes, int size){
 	switch(size){
 	case 1:
@@ -160,11 +169,17 @@ void swap_array(char* out, const char* in, long bytes, int size){
 */
 int disable_save=0;
 
-/*
+/**
   Process the input file name and return file names that can be open to
   read/write. If the file name does not end with .bin or .bin.gz it will add to
   the end .bin. For read only
-  access, it will also look into the path for files.
+  access, it will also look into the path for files. A leading ~ is expanded to
+  HOME.
+
+  @param[in] fn Input file name.
+  @param[in] mod Access mode: starts with r for read, w or a for write.
+  @return Newly allocated file name; the caller frees it. NULL if fn is NULL, the
+  file is not found for reading, or saving is disabled for writing.
 */
 static char* procfn(const char* fn, const char* mod){
 	char* fn2;
@@ -236,6 +251,9 @@ static char* procfn(const char* fn, const char* mod){
 }
 /**
    Test whether a bin file exist.
+
+   @param[in] format printf style format of the file name, followed by its arguments.
+   @return 1 if the file exists, 0 otherwise.
 */
 int zfexist(const char* format, ...){
 	format2fn;
@@ -249,6 +267,8 @@ int zfexist(const char* format, ...){
 }
 /**
    Update the modification time of a bin file.
+
+   @param[in] format printf style format of the file name, followed by its arguments.
 */
 void zftouch(const char* format, ...){
 	format2fn;
@@ -259,7 +279,7 @@ void zftouch(const char* format, ...){
 	free(fn2);
 }
 //PNEW(lock);
-/*
+/**
   convert a socket or fd into file_t.
 
   @param[in] fd File or socket descriptor. Closed by zfclose().
@@ -328,6 +348,11 @@ file_t* zfdopen_as(int fd, const char* mod, const char* suffix){
 }
 /**
    Adaptively call open or shm_open depending on the name.
+
+   @param[in] name File name. Names like /name or /shm use shm_open().
+   @param[in] oflag Open flags.
+   @param[in] mode Permission mode used when creating the file.
+   @return File descriptor, or -1 on failure.
 */
 static inline int myopen(const char* name, int oflag, mode_t mode){
 	if(IS_SHM(name)){
@@ -351,9 +376,13 @@ static inline int myopen(const char* name, int oflag, mode_t mode){
    Open a bin file for read/write access.
 
    Whether the file is gzipped or not is automatically determined when open for
-   reading. When open for writing, if the file name ends with .bin or .fits,
-   will not be gzipped. If the file has no suffix, the file will be gzipped and
-   .bin is appened to file name.
+   reading. When open for writing, the file is compressed with gzip or zstd if
+   the name ends with .gz or .zst. If the file has no recognized suffix, .bin is
+   appended to the file name. Files opened for writing are locked.
+
+   @param[in] fni File name.
+   @param[in] mod Access mode: r for read, w for write (truncate), a for append.
+   @return Newly allocated file_t; close it with zfclose(). NULL on failure.
 */
 file_t* zfopen(const char* fni, const char* mod){
 	//LOCK(lock);//nothing to protect
@@ -475,6 +504,8 @@ fail:
 }
 /**
  * print error message
+
+   @param[in] fp File handle whose error field is reported.
  * */
 static void zferrprint(file_t *fp){
 	switch(fp->err){
@@ -492,6 +523,9 @@ static void zferrprint(file_t *fp){
 }
 /**
  * set error field
+
+   @param[in,out] fp File handle. May be NULL.
+   @param[in] err Error code. 0: clear, 1: EOF, 2: other error.
  * */
 static void zferr(file_t *fp, int err){
 	if(!fp) return;
@@ -500,6 +534,9 @@ static void zferr(file_t *fp, int err){
 }
 /**
  * Return the error number
+
+   @param[in] fp File handle.
+   @return The error field (0: none, 1: EOF, 2: other error), or -1 if fp is NULL.
  * */
 int zferrno(file_t *fp){
 	return fp?fp->err:-1;
@@ -522,6 +559,9 @@ int zferrno(file_t *fp){
 }*/
 /**
    Return the underlining filename
+
+   @param[in] fp File handle.
+   @return Reference to the file name; do not free. NULL if fp is NULL.
 */
 const char* zfname(file_t* fp){
 	return fp?fp->fn:NULL;
@@ -529,12 +569,17 @@ const char* zfname(file_t* fp){
 
 /**
    Return 1 when it is a fits file.
+
+   @param[in] fp File handle.
+   @return 1 if fp is a fits file, 0 otherwise.
 */
 int zfisfits(file_t* fp){
 	return (fp&&fp->isfits)?1:0;
 }
 /**
    Close the file.
+
+   @param[in] fp File handle; freed. May be NULL.
 */
 void zfclose(file_t* fp){
 	if(!fp) return;
@@ -562,7 +607,12 @@ void zfclose(file_t* fp){
 	//UNLOCK(lock);
 }
 /**
- * Wrap normal and compressed file write operation. Return zero if success, non-zero otherwise.
+ * Wrap normal and compressed file write operation.
+
+   @param[in] ptr Data to write.
+   @param[in] tot Number of bytes to write.
+   @param[in,out] fp File handle; its error field is set on failure.
+   @return 0 if success, non-zero otherwise.
  * */
 static int zfwrite_do(const void* ptr, const size_t tot, file_t* fp){
 	int ans=-1;
@@ -597,6 +647,16 @@ static int zfwrite_do(const void* ptr, const size_t tot, file_t* fp){
 
 /**
    Handles byteswapping in fits file format then call zfwrite_do to do the actual writing.
+   For fits files, each call writes one complete data unit padded to a full FITS
+   block. Complex numbers must be written with size of each real component and
+   twice the number of elements so that the real and imaginary parts are byte
+   swapped separately (see writearr()).
+
+   @param[in] ptr Data to write.
+   @param[in] size Size of each element in bytes.
+   @param[in] nmemb Number of elements.
+   @param[in,out] fp File handle; its error field is set on failure.
+   @return 0 if success, non-zero otherwise.
 */
 int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	/*a wrapper to call either fwrite or gzwrite based on flag of iszip*/
@@ -627,7 +687,12 @@ int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	return ans;
 }
 /**
- * Wrap normal and compressed file operation. Return 0 if success, 2 if error, 1 if EOF.
+ * Wrap normal and compressed file read operation.
+
+   @param[out] ptr Buffer to read into.
+   @param[in] tot Number of bytes to read.
+   @param[in,out] fp File handle; its error field is set on failure.
+   @return 0 if success, 2 if error, 1 if EOF, -1 if input invalid or a previous error exists.
  * */
 static int zfread_do(void* ptr, const size_t tot, file_t* fp){
 	int ans=-1;
@@ -662,8 +727,17 @@ static int zfread_do(void* ptr, const size_t tot, file_t* fp){
 	return fp->err;
 }
 /**
-   Handles byteswapping in fits file format then call zfread_do to do the actual writing.
-   return 0 when succeed and -1 when error.
+   Handles byteswapping in fits file format then call zfread_do to do the actual reading.
+   For fits files, each call reads one complete data unit: the padding to a full
+   FITS block (2880 bytes) after the data is skipped for all element sizes.
+   Complex numbers must be read with size of each real component and twice the
+   number of elements (see readvec()).
+
+   @param[out] ptr Buffer to read into.
+   @param[in] size Size of each element in bytes.
+   @param[in] nmemb Number of elements.
+   @param[in,out] fp File handle; its error field is set on failure.
+   @return 0 when succeed, 1 at EOF, 2 on read error, and -1 if fp already has an error.
 */
 int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	int ans=0;
@@ -688,6 +762,13 @@ int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 }
 /**
    Move the current position pointer, like fseek
+
+   @param[in,out] fp File handle.
+   @param[in] offset Offset in bytes.
+   @param[in] whence SEEK_SET, SEEK_CUR, or SEEK_END.
+   @return The resulting offset from the beginning of the file, or -1 on error.
+   Seeking is not supported for zstd compressed files (returns -1) because the
+   underlying fd offset is not the uncompressed position.
 */
 long zfseek(file_t* fp, long offset, int whence){
 	if(fp->iszip==1){
@@ -699,7 +780,9 @@ long zfseek(file_t* fp, long offset, int whence){
 	}
 }
 /**
-   Move the file position pointer to the beginning
+   Move the file position pointer to the beginning and clear the error on success.
+
+   @param[in,out] fp File handle.
 */
 void zfrewind(file_t* fp){
 	if(fp->iszip==1){
@@ -714,6 +797,9 @@ void zfrewind(file_t* fp){
 }
 /**
    Tell position pointer in file.
+
+   @param[in] fp File handle.
+   @return Current position in bytes, or -1 on error.
 */
 long zfpos(file_t* fp){
 	/*if(fp->iszip==1){
@@ -725,6 +811,10 @@ long zfpos(file_t* fp){
 }
 /**
    Return 1 if end of file is reached.
+
+   @param[in] fp File handle.
+   @return 1 if an EOF error was recorded or the position is at the end of the
+   file, 0 otherwise or if the position cannot be determined.
 */
 int zfeof(file_t* fp){
 	if(fp->err) return fp->err==1;//already EOF error
@@ -734,8 +824,11 @@ int zfeof(file_t* fp){
 	return pos>=0&&pos==end;
 }
 /**
- * Return file length
- * */
+   Return file length. The current file position is preserved.
+
+   @param[in] fp File handle.
+   @return File length in bytes, or -1 on error.
+*/
 long zflen(file_t *fp){
 	long pos=zfpos(fp);
 	long end=zfseek(fp, 0, SEEK_END);
@@ -759,9 +852,14 @@ void zflush(file_t* fp){
 }
 #define CHECK_EOF(A, errmsg) if(A){if(fp->err==1) goto read_error_eof; else  {fp->msg=errmsg;goto read_error;}}//eof is not error
 #define CHECK_ERR(A, errmsg) if(A){if(!fp->err) zferr(fp, 2); fp->msg=errmsg; goto read_error;} //eof is error
-/*
-  Obtain the current magic number, string header, and array size from a bin
-  format file. In file, the string header is located before the data magic.
+/**
+   Obtain the current magic number, string header, and array size from a bin
+   format file. In file, the string header is located before the data magic.
+
+   @param[out] header Header to fill. header->str is newly allocated; the caller frees it.
+   @param[in,out] fp File handle, read from its current position.
+   @return 0 on success, 1 if the end of data marker (M_EOD) is read, or the file
+   error code (non-zero) or -1 on failure.
 */
 static int
 read_bin_header(header_t* header, file_t* fp){
@@ -837,6 +935,9 @@ read_error_eof:
 	be written multiple times. They will be concatenated when read. The header
 	should contain key=value entries just like the configuration files. The
 	entries should be separated by new line charactor.
+
+	@param[in] header Header with magic number, dimension, and optional string.
+	@param[in,out] fp File handle to write to.
 */
 static void write_bin_header(const header_t* header, file_t* fp){
 	const uint64_t nlen8=header->str?(((strlen(header->str)+8)>>3)<<3):0;
@@ -861,8 +962,13 @@ static void write_bin_header(const header_t* header, file_t* fp){
 	zfwrite(buf, nbyte, 1, fp);
 	free(buf);
 }
-/*
-  Write fits header. str is extra header that will be put in fits comment
+/**
+   Write fits header. str is extra header that will be put in fits comment
+
+   @param[in,out] fp File handle. fp->isfits is incremented after the primary header.
+   @param[in] str Extra header text with key=value entries. May be NULL.
+   @param[in] magic Magic number of the data type.
+   @param[in] naxis Number of dimensions, followed by naxis pointers to uint64_t dimensions.
 */
 static void
 write_fits_header(file_t* fp, const char* str, uint32_t magic, int naxis, ...){
@@ -948,6 +1054,9 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int naxis, ...){
 		snprintf(header[hc], 80, "%-8s= %20s", "GCOUNT", "1");    header[hc][30]=' '; hc++;
 	}
 	if(str){
+		/*Each key=value or other text, separated by newline or ;, is written
+		  to a card as KEY     = VALUE or COMMENT   text. Text that does not
+		  fit is continued in CONTINUE cards.*/
 		const char* str_end=str+strlen(str);
 		while(isspace((unsigned char)str[0])&&str<str_end) str++;
 		int cont=0;//continuing a line that did not fit
@@ -1001,8 +1110,12 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int naxis, ...){
 	zfwrite(header, sizeof(char), 36*80, fp);
 #undef FLUSH_OUT
 }
-/*
-  Read fits header.
+/**
+   Read fits header.
+
+   @param[out] header Header to fill. header->str is newly allocated; the caller frees it.
+   @param[in,out] fp File handle, read from its current position.
+   @return 0 on success, or the file error code (non-zero) or -1 on failure.
 */
 static int
 read_fits_header(header_t* header, file_t* fp){
@@ -1123,7 +1236,12 @@ read_error_eof:
 }
 /**
    A unified header writing routine for .bin and .fits files. It write the array
-   information and string header if any.  */
+   information and string header if any.
+
+   @param[in] header Header with magic number, dimension, and optional string.
+   For fits files, magic MCC_ANY saves the string as the global keyword.
+   @param[in,out] fp File handle to write to.
+*/
 void write_header(const header_t* header, file_t* fp){
 	if(fp->isfits){
 		if(header->id!=MCC_ANY){
@@ -1137,7 +1255,13 @@ void write_header(const header_t* header, file_t* fp){
 }
 /**
    A unified header reading routine for .bin and .fits files. It read the array
-   information and string header if any.  Return non zero value if reading failed*/
+   information and string header if any.
+
+   @param[out] header Header to fill. header->str is newly allocated; the caller frees it.
+   @param[in,out] fp File handle, read from its current position.
+   @return 0 on success, non zero value if reading failed (1 at the end of data
+   marker for bin files).
+*/
 int read_header(header_t* header, file_t* fp){
 	int ans;
 	header->str=NULL;
@@ -1153,6 +1277,10 @@ int read_header(header_t* header, file_t* fp){
 }
 /**
  * Get the length of mem to storge the header and its dimension, rounded to multiple of 8.
+
+   @param[in] keywords Header string. May be NULL.
+   @return Number of bytes of the keyword block (string rounded to multiple of 8
+   plus 24), or 0 if keywords is NULL.
  */
 uint64_t bytes_header(const char* keywords){
 	if(keywords){
@@ -1181,17 +1309,18 @@ uint64_t bytes_header(const char* keywords){
    represents the data type. Then write two numbers representing the
    dimension. Finally write the data itself.
 
-   returns the file offset of the array start
+   @param[in] fpn The file name (if isfn) or the opened file_t pointer.
+   @param[in] isfn Is this a filename or already opened file.
+   @param[in] size Size of each element.
+   @param[in] magic The magic number. see bin.h.
+   @param[in] str The header as string.
+   @param[in] p The data of the array.
+   @param[in] nx Number of rows. this index changes fastest.
+   @param[in] ny Number of columns. 1 for vector.
+   @return 0 on success, -1 if the file cannot be opened, or the zfwrite error code.
 */
-long writearr(const void* fpn,     /**<[in] The file pointer*/
-	const int isfn,      /**<[in] Is this a filename or already opened file*/
-	const size_t size,   /**<[in] Size of each element*/
-	const uint32_t magic,/**<[in] The magic number. see bin.h*/
-	const char* str,     /**<[in] The header as string*/
-	const void* p,       /**<[in] The data of the array*/
-	const uint64_t nx,   /**<[in] Number of rows. this index changes fastest*/
-	const uint64_t ny    /**<[in] Number of columns. 1 for vector*/
-){
+long writearr(const void* fpn, const int isfn, const size_t size, const uint32_t magic, const char* str,
+	const void* p, const uint64_t nx, const uint64_t ny){
 	file_t* fp;
 	if(isfn){
 		fp=zfopen((char*)fpn, "wb");
@@ -1229,6 +1358,9 @@ long writearr(const void* fpn,     /**<[in] The file pointer*/
 
 /**
    Unreference the mmaped memory. When the reference drops to zero free or unmap it.
+
+   @param[in,out] pin Pointer to the mem_t; set to NULL.
+   @return The remaining reference count. 0 if freed or pin is empty.
 */
 unsigned int mem_unref(mem_t** pin){
 	if(!pin) return 0;
@@ -1259,7 +1391,13 @@ unsigned int mem_unref(mem_t** pin){
 /**
    Create a mem_t object.
 
-   Notice that nref is set to 0. Default is set to reference heap memory.
+   Notice that nref is set to 0 by design: each user (e.g., X(new_do)) takes
+   its own reference with mem_ref() and releases it with mem_unref(), which
+   frees the object when the last reference is released. Default is set to
+   reference heap memory.
+
+   @param[in] p Memory to manage; owned by the returned mem_t.
+   @return Newly allocated mem_t with nref=0.
 */
 mem_t* mem_new(void* p){
 	mem_t* out=mycalloc(1, mem_t);
@@ -1270,6 +1408,9 @@ mem_t* mem_new(void* p){
 }
 /**
    Add a reference to a mem_t.
+
+   @param[in,out] in The mem_t. May be NULL.
+   @return in. Release it with mem_unref().
 */
 mem_t* mem_ref(mem_t* in){
 	if(in){
@@ -1279,12 +1420,19 @@ mem_t* mem_ref(mem_t* in){
 }
 /**
    Check whether it is a referenced data.
+
+   @param[in] in The mem_t. May be NULL.
+   @return kind+nref (non-zero if mmaped or referenced), or 0 if in is NULL.
 */
 int mem_nref(const mem_t* in){
 	return in?(in->kind+in->nref):0;
 }
 /**
-   Replace internal vector. If p is null, checking only. Use with care.
+   Replace internal vector. Use with care. Errors if the memory is mmaped or
+   referenced more than once.
+
+   @param[in,out] in The mem_t.
+   @param[in] p New memory pointer; the old one is not freed.
 */
 void mem_replace(mem_t* in, void* p){
 	if(!in||in->nref>1||in->kind){
@@ -1295,6 +1443,9 @@ void mem_replace(mem_t* in, void* p){
 }
 /**
    Return internal pointer
+
+   @param[in] in The mem_t. May be NULL.
+   @return Reference to the internal memory; do not free. NULL if in is NULL.
 */
 void* mem_p(const mem_t* in){
 	return in?in->mem:NULL;
@@ -1303,6 +1454,14 @@ void* mem_p(const mem_t* in){
    Open a file for write with mmmap. We don't provide an access control here for
    generic usage of the function. Lock on a special dummy file for access
    control.
+
+   @param[in] fn File name (.bin only), or a shared memory name. May be NULL
+   for writing.
+   @param[in] msize Size in bytes to map. For reading, 0 means the file length.
+   @param[in] rw 1 to open for read/write (the file is created and resized), 0 for read only.
+   @return Newly allocated mem_t of the mapping with nref=0 (see mem_new()); each
+   user takes a reference with mem_ref() and releases it with mem_unref().
+   NULL if the file cannot be found or opened for reading.
 */
 mem_t* mmap_open(const char* fn, size_t msize, int rw){
 	int fd=-1;
@@ -1391,7 +1550,13 @@ static inline void put_u64(char* p, uint64_t v){ memcpy(p, &v, sizeof(v)); }
 static inline uint32_t get_u32(const char* p){ uint32_t v; memcpy(&v, p, sizeof(v)); return v; }
 static inline uint64_t get_u64(const char* p){ uint64_t v; memcpy(&v, p, sizeof(v)); return v; }
 /**
-   Initialize the header in the mmaped file. If header is not null, header0 points to its location in mmaped file. Upon exit, p0 points to the location of data p.
+   Initialize the header in the mmaped file. Upon exit, p0 points to the location of data p.
+
+   @param[in,out] p0 Pointer to the header location in the mmaped memory; advanced past the header.
+   @param[in] magic Magic number of the data type.
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @param[in] keywords Header string. May be NULL.
 */
 void mmap_write_header(char** p0, uint32_t magic, long nx, long ny, const char* keywords){
 	char* p=*p0;
@@ -1413,6 +1578,13 @@ void mmap_write_header(char** p0, uint32_t magic, long nx, long ny, const char* 
 
 /**
    Initialize the dimension from the header in the mmaped file.
+
+   @param[in,out] p0 Pointer to the header location in the mmaped memory; advanced to the data.
+   @param[out] magic Magic number of the data type.
+   @param[out] nx Number of rows.
+   @param[out] ny Number of columns.
+   @param[out] pkeywords Reference to the header string in the mapped memory; do
+   not free. NULL if there is none. May be NULL.
 */
 void mmap_read_header(char** p0, uint32_t* magic, long* nx, long* ny, const char** pkeywords){
 	char* p=*p0;
@@ -1466,6 +1638,15 @@ struct async_t{
  * aio_* api launches threads for async writing.
  * pwrite is much simpler for our usecase. There is no impact on simulation step timing.
  * we don't use mmap to write to file as it causes excessive traffic to NFS file system.
+
+   @param[in,out] fp File handle opened for writing.
+   @param[in] size Size of each element.
+   @param[in] magic The magic number. see bin.h.
+   @param[in] str The header as string.
+   @param[in] p The data of the array. Must stay valid until async_free().
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @return Newly allocated async_t; free it with async_free(). NULL on failure or for fits files, which are not supported.
  * */
 async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
 			  const char* str, const void* p, const uint64_t nx, const uint64_t ny){
@@ -1506,6 +1687,9 @@ async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
 #if USE_ASYNC	
 /**
  * Wait until previous async write are finished.
+
+   @param[in,out] async The async writing state.
+   @param[in] wait Wait for an unfinished write if set; otherwise only check.
  * */
 static void async_sync(async_t* async, int wait){
 	long ans;
@@ -1536,7 +1720,12 @@ static void async_sync(async_t* async, int wait){
 #endif	
 
 /**
- * Write to file asynchronously. offset is the end of block that is ready to write.
+ * Write to file asynchronously.
+
+   @param[in,out] async The async writing state. May be NULL.
+   @param[in] offset The end (in bytes from the start of the data) of the block that is ready to write.
+   @param[in] wait Wait for the previous write to finish (only with USE_ASYNC).
+   @return 0 on success or if async is NULL, -1 on error.
  * */
 int async_write(async_t* async, long offset, int wait){
 	if(!async||async->fp->err){
@@ -1594,6 +1783,11 @@ int async_write(async_t* async, long offset, int wait){
 #endif	
 	return ans;
 }
+/**
+   Wait for pending asynchronous writes to finish and free async.
+
+   @param[in] async The async writing state; freed. May be NULL.
+*/
 void async_free(async_t* async){
 	if(!async) return;
 #if USE_ASYNC

@@ -22,7 +22,13 @@
 int fft_disable_threads=0;
 #define check_vec(p,N) (p?(N?1:0):(N?(error("p is null but N is not 0\n"),0):0))
 /**
-   Compute the factorial from n1 to n2. Overflow LONG if n2>20, so we use double as output.*/
+   Compute the factorial from n1 to n2, i.e., the product n1*(n1+1)*...*n2. Overflow LONG if n2>20, so we use long
+   double as output.
+
+   @param[in] n1 First factor.
+   @param[in] n2 Last factor.
+   @return The product n1*(n1+1)*...*n2, or 1 if n2<n1.
+*/
 long double factorial(long n1, long n2){
 	long double fact=1;
 	while(n2>=n1){
@@ -35,12 +41,12 @@ long double factorial(long n1, long n2){
 }
 
 /**
- * @brief Compute the greatest common divider
- * 
- * @param a 	The larger value
- * @param b 	The smaller value
- * @return long The result
- */
+   Compute the greatest common divisor.
+
+   @param[in] a One value.
+   @param[in] b Another value. The order of a and b does not matter.
+   @return The greatest common divisor of a and b (non-negative).
+*/
 long calc_gcd(long a, long b){
 	if(a<0) a=-a;
 	if(b<0) b=-b;
@@ -53,12 +59,12 @@ long calc_gcd(long a, long b){
 	}
 }
 /**
- * @brief Compute the least common multiplier
- * 
- * @param a 
- * @param b 
- * @return long 
- */
+   Compute the least common multiple.
+
+   @param[in] a One value.
+   @param[in] b Another value.
+   @return The least common multiple of a and b (non-negative), or 0 if both are 0.
+*/
 long calc_lcm(long a, long b){
 	if(a<0) a=-a;
 	if(b<0) b=-b;
@@ -69,8 +75,12 @@ long calc_lcm(long a, long b){
 	}
 }
 /**
-   Reverse an permution vector.
+   Invert a permutation vector.
    A=B(p) <==> A(pi)=B
+
+   @param[in] p The permutation vector.
+   @param[in] np Length of p.
+   @return The inverse permutation vector, or NULL if p is NULL. Newly allocated; the caller frees it.
 */
 long* invperm(long* p, long np){
 	if(!check_vec(p, np)) return NULL;
@@ -104,6 +114,9 @@ void maxminlong(const long* restrict p, long N, long* restrict max, long* restri
 
 /**
    Find the next number that is power of 2.
+
+   @param[in] n The input number.
+   @return The smallest power of 2 that is no less than n.
 */
 long nextpow2(long n){
 	n--;
@@ -113,7 +126,10 @@ long nextpow2(long n){
 	return n+1;
 }
 /**
-   Find the next number suitable for FFT. Use radix of 2, 3, 5, 7, 11
+   Find the next even number suitable for FFT. Use radix of 2, 3, 5, 7.
+
+   @param[in] n The input number.
+   @return The smallest even number no less than n that only has factors of 2, 3, 5, and 7.
 */
 long nextfftsize(long n){
 	if(n==0) n=1;
@@ -153,6 +169,12 @@ long nextfftsize(long n){
 	} while(n2>1||(n3&1)==1);
 	return n3;
 }
+/**
+   Compute integer log2 of n, which must be a power of 2.
+
+   @param[in] n The input number. Must be a power of 2.
+   @return m so that pow(2,m)==n.
+*/
 unsigned long mylog2(unsigned long n){/*find m so that pow(2,m)==n. */
 	assert((n&(n-1))==0);
 	unsigned long m=-1;
@@ -161,8 +183,18 @@ unsigned long mylog2(unsigned long n){/*find m so that pow(2,m)==n. */
 	}
 	return m;
 }
-real golden_section_search(golden_section_fun f, void* param,
-	real x1, real x4, real tau){
+/**
+   Find the minimum of f(param, x) in the interval [x1, x4] using golden section
+   search. Stops when the interval is smaller than tau relative to |x1|+|x4|.
+
+   @param[in] f The function to minimize.
+   @param[in] param Parameter passed to f.
+   @param[in] x1 Lower end of the interval.
+   @param[in] x4 Upper end of the interval.
+   @param[in] tau Relative tolerance.
+   @return The abscissa of the minimum.
+*/
+real golden_section_search(golden_section_fun f, void* param, real x1, real x4, real tau){
 	static real resphi=0.381966011250105;/*2-0.5*(1+sqrt(5)); */
 	real x2=(x4-x1)*resphi+x1;
 	real f2=f(param, x2);
@@ -200,6 +232,11 @@ real golden_section_search(golden_section_fun f, void* param,
 
 /**
    Read spint array of size nx*ny from file and do optional data conversion.
+
+   @param[in,out] fp The file to read from.
+   @param[out] nx Number of rows read. Can be NULL.
+   @param[out] ny Number of columns read. Can be NULL.
+   @return The array, or NULL if reading failed. Newly allocated; the caller frees it.
 */
 spint* readspint(file_t* fp, long* nx, long* ny){
 	header_t header;
@@ -239,6 +276,14 @@ static int readvec_do(void* p, uint32_t magic, size_t size, size_t nmemb, file_t
 }
 /**
    Read a vector from file and perform conversion if type mismatches.
+
+   @param[out] p The output array.
+   @param[in] magic_p Magic number (data type) of p.
+   @param[in] magic_file Magic number (data type) of data in the file.
+   @param[in] size Size in bytes of each element of p. Only used if no conversion is needed.
+   @param[in] nmemb Number of elements to read.
+   @param[in,out] fp The file to read from.
+   @return 0 if succeeded, nonzero if failed.
 */
 int readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, file_t* fp){
 	if(!p||!fp) return -1;
@@ -308,9 +353,11 @@ int readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t 
 	return ans;
 }
 /**
- * Force MKL to treat CPU as Intel
- * https://danieldk.eu/Posts/2020-08-31-MKL-Zen.html
- * For dsvd_inv of 2714x2714 array, iit reduced the timing from 2 to 1.4 s
+   Force MKL to treat CPU as Intel
+   https://danieldk.eu/Posts/2020-08-31-MKL-Zen.html
+   For dsvd_inv of 2714x2714 array, it reduced the timing from 2 to 1.4 s
+
+   @return Always 1.
 */
 int mkl_serv_intel_cpu_true(){
 	//dbg("mkl_serv_intel_cpu_true is called\n");

@@ -27,6 +27,13 @@
 #include "powfs_utils.h"
 
 
+/**
+   Print noise equivalent angle sanea in mas.
+
+   @param[in] sanea NEA variance (radian^2) of each WFS. Each is nsa x 2 (or more) columns.
+   @param[in] sprint Indices of subapertures to print for each WFS. If NULL, print subapertures along the +x axis.
+   @param[in] saloc Subaperture locations.
+*/
 void print_nea(const dcell* sanea, const lcell* sprint, const loc_t* saloc){
 	//info2("Matched filter sanea:\n");
 	if(sprint){/*print nea for select subapertures.*/
@@ -65,6 +72,14 @@ void print_nea(const dcell* sanea, const lcell* sprint, const loc_t* saloc){
 	}
 }
 
+/**
+   Generate matched filter and noise equivalent angle for powfs ipowfs from the
+   i0, gx, gy in intstat, and print NEA if srsa is set.
+
+   @param[in] parms The parameter struct.
+   @param[in,out] powfs The powfs struct array. intstat->mtche, intstat->i0sum, intstat->i0sumsum, and sanea are set.
+   @param[in] ipowfs Index of the powfs.
+*/
 void mtch_wrap(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 	info("Generating matched filter for powfs %d\n", ipowfs);
 	const real bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;

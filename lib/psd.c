@@ -23,10 +23,12 @@
 
 /**
    Compute the 1-d PSD from a 1-d sequence.
+
+   @param[in] v The data sequence. A row vector, or one sequence per column.
+   @param[in] nseg Number of overlapping segments.
+   @return Newly allocated one sided PSD, integrated in each frequency bin, one column per sequence; the caller frees it.
 */
-dmat* psd1d(const dmat* v, /**<[in] The data sequence*/
-	long nseg      /**<[in] Number of overlapping segments*/
-){
+dmat* psd1d(const dmat* v, long nseg){
 	long nx;
 	long ncol;
 	if(NX(v)==1){
@@ -67,7 +69,12 @@ dmat* psd1d(const dmat* v, /**<[in] The data sequence*/
 	return psd;
 }
 /**
-  Wrap of psd1d to put the frequency along the first column.
+   Wrap of psd1d to put the frequency along the first column.
+
+   @param[in] v The data sequence. A row vector, or one sequence per column.
+   @param[in] nseg Number of overlapping segments.
+   @param[in] dt Sampling period (s).
+   @return Newly allocated PSD with frequency (Hz) in the first column and PSD density in the remaining; the caller frees it.
 */
 dmat* psd1dt(const dmat* v, long nseg, real dt){
 	dmat* psd=psd1d(v, nseg);
@@ -85,6 +92,11 @@ dmat* psd1dt(const dmat* v, long nseg, real dt){
 
 /**
    Interpolate psd onto new f. We interpolate in log space which is usually more linear.
+
+   @param[in] psdin The PSD with frequency in the first column and PSD in the second column.
+   @param[in] fnew The new frequency.
+   @param[in] uselog Interpolate in log space of the PSD.
+   @return Newly allocated PSD (without the frequency column) on fnew; the caller frees it.
 */
 dmat* psd_interp1(const dmat* psdin, const dmat* fnew, int uselog){
 	if(NY(psdin)!=2){
@@ -114,7 +126,10 @@ dmat* psd_interp1(const dmat* psdin, const dmat* fnew, int uselog){
 }
 /**
    Find vibration peaks in the PSD by comparing the PSD against a LPF version plus noise.
- */
+
+   @param[in] psdin The PSD with frequency in the first column and PSD in the second column.
+   @return Newly allocated 4*npeak array with each column containing the centroid frequency, integrated power, starting index, and ending index of a peak; the caller frees it.
+*/
 dmat* psd_vibid(const dmat* psdin){
 	int nmaxp=100;
 	if(!psdin||NY(psdin)<2||NX(psdin)<3){
@@ -187,7 +202,13 @@ dmat* psd_vibid(const dmat* psdin){
 	return res;
 }
 
-/**Convert temporal PSD to spatial*/
+/**
+   Convert temporal PSD to spatial
+
+   @param[in] psdt The temporal PSD as a row vector [alpha, beta, fmin, fmax] of power law beta*f^alpha. fmin and fmax are optional.
+   @param[in] vmean The mean wind speed (m/s).
+   @return Newly allocated spatial PSD in the same format; the caller frees it.
+*/
 dmat* psd_t2s(const dmat* psdt, real vmean){
 	if(NX(psdt)!=1||NY(psdt)>4){
 		error("psdt needs to be 1 row and less than 4 cols\n");
@@ -211,7 +232,13 @@ dmat* psd_t2s(const dmat* psdt, real vmean){
 	return psds;
 }
 
-/**Convert spatial PSD to temporal*/
+/**
+   Convert spatial PSD to temporal
+
+   @param[in] psds The spatial PSD as a row vector [alpha, beta, fmin, fmax] of power law beta*f^alpha. fmin and fmax are optional.
+   @param[in] vmean The mean wind speed (m/s).
+   @return Newly allocated temporal PSD in the same format; the caller frees it.
+*/
 dmat* psd_s2t(const dmat* psds, real vmean){
 	if(NX(psds)!=1||NY(psds)>4){
 		error("psds needs to be 1 row and less than 4 cols\n");
@@ -237,7 +264,12 @@ dmat* psd_s2t(const dmat* psds, real vmean){
 
 
 /**
-   Integrated a PSF that defines on linear or logrithmically spaced grid nu.
+   Integrated a PSD that defines on linear or logrithmically spaced grid nu.
+
+   @param[in] nu The frequency grid.
+   @param[in] psd The PSD.
+   @param[in] n Number of points.
+   @return The integral, or 0 if the grid is neither linear nor logarithmic.
 */
 real psd_inte(const real* nu, const real* psd, long n){
 	real dnu=(nu[n-1]-nu[0])/(n-1);
@@ -258,6 +290,9 @@ real psd_inte(const real* nu, const real* psd, long n){
 }
 /**
    wraps psd_inte with a single input variable containing both frequency and psd.
+
+   @param[in] psdin The PSD with frequency in the first column and PSD in the second column.
+   @return The integral of the PSD.
 */
 real psd_inte2(const dmat* psdin){
 	if(NY(psdin)!=2){
@@ -270,12 +305,12 @@ real psd_inte2(const dmat* psdin){
 	return psd_inte(nu, psd, n);
 }
 /**
- * @brief Reverse cumulative sum of PSD
- *
- * @param psdin 	the input PSD
- * @param scale		optional scaling
- * @return dmat* 	sqrt of the reverse integration of PSD
- */
+   Reverse cumulative sum of PSD
+
+   @param[in] psdin The input PSD with frequency in the first column and PSD in the remaining columns.
+   @param[in] scale Scaling applied to the result.
+   @return Newly allocated array with frequency in the first column and sqrt of the reverse integration of PSD in the remaining; the caller frees it.
+*/
 dmat *psd_reverse_cumu(const dmat *psdin, real scale){
 	long nx=NX(psdin);
 	dmat *cumu=dnew(NX(psdin), NY(psdin));
@@ -313,15 +348,28 @@ dmat *psd_reverse_cumu(const dmat *psdin, real scale){
 }
 
 /**
- * Convert PSD into time series. wraps psd2ts with a seed instead of rand_t as input.
- * */
+   Convert PSD into time series. wraps psd2ts with a seed instead of rand_t as input.
+
+   @param[in] psdin The PSD. See psd2ts().
+   @param[in] seed The random seed.
+   @param[in] dt The sampling period (s).
+   @param[in] nstepin Number of time steps.
+   @return Newly allocated time series of length nstepin; the caller frees it.
+*/
 dmat *psd2ts2(const dmat *psdin, int seed, real dt, int nstepin){
 	rand_t stat0;
 	seed_rand(&stat0, seed);
 	return psd2ts(psdin, &stat0, dt, nstepin);
 }
 /**
-   Convert PSD into time series.*/
+   Convert PSD into time series.
+
+   @param[in] psdin The PSD. Either a row vector [alpha, beta, fmin, fmax] of power law beta*f^alpha (fmin and fmax are optional), or two columns of frequency and PSD.
+   @param[in,out] rstat The random number generator state.
+   @param[in] dt The sampling period (s).
+   @param[in] nstepin Number of time steps.
+   @return Newly allocated time series of length nstepin; the caller frees it.
+*/
 dmat* psd2ts(const dmat* psdin, rand_t* rstat, real dt, int nstepin){
 	if(!psdin){
 		error("psdin cannot be null\n");
@@ -401,7 +449,13 @@ static int check_psd_match(const dmat* psd1, const dmat* psd2){
 }
 /**
    Add two PSDs. The first column of each dmat is the frequency nu, and the
-   second column is PSD*/
+   second column is PSD
+
+   @param[in] psd1 The first PSD.
+   @param[in] psd2 The second PSD, interpolated onto the frequency of psd1 if needed.
+   @param[in] scale2 Scaling of psd2.
+   @return Newly allocated psd1+psd2*scale2; the caller frees it.
+*/
 dmat* add_psd(const dmat* psd1, const dmat* psd2, real scale2){
 	dmat* out=ddup(psd1);
 	add_psd2(&out, psd2, scale2);
@@ -409,8 +463,12 @@ dmat* add_psd(const dmat* psd1, const dmat* psd2, real scale2){
 }
 
 /**
-  Add a PSD scaled by scale to another. The first column of each dmat is the
+   Add a PSD scaled by scale to another. The first column of each dmat is the
    frequency nu, and the second column is PSD.
+
+   @param[in,out] pout The PSD to add to. If NULL, it is set to a copy of in times scale.
+   @param[in] in The PSD to add, interpolated onto the frequency of pout if needed.
+   @param[in] scale Scaling of in.
 */
 void add_psd2(dmat** pout, const dmat* in, real scale){
 	if(!*pout){
@@ -442,12 +500,14 @@ void add_psd2(dmat** pout, const dmat* in, real scale){
 	}
 }
 /**
- * @brief Choose a mode from the PSD. The first column is frequency.
- * @param psd	the input PSD
- * @param im	index of the first mode. -1: sum all modes. 0 to ny(psd)-1.
- * @param nm	number of modes.
- * @param keepdc	Do not remove DC component (f=0)
- * @param scale scaling fctor
+   Choose and sum modes from the PSD. The first column is frequency.
+
+   @param[in] psd The input PSD with frequency in the first column.
+   @param[in] im Index of the first mode, 0 to ny(psd)-2. -1: sum all modes.
+   @param[in] nm Number of modes. At least 1.
+   @param[in] keepdc Do not remove DC component (f=0).
+   @param[in] scale Scaling factor.
+   @return Newly allocated two column array of frequency and summed PSD; the caller frees it.
 */
 dmat* psd_select(const dmat* psd, int im, int nm, int keepdc, real scale){
 	int skip=(keepdc||P(psd,0)>0)?0:1;
@@ -473,8 +533,12 @@ dmat* psd_select(const dmat* psd, int im, int nm, int keepdc, real scale){
 	}
 	return psd2;
 }
-/*
-	from a 2-d screen, compute 1-d PSD by radially averaging the 2-D psd assuming isotropy. 
+/**
+   from a 2-d screen, compute 1-d PSD by radially averaging the 2-D psd assuming isotropy.
+
+   @param[in] screen The square 2-d screen.
+   @param[in] dx The spatial sampling (m).
+   @return Newly allocated two column array of spatial frequency (1/m) and PSD; the caller frees it.
 */
 dmat *psd2d_aniso(const dmat *screen, real dx){
 	if(!screen || NX(screen)!=NY(screen)){
@@ -506,15 +570,17 @@ dmat *psd2d_aniso(const dmat *screen, real dx){
 	}
 	return psd1d;
 }
-/*
-	From a 2-d screen, compute 1-d PSD by averaging the 1-D psd of each
-	row/column, and then scale back to the 2-D psd using the technique of computing
-	temporay PSD of turbulence.
-	*/
-dmat *psd2d(dmat **extra, /**<[out] extra output*/
-		const_anyarray screens_, /**<[in] 2-d screen or cell of 2-d screens*/
-		real dx /**<[in] Sampling*/
-){
+/**
+   From a 2-d screen, compute 1-d PSD by averaging the 1-D psd of each
+   row/column, and then scale back to the 2-D psd using the technique of computing
+   temporay PSD of turbulence.
+
+   @param[out] extra Extra output [r0 equivalent at 0.5 micron (m), power law slope]. Can be NULL.
+   @param[in] screens_ 2-d square screen or cell of 2-d screens of the same size.
+   @param[in] dx Sampling (m).
+   @return Newly allocated two column array of spatial frequency (1/m) and PSD, or NULL if screens_ is empty; the caller frees it.
+*/
+dmat *psd2d(dmat **extra, const_anyarray screens_, real dx){
 	const cell* screens=screens_.c;
 	if(!screens){
 		dbg("screen is empty\n");

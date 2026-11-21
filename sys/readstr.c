@@ -30,18 +30,20 @@
    Obtain a string array value from the key. String entries must be separated by
    coma [,]. Enclosing with quote is optional, but necessary to protect spaces.
    Examples:
-   []: one empty string
+   []: no entry
    [,]: two empty strings
    [a,b]: two strings: "a" and "b";
    [a,b,]: three strings, "a", "b", and ""
    ['a b']: one string "a b".
- */
-int readstr_strarr(char*** res, /**<[out] Result*/
-	int len,     /**<[in] max number f values to read*/
-	int relax,	 /**<[in] Whether fewer entries are permitted. If true, will copy from last.*/
-	const char *key, /**<[in] the key that needs the value.*/
-	const char *sdata /**<[in] Input string*/
-){
+
+   @param[in,out] res Result. If len is nonzero and *res is set, it is pre-allocated with len entries; otherwise it is allocated.
+   @param[in] len max number of values to read. 0 means no limit.
+   @param[in] relax Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last.
+   @param[in] key the key that needs the value.
+   @param[in] sdata Input string
+   @return Number of entries, including those copied when relax is set.
+*/
+int readstr_strarr(char*** res, int len, int relax, const char *key, const char *sdata){
 	int count=0;
 	int maxcount=len;
 	if(len&&*res){//pre allocatrd data.
@@ -220,11 +222,15 @@ static int parse_expr(double* vmul, double* vadd, char** pendptr){
 /**
    Read in a number from the value string. Will interpret +,0,*,/ operators if
    there is nospace in between. *endptr0 will be updated to point to the next
-   valid entry, or at separator like coma (spaced are skipped).  */
-double readstr_num(const char *key, /**<[in] the key that needs the value.*/
-	const char *data, /**<[in] Input string*/
-	char** endptr0    /**<[out] Location in Input string after readed number.*/
-){
+   valid entry, or at separator like coma (spaced are skipped).
+
+   @param[in] key the key that needs the value.
+   @param[in] data Input string
+   @param[out] endptr0 Location in Input string after readed number. May be NULL.
+   It is set to the end of the (blank) string if data is empty, and to data if parsing failed.
+   @return The number, 0 if data is empty, or NAN if parsing failed.
+*/
+double readstr_num(const char *key, const char *data, char** endptr0){
 	char* endptr;
 	if(endptr0) *endptr0=(char*)data;
 	while(data && isspace((unsigned char)data[0]) && data[0]!='\0') data++;
@@ -246,17 +252,18 @@ double readstr_num(const char *key, /**<[in] the key that needs the value.*/
 	return res*vmul+vadd;
 }
 /**
- * @brief Append the array with new numbers or duplicate the last entry ndup times.
- * 
- * @param ret 	The vector for containing the numbers
- * @param len 	Total number of elements requested (ret is pre-allocated). 0 means no limit (ret is no pre-allocated)
- * @param type 	The date type of the vector in memory
- * @param size	The data element size
- * @param count The existing number of elements in the vector.
- * @param res 	The number to append
- * @param ndup 	Number of times to duplicate the last entry.
- * @return -1 if invalid entry, -2 if more numbers are supplied, 0 if success.
- */
+   Append the number res to the array nfill times.
+
+   @param[in,out] ret The vector for containing the numbers. Reallocated if it is full.
+   @param[in] len Total number of elements requested (ret is pre-allocated). 0 means no limit (ret is no pre-allocated)
+   @param[in,out] nmax Allocated number of elements in ret; doubled when ret is reallocated.
+   @param[in] type The date type of the vector in memory
+   @param[in] size The data element size
+   @param[in,out] count The existing number of elements in the vector; increased by nfill.
+   @param[in] res The number to append
+   @param[in] nfill Number of times to append res.
+   @return -1 if invalid entry, -2 if more numbers are supplied, 0 if success.
+*/
 int fill_num(void **ret, int len, int *nmax, int type, int size, int *count, double res, int nfill){
 	if(len>0 && *count+nfill>len){
 		//warning("Needs %d numbers, but more are supplied.\n", len);
@@ -313,17 +320,18 @@ int fill_num(void **ret, int len, int *nmax, int type, int size, int *count, dou
    [1 2 3; 4 5 6]' is 2 d array, 2 rows, 3 columns. In memory is stored as [1 4 2 5 3 6]
 
    when there is no [], only read until there is ';', '\n', or end of str.
-   \return Number of values actually read not including duplicated when relax is set.
+
+   @param[in,out] ret Result. If len is nonzero, it may be pre-allocated with len entries; otherwise it is allocated.
+   @param[out] nrow0 Number of rows (nx). May be NULL.
+   @param[out] ncol0 Number of columns (ny). May be NULL.
+   @param[in] len Max number of values to read. 0 means no limit.
+   @param[in] relax Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last.
+   @param[in] type Data type (M_INT, M_LONG, M_DBL, or M_FLT).
+   @param[in] key the key that needs the value.
+   @param[in] data Input string
+   @return Number of values in *ret, including those filled when relax is set, or -1 on error.
 */
-int readstr_numarr(void **ret, /**<[out] Result*/
-	int *nrow0, /**<[out] Number of rows (nx)*/
-	int *ncol0, /**<[out] Number of columns (ny)*/
-	int len,    /**<[in]  Max number of values to read.*/
-	int relax,  /**<[in] Whether fewer entries are permitted. If true, will copy from last.*/
-	int type,   /**<[in]  Data type*/
-	const char *key, /**<[in] the key that needs the value.*/
-	const char *data /**<[in] Input string*/
-){
+int readstr_numarr(void **ret, int *nrow0, int *ncol0, int len, int relax, int type, const char *key, const char *data){
 	if(!ret){
 		warning("%s=%s: ret is not set\n", key, data);
 		return 0;
@@ -588,7 +596,12 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	return count;
 }
 /**
-	Return start of valid region and update pend (if set) to end of valid region. Does not modify the string
+	Return start of valid region and update pend (if set) to end of valid region. Does not modify the string.
+	Leading and trailing spaces and matching quotes are removed.
+
+	@param[in] start Start of the string.
+	@param[in,out] pend End of the string (exclusive). Uses the string end if NULL or *pend is NULL. Updated to the end of valid region, or NULL if it is empty.
+	@return Start of valid region, or NULL if it is empty. Points into the input string.
 */
 const char* trim_string(const char *start, const char **pend){
 	if(!start) return NULL;
@@ -617,7 +630,12 @@ repeat:
    Search and return the value correspond to key. Case is ignored; 
    NULL if not found. Do not free the returned pointer. 
    The key must be preceeded by space, semicolon, coma or new line (isspace),
-   and succeeded by = sign. */
+   and succeeded by = sign.
+
+   @param[in] keywords String containing key=value pairs.
+   @param[in] key The key.
+   @return Pointer to the value in keywords, or NULL if not found.
+*/
 const char* search_keyword(const char* keywords, const char* key){
 	if(!keywords) return NULL;
 	const char* ans=NULL;
@@ -654,6 +672,10 @@ const char* search_keyword(const char* keywords, const char* key){
 }
 /**
    Read a number from the header with key
+
+   @param[in] keywords String containing key=value pairs.
+   @param[in] key The key.
+   @return The number, or NAN if not found.
 */
 double search_keyword_num(const char* keywords, const char* key){
 	if(!keywords) return NAN;
@@ -665,7 +687,11 @@ double search_keyword_num(const char* keywords, const char* key){
 	}
 }
 /**
-   Read a number from the header and verify.
+   Read a number from the header and verify. Calls error() if not found or invalid.
+
+   @param[in] keywords String containing key=value pairs.
+   @param[in] key The key.
+   @return The number.
 */
 double search_keyword_num_valid(const char* keywords, const char* key){
 	double val=search_keyword_num(keywords, key);
@@ -676,7 +702,13 @@ double search_keyword_num_valid(const char* keywords, const char* key){
 }
 /**
    Read a number from the header and use value0 if not found.
+
+   @param[in] keywords String containing key=value pairs.
+   @param[in] key The key.
+   @param[in] value0 Default value.
+   @return The number, or value0 if not found or invalid.
 */
+
 double search_keyword_num_default(const char* keywords, const char* key, double value0){
 	double val=search_keyword_num(keywords, key);
 	if(!(val==val)){

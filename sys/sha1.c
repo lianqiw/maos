@@ -32,6 +32,11 @@ struct SHA1_CTX{
     size_t curlen;
 };
 
+/**
+   Initialize the SHA1 context.
+
+   @param[out] ctx The SHA1 context.
+*/
 void sha1_init(SHA1_CTX *ctx) {
     ctx->h[0] = 0x67452301;
     ctx->h[1] = 0xEFCDAB89;
@@ -42,6 +47,12 @@ void sha1_init(SHA1_CTX *ctx) {
     ctx->bitlen = 0;
 }
 
+/**
+   Process one 64 byte block and update the hash state.
+
+   @param[in,out] ctx The SHA1 context.
+   @param[in] data The 64 byte block.
+*/
 static void sha1_transform(SHA1_CTX *ctx, const unsigned char *data) {
     uint32_t w[80];
     uint32_t a, b, c, d, e, t;
@@ -70,6 +81,13 @@ static void sha1_transform(SHA1_CTX *ctx, const unsigned char *data) {
     ctx->h[3] += d; ctx->h[4] += e;
 }
 
+/**
+   Feed len bytes of data into the SHA1 context.
+
+   @param[in,out] ctx The SHA1 context.
+   @param[in] data The data.
+   @param[in] len Number of bytes in data.
+*/
 void sha1_update(SHA1_CTX *ctx, const unsigned char *data, size_t len) {
     for (size_t i = 0; i < len; i++) {
         ctx->block[ctx->curlen++] = data[i];
@@ -81,6 +99,12 @@ void sha1_update(SHA1_CTX *ctx, const unsigned char *data, size_t len) {
     }
 }
 
+/**
+   Finish the SHA1 computation and write the 20 byte digest to out.
+
+   @param[in,out] ctx The SHA1 context.
+   @param[out] out The 20 byte digest.
+*/
 void sha1_final(SHA1_CTX *ctx, unsigned char *out) {
     ctx->bitlen += ctx->curlen * 8;
     ctx->block[ctx->curlen++] = 0x80;
@@ -103,7 +127,14 @@ void sha1_final(SHA1_CTX *ctx, unsigned char *out) {
     }
 }
 
-/**  Base64 Encode  */
+/**
+   Base64 encode in_len bytes of in to a null terminated string out, which
+   must hold at least 4*ceil(in_len/3)+1 characters.
+
+   @param[in] in Input bytes.
+   @param[in] in_len Number of input bytes.
+   @param[out] out Output string.
+*/
 void base64_encode(const unsigned char *in, int in_len, char *out) {
 	static const char b64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     int i, j;
@@ -120,6 +151,13 @@ void base64_encode(const unsigned char *in, int in_len, char *out) {
     }
     out[j] = 0;
 }
+/**
+   Compute the SHA1 digest of string in and base64 encode it into out (at least
+   29 characters). Used for the websocket handshake.
+
+   @param[in] in Input string.
+   @param[out] out Output string.
+*/
 void base64_sha1(const char* in,  char *out){
 	unsigned char sha[20];
 	SHA1_CTX sha_ctx;
@@ -131,6 +169,13 @@ void base64_sha1(const char* in,  char *out){
 
 #define TOKEN_BYTES 32
 
+/**
+   Fill a buffer with random bytes.
+
+   @param[out] token Output buffer.
+   @param[in] len Number of bytes.
+   @return 0 on success, -1 on failure.
+*/
 static int generate_token(uint8_t *token, size_t len){
     size_t offset = 0;
 
@@ -149,6 +194,12 @@ static int generate_token(uint8_t *token, size_t len){
 
     return 0;
 }
+
+/**
+   Generate a random 32 byte session token as a hex string.
+
+   @return Newly allocated 64 character hex string, or NULL on failure; the caller frees it.
+*/
 
 char *generate_session_cookie(void){
     uint8_t token[TOKEN_BYTES];

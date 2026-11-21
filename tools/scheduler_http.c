@@ -91,8 +91,14 @@ typedef struct http_context_t{
 http_context_t *http_context=NULL;
 int nhttp_context=0;
 #ifdef HAVE_OPENSSL
-static int has_ssl=0;//guard initialization and tell the status. 1: yes. 0 or -1: no. 0: not initialized
+/**guard initialization and tell the status. 1: yes. 0 or -1: no. 0: not initialized*/
+static int has_ssl=0;
 SSL_CTX *ssl_ctx=NULL;
+/**
+   Initialize the OpenSSL server context once, using the certificate and key in
+   ~/.aos/HOST.crt and HOST.key (or Server.crt and Server.key). Sets has_ssl to
+   1 on success and -1 on failure.
+*/
 void init_ssl(){
 	if(has_ssl) return;
 	SSL_load_error_strings();
@@ -139,6 +145,12 @@ void init_ssl(){
 	}
 }
 #endif
+/**
+   Mark an http context as unused: set fd to -1 and free the SSL handle, auth,
+   and cookie. The socket itself is not closed.
+
+   @param[in,out] ctx The context.
+*/
 static void http_context_remove(http_context_t *ctx){
 	dbg_time("http_context removed for %d\n", ctx->fd);
 	ctx->fd=-1;
@@ -152,9 +164,26 @@ static void http_context_remove(http_context_t *ctx){
 	free(ctx->cookie); ctx->cookie=NULL;
 }
 #if HAVE_OPENSSL
+/**
+   Read from a TLS connection.
+
+   @param[in] ctx The context.
+   @param[out] buf Buffer to receive data.
+   @param[in] nbuf Size of buf.
+   @return Number of bytes read as SSL_read(), or -1 if ctx is NULL.
+*/
 static int https_reader(http_context_t*ctx, char *buf, size_t nbuf){
 	return ctx?SSL_read(ctx->ssl, (void*)buf, (int)(nbuf>INT_MAX?INT_MAX:nbuf)):-1;
 }
+/**
+   Write all data to a TLS connection, retrying on partial writes. The context
+   is removed on failure.
+
+   @param[in,out] ctx The context.
+   @param[in] buf Data to send.
+   @param[in] nbuf Number of bytes to send.
+   @return 0 on success, -1 on failure.
+*/
 static int https_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 	if(!ctx) return -1;
 	if(!nbuf) return 0;
@@ -176,9 +205,26 @@ static int https_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 	}
 }
 #endif
+/**
+   Read from a plain socket connection.
+
+   @param[in] ctx The context.
+   @param[out] buf Buffer to receive data.
+   @param[in] nbuf Size of buf.
+   @return Number of bytes read as recv(), or -1 if ctx is NULL.
+*/
 static int http_reader(http_context_t*ctx, char *buf, size_t nbuf){
 	return ctx?(int)recv(ctx->fd, (void*)buf, nbuf, 0):-1;
 }
+/**
+   Write all data to a plain socket connection, retrying on partial writes. The
+   context is removed on failure.
+
+   @param[in,out] ctx The context.
+   @param[in] buf Data to send.
+   @param[in] nbuf Number of bytes to send.
+   @return 0 on success, -1 on failure.
+*/
 static int http_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 	if(!ctx) return -1;
 	if(!nbuf) return 0;
@@ -200,6 +246,12 @@ static int http_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 	}
 }
 
+/**
+   Find the http context for a socket.
+
+   @param[in] fd Socket descriptor.
+   @return Reference to the context (do not free), or NULL if not found.
+*/
 static http_context_t *http_context_get(int fd){
 	for (int ic=0; ic<nhttp_context; ic++){
 		if(http_context[ic].fd==fd){
@@ -243,7 +295,14 @@ char *read_line_trim(int *pn, FILE *fp){
 	*pn=(int)n;
 	return line;
 }
-/**Create a context for fd. overriding existing one if exists */
+/**
+   Create an http or https context for fd, overriding the existing one if it
+   exists. Also loads basic authentication from ~/.aos/htpasswd and the session
+   cookie from ~/.aos/htcookie (created if missing).
+
+   @param[in] fd Socket descriptor of the new connection.
+   @return Reference to the context (do not free), or NULL if the protocol is not http or https or https is not supported.
+*/
 static http_context_t *http_context_create(int fd){
 	char buf[5]={0};
 	ssize_t len=recv(fd, buf, 4, MSG_PEEK);
@@ -355,6 +414,12 @@ static http_context_t *http_context_create(int fd){
 	return &http_context[jc];
 }
 
+/**
+   Compute the websocket frame header size for a server (unmasked) frame.
+
+   @param[in] nlen Payload length.
+   @return Header size in bytes (2, 4, or 10).
+*/
 static int nlen_offset(int nlen){
 	int offset=2;//no mask field can be present
 	if(nlen>UINT16_MAX){
@@ -365,8 +430,16 @@ static int nlen_offset(int nlen){
 	return offset;
 }
 const int http_padding=16;
-/** 
- * Write to websockets. allocated memory must have at least http_padding padding before the pointer*/
+/**
+   Write to websockets. The memory pointed to by buf must have at least
+   http_padding bytes before the pointer, which is used for the frame header.
+
+   @param[in,out] buf Payload. The header is written before it.
+   @param[in] nlen Payload length.
+   @param[in] mode 0: text, 1: binary.
+   @param[in] userdata Socket descriptor of the websocket client cast to a pointer.
+   @return 0 on success, -1 on failure.
+*/
 static int ws_send(char *buf, int nlen, int mode, void *userdata){
 	int offset=nlen_offset(nlen);
 	char *header=buf-offset;
@@ -392,6 +465,16 @@ static int ws_send(char *buf, int nlen, int mode, void *userdata){
 	return 0;
 }
 #if HAVE_LIBZSTD
+/**
+   Decompress the zstd frame src into a persistent internal buffer starting at
+   dstOffset, growing the buffer as needed.
+
+   @param[in] src Compressed data.
+   @param[in] srcSize Number of bytes in src.
+   @param[in] dstOffset Offset in the internal buffer to write the output at.
+   @param[out] dstSizeOut Decompressed size.
+   @return Start of the internal buffer (not including the offset), which must not be freed and is overwritten by the next call, or NULL on error.
+*/
 void* decompress_buffer(
     const void* src,
     size_t srcSize,
@@ -430,17 +513,16 @@ void* decompress_buffer(
     return buf;
 }
 /**
- * Compress a portion of a buffer using Zstd with a persistent internal buffer.
- * Automatically reallocates if the buffer is too small.
- *
- * @param src         Pointer to source buffer
- * @param srcOffset   Offset into the source buffer
- * @param srcSize     Number of bytes to compress
- * @param dstOffset   Offset into the internal destination buffer
- * @param dstSizeOut  Pointer to store the compressed size of this call
- * @param level       Compression level (1-22)
- * @return            Pointer to internal buffer containing compressed data, or NULL on error
- */
+   Compress a buffer using Zstd into a persistent internal buffer starting at
+   dstOffset. Automatically reallocates if the buffer is too small.
+
+   @param[in] srcPtr Pointer to source buffer.
+   @param[in] srcSize Number of bytes to compress.
+   @param[in] dstOffset Offset into the internal destination buffer.
+   @param[out] dstSizeOut Compressed size.
+   @param[in] level Compression level (1-22).
+   @return Start of the internal buffer (not including the offset), which must not be freed and is overwritten by the next call, or NULL on error.
+*/
 void* compress_buffer(
     const void* srcPtr,
     size_t srcSize,
@@ -471,8 +553,16 @@ void* compress_buffer(
     return buf;
 }
 #endif
-/** 
- * Read tcp data and send to websockets */
+/**
+   Read nlen bytes of tcp data from fd and send to the websocket client.
+   Payloads larger than 1024 bytes are zstd compressed if available.
+
+   @param[in] fd Socket to read from.
+   @param[in] nlen Number of bytes to read.
+   @param[in] mode 0: text, 1: binary.
+   @param[in] userdata Socket descriptor of the websocket client cast to a pointer.
+   @return 0 on success, -1 on failure.
+*/
 static int ws_forward(int fd, int nlen, int mode, void *userdata){
 	static char *buf=0;//persistent buffer
 	static int size=0;
@@ -499,7 +589,12 @@ static int ws_forward(int fd, int nlen, int mode, void *userdata){
 	socket_recv_timeout(fd, 0);
 	return ans;
 }
-static void ws_write_close(http_context_t* ctx){//send a ws close frame.
+/**
+   Send a websocket close frame with status 1000.
+
+   @param[in] ctx The context. Nothing is done if NULL.
+*/
+static void ws_write_close(http_context_t* ctx){
 	if(!ctx) return;
 	char buf[4];
 	buf[0]=0x88;//FIN=1; opcode=8
@@ -510,14 +605,26 @@ static void ws_write_close(http_context_t* ctx){//send a ws close frame.
 	}
 }
 static int ws_fail(int fd, const char *format, ...) CHECK_ARG(2);
+/**
+   Log a websocket failure and remove the proxy link of fd, closing it.
+
+   @param[in] fd Socket descriptor of the websocket client.
+   @param[in] format printf style format of the message.
+   @return -1.
+*/
 static int ws_fail(int fd, const char *format, ...) {
 	format2fn;
 	dbg_time("sock %d: %s\n", fd, fn);
 	ws_proxy_remove((void*)(long)fd, 1);
 	return -1;
 }
-/*
-	Receive websocket messages and call ws_proxy_command to handle it.
+/**
+   Receive websocket messages and call ws_proxy_command to handle it. Handles
+   fragmented messages, ping, and close frames.
+
+   @param[in] pfd Poll entry of the websocket client.
+   @param[in] flag -1 asks the client to close.
+   @return 0 to keep the connection, -1 to close it.
 */
 static int ws_receive(struct pollfd *pfd, int flag){
 	const int fd=pfd->fd;
@@ -625,8 +732,12 @@ static int ws_receive(struct pollfd *pfd, int flag){
 	}
     return 0;
 }
-/*
-	Parse keys from http payload. The client needs to free the returned memory.
+/**
+   Parse the value of a key from the http header.
+
+   @param[in] buf The http header.
+   @param[in] name Name of the key including the colon.
+   @return Newly allocated value; the caller frees it. NULL if not found.
 */
 char* http_parse_key(const char *buf, const char *name){
 	const char *key_start = strstr(buf, name);
@@ -637,8 +748,12 @@ char* http_parse_key(const char *buf, const char *name){
 	if (!key_end) return 0;
 	return strndup(key_start, key_end-key_start);
 }
-/*
-	Upgrade http connection to websocket. it replaces the handler in listen_port.
+/**
+   Upgrade http connection to websocket. It replaces the handler in listen_port
+   by ws_receive(). For the monitor protocol, the client is added as a monitor.
+
+   @param[in] ctx The context.
+   @param[in] buf The http request header.
 */
 void http_upgrade_websocket(http_context_t *ctx, char *buf) {
 	//Sec-WebSocket-Protocol: maos-monitor-protocol
@@ -667,8 +782,11 @@ void http_upgrade_websocket(http_context_t *ctx, char *buf) {
 	free(protocol);
 	free(key);
 }
-/*
-	Send a close request to client which will indicate closure. 
+/**
+   Send a response with "Connection: close" and shut down the socket for
+   writing to indicate closure.
+
+   @param[in] ctx The context. Nothing is done if NULL.
 */
 void http_close(http_context_t *ctx){
 	if(!ctx) return;
@@ -684,9 +802,14 @@ void http_close(http_context_t *ctx){
 	shutdown(ctx->fd, SHUT_WR);  // optional graceful signal
 }
 
-/*
-	HTTP handler callable by listen_port. 
-	It supports sending plain files (folder is disabled for security reasons) and websocket upgrade
+/**
+   HTTP handler callable by listen_port. It supports sending plain files from
+   the source tools directory (folder is disabled for security reasons) and
+   websocket upgrade.
+
+   @param[in] pfd Poll entry of the client socket.
+   @param[in] flag -1 asks the client to close.
+   @return 0 to keep the connection, -1 (or nonzero) to close it.
 */
 int http_handler(struct pollfd *pfd, int flag){
 	int fd=pfd->fd;
@@ -806,10 +929,15 @@ int http_handler(struct pollfd *pfd, int flag){
 		
 	}
 }
-/// @brief Accept HTTP connection
-/// @param pfd 
-/// @param flag 
-/// @return 
+/**
+   Responder for listen_port() for a new connection on the http port. Creates an
+   http (or https) context for the socket and installs http_handler() for
+   subsequent data.
+
+   @param[in] pfd Poll entry of the new connection.
+   @param[in] flag -1 closes the connection.
+   @return -1 if the protocol is not supported, 0 otherwise.
+*/
 int http_handshake(struct pollfd *pfd, int flag){
 	http_context_t *ctx=http_context_create(pfd->fd);
 	if(!ctx){

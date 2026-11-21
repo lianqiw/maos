@@ -26,6 +26,13 @@
   usage write(filename, data);
 */
 #include "io.h"
+/**
+   Convert a Matlab string to a C string, converting each backslash-n sequence to a space
+   followed by a newline.
+
+   @param[in] header Matlab char array. May be NULL.
+   @return Newly allocated C string, or NULL if header is NULL or not a string. The caller frees it.
+*/
 static char* mx2str(const mxArray* header){
 	char* str=NULL;
 	if(header&&mxIsChar(header)){
@@ -43,6 +50,13 @@ static char* mx2str(const mxArray* header){
 	}
 	return str;
 }
+/**
+   Write a Matlab array, recursively for cells and structs, to the file.
+
+   @param[in,out] fp File handle.
+   @param[in] arr Matlab array to write. NULL writes an empty array.
+   @param[in] header Matlab string (or cell of strings for cell arrays) to write as header. May be NULL.
+*/
 static void writedata(file_t* fp, const mxArray* arr, const mxArray* header){
 	char* str=mx2str(header);
 	header_t header2={0,0,0,0,str};
@@ -224,6 +238,15 @@ static void writedata(file_t* fp, const mxArray* arr, const mxArray* header){
 	}
 	free(str);
 }
+/**
+   Matlab entry point to write data to bin or fits file:
+   write(var,'file') or write(var, header, 'file').
+
+   @param[in] nlhs Unused.
+   @param[out] plhs Unused.
+   @param[in] nrhs Number of input arguments.
+   @param[in] prhs Input arguments: data, optional header, and file name.
+*/
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 	(void)nlhs;
 	(void)plhs;

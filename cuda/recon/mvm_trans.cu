@@ -40,6 +40,17 @@ typedef struct mvm_igpu_t{
 	int load_mvmf; /*intermediate FitR result is for 1) loading, 0) saving.*/
 }mvm_igpu_t;
 #define MVM_DEBUG 0
+/**
+   Thread worker that computes rows info->start to info->end of the MVM
+   control matrix (columns of its transpose) in GPU info->ithread: for each
+   actuator, solve the fitting (or use FLI or loaded mvmf), apply the transpose
+   of fitting right hand side, solve the tomography, and apply the transpose of
+   the tomography right hand side.
+
+   @param[in] info Thread data. info->data points to mvm_igpu_t whose mvmt,
+   mvmig, mvmfg, residual, and residualfit are filled for the assigned actuators.
+   @return Always NULL.
+*/
 static void* mvm_trans_igpu(thread_t* info){
 	TIC;tic;
 	real tk_prep=0, tk_fitL=0, tk_fitR=0, tk_TomoL=0, tk_TomoR=0, tk_cp=0;
@@ -164,6 +175,18 @@ static void* mvm_trans_igpu(thread_t* info){
 	return NULL;
 }
 
+/**
+   Assemble the MVR control matrix in GPU using the transpose method: for each
+   actuator, solve the fitting and tomography in transpose to obtain one row
+   of the MVM. Actuators are split among all GPUs. Intermediate results can be
+   loaded or saved with load.mvmi/mvmf and save.mvmi/mvmf. The result is kept
+   in GPU (cuglobal->mvm) and/or copied to recon->MVM. Skipped if load.mvm is
+   set. Only supports recon.alg=0 (MVR). GPU reconstruction data
+   (cudata->recon) is deleted from all GPUs afterwards.
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] recon Reconstruction data. recon->MVM is set.
+*/
 void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 	TIC;tic;
 	if(parms->recon.alg!=0){

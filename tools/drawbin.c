@@ -18,6 +18,9 @@
 #include <unistd.h>
 #include "../lib/aos.h"
 
+/**
+   Print usage information.
+*/
 static void usage(){
 	info("Usage:\n"
 		"drawbin loc.bin\n"
@@ -26,7 +29,14 @@ static void usage(){
 	);
 }
 /**
-   The main.
+   Plot OPDs or maps stored in bin files with drawdaemon. Usage:
+   drawbin loc.bin, drawbin loc.bin opd.bin, or drawbin map.bin. Optional
+   3rd and 4th arguments are the starting cell indices along x and y; at most
+   20 cells are plotted along each dimension.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments.
+   @return 0 on completion.
 */
 int main(int argc, char* argv[]){
 	if(argc<2){

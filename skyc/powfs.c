@@ -24,6 +24,9 @@
 */
 /**
    Setup the detector transfer functions. See maos/setup_powfs.c
+
+   @param[in,out] powfs Array of npowfs WFS types. The dtf field is allocated and filled.
+   @param[in] parms Simulation parameters.
  */
 static void setup_powfs_dtf(powfs_s* powfs, const parms_s* parms){
 	const int npowfs=parms->maos.npowfs;
@@ -147,7 +150,10 @@ static void setup_powfs_dtf(powfs_s* powfs, const parms_s* parms){
 	}/*ipowfs */
 }
 /**
-   Read in the WFS grid and amplitude map.
+   Read in the WFS grid and amplitude map and compute the amplitude weighted subaperture centers.
+
+   @param[in,out] powfs Array of npowfs WFS types. The loc, amp, saloc, and sacent fields are filled.
+   @param[in] parms Simulation parameters.
  */
 static void read_powfs_locamp(powfs_s* powfs, const parms_s* parms){
 	const int npowfs=parms->maos.npowfs;
@@ -182,6 +188,9 @@ static void read_powfs_locamp(powfs_s* powfs, const parms_s* parms){
 }
 /**
    Setup powfs_s struct.
+
+   @param[in,out] powfs Array of npowfs WFS types, allocated by the caller, to be filled.
+   @param[in] parms Simulation parameters.
 */
 void setup_powfs(powfs_s* powfs, const parms_s* parms){
 	for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
@@ -193,7 +202,10 @@ void setup_powfs(powfs_s* powfs, const parms_s* parms){
 	read_powfs_locamp(powfs, parms);
 }
 /**
-   Release memory.
+   Release memory held by the powfs_s array. The array itself is not freed.
+
+   @param[in,out] powfs Array of npowfs WFS types.
+   @param[in] parms Simulation parameters.
  */
 void free_powfs(powfs_s* powfs, const parms_s* parms){
 	const int npowfs=parms->maos.npowfs;

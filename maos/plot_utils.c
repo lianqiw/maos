@@ -23,10 +23,13 @@
    A few utility routines
 */
 /**
- * Return type of wfs
+   Return the legend label of the WFS type of a powfs.
+
+   @param[in] parms The parameter struct.
+   @param[in] ipowfs Index of the powfs.
+   @return Static string of the label. Do not free.
 */
-static const char *
-powfs_legend(const parms_t *parms, int ipowfs){
+static const char *powfs_legend(const parms_t *parms, int ipowfs){
 	const char *const legwfs[]={
 	"LGS WFS",
 	"NGS WFS",
@@ -57,9 +60,14 @@ powfs_legend(const parms_t *parms, int ipowfs){
 }
 /**
    Plot the loc, together with all beams.
-   show_recon=1: include WFS for tomography and DM fitting directions
-   show_recon=2: include all WFS and DM fitting directions
-   show_evl: include evaluation directions
+
+   @param[in] fig Name of the figure.
+   @param[in] parms The parameter struct.
+   @param[in] show_recon 1: include WFS used for tomography and DM fitting directions. 2: include all WFS and DM fitting directions.
+   @param[in] show_evl Whether to include evaluation directions.
+   @param[in] loc The grid to plot.
+   @param[in] ht Conjugation height (m) of loc, used to compute the beam footprints.
+   @param[in] format printf style format for the tab name, followed by its arguments.
 */
 void plot_loc(const char* fig, const parms_t* parms, int show_recon, int show_evl, 
 	loc_t* loc, real ht, const char* format, ...){
@@ -131,16 +139,21 @@ void plot_loc(const char* fig, const parms_t* parms, int show_recon, int show_ev
 	dfree(cir);
 }
 /**
-   ploted all the different beam directions as points. 
+   ploted all the different beam directions as points.
    style is defined as follows:
    bits 1-3:the point style.
    bit  4: whether points are connected.
    bits 5-8: size
    bits 9-32:color
- 
+
    The color follows RGB representation: (Since 2011-02-18)
    bits 32-25: Red. bits 24-17: Green. bits 16-9: Blue.
-   */
+
+   @param[in] fig Name of the figure.
+   @param[in] parms The parameter struct.
+   @param[in] totfov Diameter (arcsec) of the total field of view to draw.
+   @param[in] format printf style format for the tab name, followed by its arguments.
+*/
 void plot_dir(const char* fig, const parms_t* parms, real totfov, const char* format, ...){
 	format2fn;
 	int ncir=1;
@@ -240,7 +253,12 @@ void plot_dir(const char* fig, const parms_t* parms, real totfov, const char* fo
 }
 /**
    Plot grid points, amplitude maps and NCPA.
- */
+
+   @param[in] parms The parameter struct.
+   @param[in] powfs The powfs struct array.
+   @param[in] aper The aperture struct.
+   @param[in] recon The reconstruction struct. May be NULL.
+*/
 void plot_setup(const parms_t* parms, const powfs_t* powfs,
 	const aper_t* aper, const recon_t* recon){
 	int draw_single_save=draw_single;
@@ -309,6 +327,16 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 	draw_single=draw_single_save;
 }
 
+/**
+   Plot DM commands ac on aloc for each DM if the page is currently displayed.
+
+   @param[in] parms The parameter struct.
+   @param[in] recon The reconstruction struct.
+   @param[in] ac The DM commands (or modes) for each DM.
+   @param[in] modal If set and recon->amod exists, ac is converted from modal to zonal first.
+   @param[in] title Title of the plot.
+   @param[in] type Prefix of the page name.
+*/
 void plot_dm(const parms_t *parms, const recon_t *recon, const dcell *ac, int modal, const char *title, const char *type){
 	if(!ac) return;
 	for(int idm=0; idm<NX(ac); idm++){
@@ -323,6 +351,15 @@ void plot_dm(const parms_t *parms, const recon_t *recon, const dcell *ac, int mo
 		dfree(dmc);
 	}
 }
+/**
+   Plot the low order (NGS mode) commands merr projected onto the DMs, if any
+   of the corresponding pages is currently displayed.
+
+   @param[in,out] simu The simulation struct. simu->dmtmp is used as temporary storage.
+   @param[in] merr The low order (NGS mode) commands.
+   @param[in] title Title of the plot.
+   @param[in] type Prefix of the page name.
+*/
 void plot_dm_lo(sim_t *simu, dcell *merr, const char *title, const char *type){
 	if(!simu||!merr) return;
 	int added=0;
@@ -340,6 +377,12 @@ void plot_dm_lo(sim_t *simu, dcell *merr, const char *title, const char *type){
 		plot_dm(simu->parms, simu->recon, simu->dmtmp, 1, title, type);
 	}
 }
+/**
+   Plot DM integrator, actual DM commands, TTM command, and the on-axis DM OPD
+   during simulation when plot.run is set.
+
+   @param[in,out] simu The simulation struct.
+*/
 void plot_dmreal(sim_t *simu){
     const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
@@ -388,6 +431,12 @@ void plot_dmreal(sim_t *simu){
 		}
 	}
 }
+/**
+   Plot reconstruction results during simulation when plot.run is set: MOAO DM
+   commands, DM fitting output, DM error signals, and reconstructed atmosphere.
+
+   @param[in] simu The simulation struct.
+*/
 void plot_recon(sim_t *simu){
     const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
@@ -425,6 +474,12 @@ void plot_recon(sim_t *simu){
 		plot_dm_lo(simu, simu->Merr_lo, "Deformable Mirror Error Signal (Lo)", "Err Lo");
 	}
 }
+/**
+   Plot gradient offset of wfs iwfs, or all wfs if iwfs<0, when plot.run is set.
+
+   @param[in] simu The simulation struct.
+   @param[in] iwfs Index of the WFS. A negative value plots all WFS.
+*/
 void plot_gradoff(sim_t *simu, int iwfs){
 	const parms_t *parms=simu->parms;
 	if(parms->plot.run){
@@ -444,6 +499,17 @@ void plot_gradoff(sim_t *simu, int iwfs){
 		}
 	}
 }
+/**
+   Plot PSFs of each wavelength for evaluation direction ievl.
+
+   @param[in] _psf2s The PSF of each wavelength, as real intensity or complex field.
+   @param[in] psfname Name of the PSF, used for the tab name.
+   @param[in] type 0: open loop, 1: closed loop, 2: diffraction limited.
+   @param[in] ievl Index of the evaluation direction.
+   @param[in] wvl The wavelengths (m).
+   @param[in] zlog Whether to use log scale.
+   @param[in] psfmin Minimum value of the color scale.
+*/
 void plot_psf(const_anycell _psf2s, const char *psfname, int type, int ievl, dmat* wvl, int zlog, real psfmin){
 	dmat* psftemp=NULL;
 	dmat* psfreal=NULL;

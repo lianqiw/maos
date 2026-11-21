@@ -48,6 +48,11 @@ extern int KEEP_MEM;
 PNEW(mutex_psfol);//protects open loop PSF/OPD accumulation shared by directions (evl.psfol==2)
 /**
    Propagate only controllable component of turbulence to evaluation grid.
+
+   @param[in] simu The simulation struct. simu->dmprojsq contains the controllable turbulence projected onto DM grids.
+   @param[in,out] iopdevl OPD on the evaluation grid; accumulated into.
+   @param[in] ievl Index of the evaluation direction.
+   @param[in] alpha Scaling factor.
 */
 static void perfevl_ideal_atm(sim_t* simu, dmat* iopdevl, int ievl, real alpha){
 	const parms_t* parms=simu->parms;
@@ -64,6 +69,18 @@ static void perfevl_ideal_atm(sim_t* simu, dmat* iopdevl, int ievl, real alpha){
 	}
 }
 
+/**
+   Compute closed loop PSF for an evaluation direction and accumulate it into the
+   time averaged PSF and/or the PSF time history. Also plots the PSF.
+
+   @param[in] parms The parameter struct.
+   @param[in] aper The aperture struct.
+   @param[in] psfname Name of the PSF for plotting.
+   @param[in,out] evlpsfmean Time averaged PSF (nwvl x nevl); accumulated into if evl.psfmean is set.
+   @param[in,out] evlpsfhist PSF time history files (one per direction); the PSF is appended if evl.psfhist is set.
+   @param[in] iopdevl OPD (m) on the evaluation grid.
+   @param[in] ievl Index of the evaluation direction.
+*/
 static void perfevl_psfcl(const parms_t* parms, const aper_t* aper, const char* psfname,
 	dcell* evlpsfmean, zfarr** evlpsfhist,
 	dmat* iopdevl, int ievl){
@@ -109,7 +126,11 @@ if(parms->evl.split){/*for split tomography */	\
 }									\
 
 /**
-   Performance evaluation for each direction in parallel mode.  */
+   Performance evaluation for each direction in parallel mode.
+
+   @param[in,out] info Thread info. info->data is the simulation struct and [info->start, info->end) is the range of directions.
+   @return NULL.
+*/
 void* perfevl_ievl(thread_t* info){
 	sim_t* simu=(sim_t*)info->data;
 	const parms_t* parms=simu->parms;
@@ -340,6 +361,8 @@ void* perfevl_ievl(thread_t* info){
 }
 /**
    Evaluation field averaged performance.
+
+   @param[in,out] simu The simulation struct. The field averaged results are stored in it.
 */
 static void perfevl_mean(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -520,6 +543,8 @@ OMP_TASK_FOR(4)
 /**
    Save telemetry.
    PSFs are cumulatively averaged.
+
+   @param[in,out] simu The simulation struct.
 */
 static void perfevl_save(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -633,7 +658,6 @@ static void perfevl_save(sim_t* simu){
 
 
 /**
-
    Peformance evaluation on science FoV.
 
    Evaluate performance by calling perfevl_ievl in parallel and then calls
@@ -641,7 +665,11 @@ static void perfevl_save(sim_t* simu){
    from the DM fitting FoV, which is tuned to better sharpen the NGS
 
    \todo Write a standalone routine that can plot results, using techniques
-   developped in drawdaemon.  */
+   developped in drawdaemon.
+
+   @param[in,out] simu The simulation struct.
+   @return NULL.
+*/
 void* perfevl(sim_t* simu){
 	real tk_start=PARALLEL==1?simu->tk_istart:myclockd();
 	const parms_t* parms=simu->parms;

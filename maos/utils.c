@@ -33,15 +33,16 @@
 #include "sim_utils.h"
 
 /**
- * @brief Remove lock file and create Res_seed.done file when maos finishes a seed.
- * 
- * @param fdlock 
- * @param fnlock 
- * @param seeds 
- * @param nseed 
- * @param iseed 
- * @param success 
- */
+   Remove lock file and create Res_seed.done file when maos finishes a seed.
+
+   @param[in,out] fdlock File descriptors of the lock files of each seed; closed and set to -1. Nothing is
+   done if NULL.
+   @param[in,out] fnlock File names of the lock files; the files are removed and the names freed.
+   @param[in] seeds List of seeds.
+   @param[in] nseed Number of seeds.
+   @param[in] iseed Index of the seed to process. Negative to remove lock files of all seeds.
+   @param[in] success Create Res_seed.done if set (only when iseed>=0).
+*/
 void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed, int success){
 	if(!fdlock) return;
 	for(long jseed=0; jseed<nseed; jseed++){
@@ -57,6 +58,8 @@ void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed
 
 /**
    Print out usage information.
+
+   @param[in] junk Unused. Required by parse_argopt() for M_INT callbacks.
 */
 static void print_usage(int junk){
 	(void)junk;
@@ -103,6 +106,11 @@ static void print_usage(int junk){
 
 	exit(0);
 }
+/**
+   Free arg_t pointed to by parg and its strings.
+
+   @param[in,out] parg Pointer to the arg_t to free; set to NULL.
+*/
 void free_arg(arg_t **parg){
 	if(!parg) return;
 	arg_t *arg=*parg;
@@ -117,7 +125,11 @@ void free_arg(arg_t **parg){
 	*parg=NULL;
 }
 /**
-   Parse command line arguments argc, argv
+   Parse command line arguments argc, argv. Also changes to the output directory if -o is given.
+
+   @param[in] argc Number of arguments.
+   @param[in] argv Command line arguments.
+   @return Newly allocated arguments; the caller frees it with free_arg().
 */
 arg_t* parse_args(int argc, const char* argv[]){
 	arg_t* arg=mycalloc(1, arg_t);
@@ -199,7 +211,14 @@ arg_t* parse_args(int argc, const char* argv[]){
 }
 /**
    Creates header for saving PSFs.
- */
+
+   @param[in] parms Simulation parameters.
+   @param[in] aper Aperture data.
+   @param[in] ievl Index of evaluation direction. Negative for on axis.
+   @param[in] iwvl Index of wavelength.
+   @param[in] isim Current time step, used to compute total exposure time.
+   @return Newly allocated keyword string; the caller frees it.
+*/
 char* evl_keywords(const parms_t* parms, const aper_t* aper, int ievl, int iwvl, int isim){
 	char keywords[400];
 	long nembed=P(aper->locfft->nembed,iwvl);
@@ -225,6 +244,14 @@ char* evl_keywords(const parms_t* parms, const aper_t* aper, int ievl, int iwvl,
 
 /**
    Create WFS amplitude map from coordinate, masked with annular defined by (D,Din).
+
+   @param[in] loc Coordinate of the amplitude map.
+   @param[in] aper Aperture map. If not NULL, it is ray traced to loc instead of using (D,Din).
+   @param[in] misregx Misregistration along x (m).
+   @param[in] misregy Misregistration along y (m).
+   @param[in] D Outer diameter (m).
+   @param[in] Din Inner diameter (m).
+   @return Newly allocated amplitude; the caller frees it.
 */
 dmat* mkamp(const loc_t* loc, const map_t* aper, real misregx, real misregy, real D, real Din){
 	dmat* amp=dnew(loc->nloc, 1);
@@ -239,8 +266,14 @@ dmat* mkamp(const loc_t* loc, const map_t* aper, real misregx, real misregy, rea
 	return amp;
 }
 /**
-   Test wfs linearity.
- */
+   Test the linearity of WFS iwfs by scanning tilt over -2 to 2 pixels along
+   x, y, radial and azimuthal directions and computing gradients with the physical
+   optics gradient operator. Results are saved to wfslinearity_* files.
+
+   @param[in] parms Simulation parameters.
+   @param[in] powfs WFS configuration.
+   @param[in] iwfs Index of the WFS.
+*/
 void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=(int)P(parms->powfs[ipowfs].wfsind,iwfs);
@@ -351,13 +384,13 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 					dmulvec(g, mtche[isa], P(ints), 1.);
 				}
 					  break;
-				case 2:{/*tCoG gives gradients along r/a*/
+				case 2:{/*tCoG gives gradients along r/a with radpix, otherwise along x/y*/
 					dcog(g, ints, 0., 0.,cogthres, cogoff, 0, NULL);
 					g[0]*=pixthetax;
 					g[1]*=pixthetay;
 				}
 					  break;
-				case 3:{/*MAP gives gradient along r/a(?)*/
+				case 3:{/*MAP gives gradient along x/y*/
 					g[0]=gx+pixthetax*0.1;
 					g[1]=gy+pixthetay*0.1;
 					g[2]=1;
@@ -394,7 +427,16 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	ccellfree(otf);
 }
 /**
-   Compute spherical aberration in LGS WFS gradients for all sodium profile columns.
+   Compute spherical aberration in LGS WFS gradients for all sodium profile columns. Results are saved to
+   rmod_mf and rmod_cg.
+
+   Notice that powfs[ipowfs].intstat->mtche, i0 and i0sum are freed and set to NULL, and the elongation
+   transfer function is overwritten.
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] powfs WFS configuration.
+   @param[in] recon Reconstructor.
+   @param[in] iwfs Index of the WFS.
 */
 void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const int iwfs){
 	int ipowfs=parms->wfs[iwfs].powfs;
@@ -497,6 +539,11 @@ typedef struct{
 }mapdata_t;
 /**
    The function to evaluate the result at x.
+
+   @param[in] x Parameters: gradient along x and y (rad) and intensity scaling.
+   @param[in,out] pinfo Data (mapdata_t*); info->otf is allocated if NULL.
+   @return Sum of squared difference between measured and modeled images, weighted by the noise
+   variance if info->noisy is set.
 */
 static real mapfun(const real* x, void* pinfo){
 	mapdata_t* info=(mapdata_t*)pinfo;
@@ -551,6 +598,16 @@ static real mapfun(const real* x, void* pinfo){
 }
 /**
    Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun
+
+   @param[in,out] g Gradient along x and y (rad) and intensity scaling. The input is the initial guess.
+   @param[in] ints Subaperture image.
+   @param[in] parms Simulation parameters.
+   @param[in] powfs WFS configuration.
+   @param[in] iwfs Index of the WFS.
+   @param[in] isa Index of the subaperture.
+   @param[in] noisy Weight the error by noise variance if set.
+   @param[in] bkgrnd Background level.
+   @param[in] rne Read out noise.
 */
 void maxapriori(real* g, const dmat* ints, const parms_t* parms,
 	const powfs_t* powfs, int iwfs, long isa, int noisy,
@@ -596,7 +653,11 @@ void maxapriori(real* g, const dmat* ints, const parms_t* parms,
 }
 
 /**
-   Apply the focus adjustment caused sodium profile range variation
+   Obtain the focus adjustment caused by sodium profile range variation.
+
+   @param[in] simu Simulation data.
+   @param[in] iwfs Index of the WFS.
+   @return Focus error from powfs.focus for the current time step. 0 if not available.
 */
 real wfsfocusadj(sim_t* simu, int iwfs){
 	const parms_t* parms=simu->parms;
@@ -652,6 +713,9 @@ real wfsfocusadj(sim_t* simu, int iwfs){
 */
 /**
    Fit 3 points around the peak of a 1-d profile.
+
+   @param[in] corr The 1-d profile.
+   @return Peak location (in pixels) relative to the center.
 */
 real parabolic_peak_1d(dmat* corr){
 	if(corr->nx<3) return 0;
@@ -671,6 +735,10 @@ real parabolic_peak_1d(dmat* corr){
 }
 /**
    First sum along 1 dimension, then fit 3 points around the peak. More robust than the old method.
+
+   @param[out] grad Peak location along x and y (in pixels) relative to the center.
+   @param[in] corr The 2-d correlation.
+   @param[in] nbox Size of the central box to use. Use the full array if not positive or too large.
 */
 void parabolic_peak_sum(real* grad, dmat* corr, int nbox){
 	const long nx=NX(corr);
@@ -697,6 +765,14 @@ void parabolic_peak_sum(real* grad, dmat* corr, int nbox){
 }
 /**
    Calculate gradients using current specified algorithm
+
+   @param[in,out] pgrad Gradients (rad); allocated if NULL. Values of vignetted subapertures are not updated.
+   The input is used as initial guess for MAP.
+   @param[in] ints Subaperture images.
+   @param[in] parms Simulation parameters.
+   @param[in] powfs WFS configuration.
+   @param[in] iwfs Index of the WFS.
+   @param[in] phytype The gradient algorithm (PTYPE_*).
 */
 void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t* powfs, const int iwfs, const int phytype){
 	const int ipowfs=parms->wfs[iwfs].powfs;
@@ -840,6 +916,11 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 }
 /**
    Read cell array from file specified by whole name or prefix.
+
+   @param[in] file File name or prefix. Files file_powfs%d.bin, file_wfs%d.bin, and file are tried in order.
+   @param[in] parms Simulation parameters.
+   @param[in] ipowfs Index of the powfs.
+   @return Newly allocated cell array; the caller frees it. NULL if file is NULL.
 */
 dcell* readwfs(const char* file, const parms_t* parms, int ipowfs){
 	dcell* res=0;
@@ -866,6 +947,9 @@ dcell* readwfs(const char* file, const parms_t* parms, int ipowfs){
 }
 /**
    Wait for dmreal to be available in event driven simulation.
+
+   @param[in,out] simu Simulation data.
+   @param[in] isim Time step for which dmreal is needed.
 */
 void wait_dmreal(sim_t* simu, int isim){
 	if(PARALLEL==2){
@@ -889,10 +973,10 @@ void wait_dmreal(sim_t* simu, int isim){
 	}
 }
 /**
- * @brief Notify that we are done with dmreal
- * 
- * @param simu 
- */
+   Notify that we are done with dmreal in event driven simulation.
+
+   @param[in,out] simu Simulation data.
+*/
 void post_dmreal(sim_t *simu){
 	if(PARALLEL==2){
 		atomic_add_fetch(&simu->dmreal_count,1);
@@ -901,13 +985,13 @@ void post_dmreal(sim_t *simu){
 }
 
 /**
- * @brief average vector for wfs belonging to a powfs. replace the content when replace is set.
- * 
- * @param vec	The value containing the values
- * @param wfs 	The index of wfs belongs to a powfs
- * @param replace replace the content when replace is set.
- * @return real The average for this powfs.
- */
+   Average vector for wfs belonging to a powfs. Replace the content when replace is set.
+
+   @param[in,out] vec The vector containing the values for all wfs.
+   @param[in] wfs The index of wfs belonging to a powfs.
+   @param[in] replace Replace the content of these wfs by the average when set.
+   @return The average for this powfs.
+*/
 real average_powfs(dmat *vec, lmat *wfs, int replace){
 	real avg=0;
 	int nwfs=(int)NX(wfs);
@@ -926,7 +1010,13 @@ real average_powfs(dmat *vec, lmat *wfs, int replace){
 }
 /**
    Add low order NGS modes to DM actuator commands for AHST and MVST
- */
+
+   @param[in,out] dmval DM actuator commands; allocated if NULL and accumulated into.
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstructor.
+   @param[in] low_val Low order mode values.
+   @param[in] gain Scaling factor.
+*/
 void addlow2dm(dcell** dmval, const parms_t *parms, const recon_t *recon, const dcell* low_val, real gain){
 	if(parms->recon.split==2){
 		dcellmm(dmval, recon->MVModes, low_val, "nn", gain);

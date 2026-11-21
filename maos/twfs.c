@@ -23,7 +23,10 @@
 
 /**
    Mapping Truth WFS reconstructed modes (in actuator space) to gradients.
- */
+
+   @param[in,out] recon Reconstructor; GRall, GRtwfs, GRlgs, RRlgs and Rmod are set.
+   @param[in] parms Simulation parameters.
+*/
 void twfs_setup_GR(recon_t* recon, const parms_t* parms){
 	if(parms->itpowfs==-1&&!(parms->ilgspowfs!=-1&&parms->powfs[parms->ilgspowfs].dither==-1&&parms->powfs[parms->ilgspowfs].phytype_sim2==PTYPE_COG)){
 		return;
@@ -122,6 +125,9 @@ void twfs_setup_GR(recon_t* recon, const parms_t* parms){
 
 /**
    Setup reconstructor for TWFS or sodium fit gradient
+
+   @param[in,out] recon Reconstructor; RRtwfs is set.
+   @param[in] parms Simulation parameters.
 */
 void twfs_setup_RR(recon_t* recon, const parms_t* parms){
 	if(parms->itpowfs==-1){
@@ -156,6 +162,8 @@ void twfs_setup_RR(recon_t* recon, const parms_t* parms){
 /**
    TWFS has output. Accumulate result to simu->gradoff. It is put in wfsgrad.c
    instead of recon.c to avoid race condition because it updates simu->gradoff.
+
+   @param[in,out] simu Simulation data; gradoff or dmoff is updated.
 */
 void twfs_recon(sim_t* simu){
 	const parms_t* parms=simu->parms;

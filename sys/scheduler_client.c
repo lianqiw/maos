@@ -42,6 +42,7 @@
 #include "daemonize.h"
 
 /**
+   \file scheduler_client.c
    Contains routines that will be used to talk to the scheduler. The following usage are supported:
 
    1) by maos or skyc to ask permission to go or report status.
@@ -86,9 +87,10 @@ PNEW(mutex_hosts);
    Parse and add host info to hosts[] and hostaddr[].
    hosts contains the shortcut name, without dot
    and hostaddr contains the FQDN and optionally the port
+
+   @param[in] line Contains hostname[=hostaddr:port]. Empty lines and lines starting with # are ignored.
 */
-void parse_host(const char* line /**<contains hostname[=hostaddr:port]*/
-){
+void parse_host(const char* line){
 	static size_t memhost=0;
 	if(strlen(line)>0 && line[0]!='\n' && line[0]!='#'){
 		LOCK(mutex_hosts);
@@ -160,6 +162,9 @@ void init_hosts(){
 }
 /**
    Translate hostname to address based on ~/.aos/hosts
+
+   @param[in] hostname The host name.
+   @return The host address (internal data; do not free), or hostname itself if not found.
 */
 const char* lookup_hostaddr(const char* hostname){
 	if(hostname){
@@ -173,6 +178,9 @@ const char* lookup_hostaddr(const char* hostname){
 }
 /**
    Translate address to hostname based on ~/.aos/hosts
+
+   @param[in] hostaddr The host address.
+   @return The host name (internal data; do not free), or hostaddr itself if not found.
 */
 const char *lookup_hostname(const char *hostaddr){
 	if(hostaddr){
@@ -187,6 +195,8 @@ const char *lookup_hostname(const char *hostaddr){
 #if! MAOS_DISABLE_SCHEDULER
 /**
    Launch the scheduler. We already obtained singleton lock and is in a forked process.
+
+   @param[in] junk Unused.
 */
 static void launch_scheduler_do(void* junk){
 	(void)junk;
@@ -206,6 +216,11 @@ static void launch_scheduler_do(void* junk){
 	}
 }
 
+/**
+   Launch the scheduler as a daemon if it is not already running.
+
+   @param[in] retry Number of additional attempts, one second apart, if launching fails.
+*/
 static void launch_scheduler(int retry){
 	dbg_time("launch_scheduler\n");
 	/*launch scheduler if it is not already running. */
@@ -216,6 +231,13 @@ static void launch_scheduler(int retry){
 	}
 }
 #endif
+/**
+   Connect to the scheduler at hostname using PORT. Returns the socket or -1 if
+   failed or the scheduler is disabled.
+
+   @param[in] hostname Host name or address of the scheduler.
+   @return The socket, or -1 on failure.
+*/
 int scheduler_connect(const char *hostname){
 #if MAOS_DISABLE_SCHEDULER
 	(void)hostname; return -1;
@@ -224,7 +246,12 @@ int scheduler_connect(const char *hostname){
 #endif
 }
 /**
-   To open a port and connect to scheduler in the local host*/
+   To open a port and connect to scheduler in the local host. Launches the
+   scheduler if it is not running.
+
+   @param[in] block Nonzero to retry up to 100 times; otherwise retry twice.
+   @return The socket, or -1 on failure.
+*/
 int scheduler_connect_self(int block){
 	int sock=-1;
 #if MAOS_DISABLE_SCHEDULER
@@ -249,9 +276,17 @@ int scheduler_connect_self(int block){
 	return sock;
 }
 #if! MAOS_DISABLE_SCHEDULER
-static int psock=-1; //persistent socket for maos to scheduler connection
+/**persistent socket for maos to scheduler connection*/
+static int psock=-1;
 #endif
 #define CATCH_ERR(A) if(A){psock=-1;}
+/**
+   Report the job path (command line) to the scheduler via a persistent
+   connection. The path is saved so that it can be resent with path=NULL after
+   reconnection.
+
+   @param[in] path The job path. NULL to resend the saved path.
+*/
 void scheduler_report_path(const char* path){
 #if MAOS_DISABLE_SCHEDULER
 	(void)path;
@@ -281,7 +316,11 @@ void scheduler_report_path(const char* path){
 
 /**
    Called by maos to report a job start to scheduler and wait for signal before proceeding if waiting is set.
- */
+
+   @param[in] nthread Number of threads the job uses.
+   @param[in] ngpu Number of GPUs the job uses.
+   @param[in] waiting Nonzero to wait for the scheduler (or for idle CPUs if the scheduler is unavailable) before returning.
+*/
 void scheduler_start(int nthread, int ngpu, int waiting){
 #if MAOS_DISABLE_SCHEDULER
 	(void)ngpu;
@@ -315,7 +354,10 @@ void scheduler_start(int nthread, int ngpu, int waiting){
 }
 
 /**
-   Called by maos to notify scheduler the completion of a job */
+   Called by maos to notify scheduler the completion of a job
+
+   @param[in] status 0 for success; a crash signal reports a crash; otherwise the job is reported as killed.
+*/
 void scheduler_finish(int status){
 #if MAOS_DISABLE_SCHEDULER
 	(void)status;
@@ -342,6 +384,12 @@ void scheduler_finish(int status){
 }
 #if !MAOS_DISABLE_SCHEDULER
 pthread_t cthread=0;
+/**
+   Thread routine that connects to the scheduler (blocking) and reports the job path.
+
+   @param[in] data Unused.
+   @return NULL.
+*/
 static void* scheduler_connect_thread(void *data){
 	(void) data;
 	dbg_time("started.\n");
@@ -355,7 +403,11 @@ static void* scheduler_connect_thread(void *data){
 }
 #endif
 /**
-   called by sim.c to report job status. Do not try to reconnect. */
+   called by sim.c to report job status. Do not try to reconnect. If not
+   connected, a thread is launched to connect in the background.
+
+   @param[in] status The job status.
+*/
 void scheduler_report(status_t* status){
 #if MAOS_DISABLE_SCHEDULER
 	(void)status;
@@ -375,6 +427,9 @@ void scheduler_report(status_t* status){
 /**
    Started by maos to listen to the sock which connects to the
    scheduler for commands. It reuses existing connection.
+
+   @param[in] fun Thread function that is called with the socket as its argument.
+   @return The thread, or 0 on failure.
 */
 pthread_t scheduler_listen(thread_fun fun){
 	pthread_t ans=0;
@@ -401,7 +456,11 @@ pthread_t scheduler_listen(thread_fun fun){
 /**
    Ask scheduler (maybe in another machine) to launch executable.
    Host may be null or contain coma separated hosts
-   returns <0 for error. >=0 success
+
+   @param[in,out] hostarr Coma separated host names; NULL means localhost. Temporarily modified but restored.
+   @param[in] argc Number of arguments.
+   @param[in] argv Arguments. argv[0] is the executable.
+   @return 0 if launched on at least one host, -1 otherwise.
 */
 int scheduler_launch_exe(char* hostarr, int argc, const char* argv[]){
 	char *scmd=argv2str(argc, argv, " ");
@@ -458,6 +517,11 @@ int scheduler_launch_exe(char* hostarr, int argc, const char* argv[]){
    -10000<id<0: request existing socket (drawdaemon). preferably for the same
    id<-10000: request new socket (drawdaemon).
    id>0: save socket (drawdaemon) for reuse.
+
+   @param[in] dir 1: send sfd for caching; -1: request an existing socket; 0: request a new socket.
+   @param[in,out] sfd The socket to send (dir=1) or the received socket (dir=0 or -1).
+   @param[in] id Drawing id (sign is ignored).
+   @return 0 on success, nonzero on failure.
 */
 int scheduler_socket(int dir, int *sfd, int id){
 	int ans=-1;
@@ -494,8 +558,14 @@ int scheduler_socket(int dir, int *sfd, int id){
 }
 
 /**
-   Execute addr2line as specified in buf, combine the answer, and return the
-   string.*/
+   Execute addr2line as specified in cmdstr and combine the answer into a
+   string. If it fails, the program name and addresses are copied instead.
+
+   @param[out] ans Output string.
+   @param[in] nans Size of ans.
+   @param[in] cmdstr The addr2line command.
+   @return 0.
+*/
 int call_addr2line(char* ans, int nans, const char* cmdstr){
 	ans[0]=0;
 	int res=1;
@@ -535,8 +605,12 @@ int call_addr2line(char* ans, int nans, const char* cmdstr){
 /**
    Convert backtrace address to source line.
    Do not call routines that may call malloc as the mutex in malloc may already be locked.
-   return 0 if success otherwise -1
- */
+
+   @param[in] buffer Addresses returned by backtrace().
+   @param[in] size Number of addresses.
+   @return 0 if success otherwise -1
+*/
+
 int print_backtrace_symbol(void* const* buffer, int size){
 	int ans=-1;
 	//disable memory debugging as this code may be called from within malloc_dbg
@@ -609,6 +683,9 @@ int print_backtrace_symbol(void* const* buffer, int size){
 }
 #if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <execinfo.h>
+/**
+   Print the backtrace of the current call stack with symbol names.
+*/
 void print_backtrace(){
 	int size0, size1;
 	size0=1024;
@@ -618,6 +695,9 @@ void print_backtrace(){
 	//sync();
 }
 #else
+/**
+   Print the backtrace. Not supported on this platform.
+*/
 void print_backtrace(){}
 #endif
 

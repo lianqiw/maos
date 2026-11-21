@@ -36,7 +36,16 @@ cell* loc_convert_cell(cell* A);
 lmat* loc_create_embed(long* nembed, const loc_t* loc, real oversize, int fftpad);
 void loc_create_map_npad(const loc_t* loc, int npad, int nx, int ny);
 void loc_create_map(const loc_t* loc);
-/*Obtain an entry in the map, with boundary checking enforced*/
+/**
+   Obtain an entry in the map, with boundary checking enforced. For the map
+   created by loc_create_map(), the value is the loc index plus 1, and 0 means
+   no point or out of range.
+
+   @param[in] map Map to read.
+   @param[in] ix Index along x.
+   @param[in] iy Index along y.
+   @return Value of the map at (ix, iy), converted to long; 0 if out of range.
+*/
 static inline long loc_map_get(map_t* map, long ix, long iy){
 	if(ix>=0&&ix<map->nx&&iy>=0&&iy<map->ny){
 		return (long)map->p[ix+iy*map->nx];

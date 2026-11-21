@@ -33,6 +33,9 @@
    This is very close to RR except replacing GX with GA.
 
    We use the tomograhy parameters for lsr, since lsr is simply "tomography" onto DM directly.
+
+   @param[in,out] recon The reconstruction struct. recon->LR and recon->LL are set.
+   @param[in] parms The parameter struct.
 */
 void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	const int ndm=parms->ndm;

@@ -21,13 +21,25 @@
 #include "wfs.h"
 #include "cudata.h"
 
+/**
+   Copy one column of the elongation transfer function to GPU.
+
+   @param[out] cuetf GPU ETF. Allocated as needed.
+   @param[in] etf CPU ETF data.
+   @param[in] icol Column (LLT) index.
+*/
 static void etf2gpu(cucmat& cuetf, etf_t* etf, int icol){
 	cmat* etfm=ccell_col(etf->etf, icol);
 	cp2gpu(cuetf, etfm);
 	cfree(etfm);
 }
 /**
-   Initialize or update etf.
+   Initialize or update etf. ETF is copied from CPU for the first WFS (or each
+   WFS if there are multiple LLTs) and copied or referenced for others.
+
+   @param[in] parms Simulation parameters.
+   @param[in] powfs WFS type data.
+   @param[in] ipowfs WFS type index.
 */
 void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs, int ipowfs){
 	const int* wfsgpu=cuglobal->wfsgpu();
@@ -103,6 +115,10 @@ void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs, int ipow
 }
 /**
    Initialize or update mtched filter, cogmask, and i0sum, i0sumsum
+
+   @param[in] parms Simulation parameters.
+   @param[in] powfs WFS type data.
+   @param[in] ipowfs WFS type index.
 */
 void gpu_wfsgrad_update_ref(const parms_t* parms, const powfs_t* powfs, int ipowfs){
 	const int* wfsgpu=cuglobal->wfsgpu();
@@ -154,7 +170,12 @@ void gpu_wfsgrad_update_ref(const parms_t* parms, const powfs_t* powfs, int ipow
 	}
 }
 /**
-   Initialize other arrays
+   Initialize WFS data in GPU: per-GPU powfs geometry (loc, pts, LLT,
+   embedding, field stop, etc.) and per-WFS data in the GPU assigned to
+   each WFS, then update ETF and reference images.
+
+   @param[in] parms Simulation parameters.
+   @param[in] powfs WFS type data.
 */
 void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 	const int* wfsgpu=cuglobal->wfsgpu();
@@ -470,6 +491,13 @@ void gpu_wfs_update_amp(const parms_t* parms, powfs_t* powfs){
 	}
 }*/
 
+/**
+   Initialize or zero the WFS runtime data (gradient and image accumulation,
+   pistat, intsout) for a new seed.
+
+   @param[in] parms Simulation parameters.
+   @param[in] powfs WFS type data.
+*/
 void gpu_wfs_init_sim(const parms_t* parms, powfs_t* powfs){
 	int* wfsgpu=cuglobal->wfsgpu();
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -511,6 +539,12 @@ void gpu_wfs_init_sim(const parms_t* parms, powfs_t* powfs){
 		CUDA_SYNC_DEVICE;
 	}
 }
+/**
+   Copy the WFS NCPA OPD (powfs.opdadd) to the GPU assigned to each WFS.
+
+   @param[in] parms Simulation parameters.
+   @param[in] powfs WFS type data.
+*/
 void gpu_wfssurf2gpu(const parms_t* parms, powfs_t* powfs){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		gpu_set(cuglobal->wfsgpu[iwfs]);
@@ -522,12 +556,22 @@ void gpu_wfssurf2gpu(const parms_t* parms, powfs_t* powfs){
 		}
 	}
 }
+/**
+   Initialize the random number generator state of each thread.
+
+   @param[out] rstat Random number generator state, one per thread.
+   @param[in] seed Seed.
+*/
 __global__ static void setup_rand(curandState* rstat, int seed){
 	int id=threadIdx.x+blockIdx.x*blockDim.x;
 	curand_init(seed, id, 0, &rstat[id]);
 }
 /**
-   Seed the random number genrator
+   Seed the random number genrator in GPU for each noisy WFS.
+
+   @param[in] parms Simulation parameters.
+   @param[in] powfs WFS type data.
+   @param[in,out] rstat CPU random number generator used to draw the seed of each WFS.
 */
 void gpu_wfsgrad_seeding(const parms_t* parms, const powfs_t* powfs, rand_t* rstat){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){

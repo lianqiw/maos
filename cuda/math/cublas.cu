@@ -26,6 +26,10 @@ int NULL_STREAM=0;
 #if CUDA_VERSION < 10000
 static cusparseMatDescr_t spdesc=NULL;
 #endif
+/**
+   Library constructor. Creates the cusparse matrix descriptor for old CUDA
+   versions and enables NULL_STREAM if CUDA_LAUNCH_BLOCKING is set.
+*/
 static __attribute((constructor)) void init(){
 #if CUDA_VERSION < 10000
 	DO(cusparseCreateMatDescr(&spdesc));
@@ -198,6 +202,22 @@ cusparseSpMM(cusparseHandle_t     handle,
 	}
 }
 
+/**
+   Template specialization of cublas dgmm for float: C=A*diag(x) (mode is
+   CUBLAS_SIDE_RIGHT) or C=diag(x)*A (mode is CUBLAS_SIDE_LEFT).
+
+   @param[in] handle cublas handle.
+   @param[in] mode Side of the diagonal matrix.
+   @param[in] m Number of rows of A and C.
+   @param[in] n Number of columns of A and C.
+   @param[in] A Input matrix.
+   @param[in] lda Leading dimension of A.
+   @param[in] x Diagonal vector.
+   @param[in] incx Stride of x.
+   @param[out] C Output matrix.
+   @param[in] ldc Leading dimension of C.
+   @return cublas status.
+*/
 template<>
 cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 						  int m, int n,
@@ -206,6 +226,22 @@ cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 						  float *C, int ldc){
 	return cublasSdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc);
 }
+/**
+   Template specialization of cublas dgmm for double: C=A*diag(x) (mode is
+   CUBLAS_SIDE_RIGHT) or C=diag(x)*A (mode is CUBLAS_SIDE_LEFT).
+
+   @param[in] handle cublas handle.
+   @param[in] mode Side of the diagonal matrix.
+   @param[in] m Number of rows of A and C.
+   @param[in] n Number of columns of A and C.
+   @param[in] A Input matrix.
+   @param[in] lda Leading dimension of A.
+   @param[in] x Diagonal vector.
+   @param[in] incx Stride of x.
+   @param[out] C Output matrix.
+   @param[in] ldc Leading dimension of C.
+   @return cublas status.
+*/
 template<>
 cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 						  int m, int n,
@@ -214,6 +250,22 @@ cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 						  double *C, int ldc){
 	return cublasDdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc);
 }
+/**
+   Template specialization of cublas dgmm for single precision complex: C=A*diag(x) (mode is
+   CUBLAS_SIDE_RIGHT) or C=diag(x)*A (mode is CUBLAS_SIDE_LEFT).
+
+   @param[in] handle cublas handle.
+   @param[in] mode Side of the diagonal matrix.
+   @param[in] m Number of rows of A and C.
+   @param[in] n Number of columns of A and C.
+   @param[in] A Input matrix.
+   @param[in] lda Leading dimension of A.
+   @param[in] x Diagonal vector.
+   @param[in] incx Stride of x.
+   @param[out] C Output matrix.
+   @param[in] ldc Leading dimension of C.
+   @return cublas status.
+*/
 template<>
 cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 						  int m, int n,
@@ -222,6 +274,22 @@ cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 						  float2 *C, int ldc){
 	return cublasCdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc);
 }
+/**
+   Template specialization of cublas dgmm for double precision complex: C=A*diag(x) (mode is
+   CUBLAS_SIDE_RIGHT) or C=diag(x)*A (mode is CUBLAS_SIDE_LEFT).
+
+   @param[in] handle cublas handle.
+   @param[in] mode Side of the diagonal matrix.
+   @param[in] m Number of rows of A and C.
+   @param[in] n Number of columns of A and C.
+   @param[in] A Input matrix.
+   @param[in] lda Leading dimension of A.
+   @param[in] x Diagonal vector.
+   @param[in] incx Stride of x.
+   @param[out] C Output matrix.
+   @param[in] ldc Leading dimension of C.
+   @return cublas status.
+*/
 template<>
 cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 						  int m, int n,
@@ -230,6 +298,26 @@ cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 						  double2 *C, int ldc){
 	return cublasZdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc);
 }
+/**
+   Template specialization of cublas gemm for float:
+   C=alpha*op(A)*op(B)+beta*C.
+
+   @param[in] handle cublas handle.
+   @param[in] transa Operation on A.
+   @param[in] transb Operation on B.
+   @param[in] m Number of rows of op(A) and C.
+   @param[in] n Number of columns of op(B) and C.
+   @param[in] k Number of columns of op(A) and rows of op(B).
+   @param[in] alpha Scaling factor of the product (host or device pointer).
+   @param[in] A Input matrix.
+   @param[in] lda Leading dimension of A.
+   @param[in] B Input matrix.
+   @param[in] ldb Leading dimension of B.
+   @param[in] beta Scaling factor of C (host or device pointer).
+   @param[in,out] C Output matrix.
+   @param[in] ldc Leading dimension of C.
+   @return cublas status.
+*/
 template<>
 cublasStatus_t cublasGgemm(cublasHandle_t handle,
 						   cublasOperation_t transa, cublasOperation_t transb,
@@ -241,6 +329,26 @@ cublasStatus_t cublasGgemm(cublasHandle_t handle,
 						   float *C, int ldc){
 	return cublasSgemm(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
+/**
+   Template specialization of cublas gemm for double:
+   C=alpha*op(A)*op(B)+beta*C.
+
+   @param[in] handle cublas handle.
+   @param[in] transa Operation on A.
+   @param[in] transb Operation on B.
+   @param[in] m Number of rows of op(A) and C.
+   @param[in] n Number of columns of op(B) and C.
+   @param[in] k Number of columns of op(A) and rows of op(B).
+   @param[in] alpha Scaling factor of the product (host or device pointer).
+   @param[in] A Input matrix.
+   @param[in] lda Leading dimension of A.
+   @param[in] B Input matrix.
+   @param[in] ldb Leading dimension of B.
+   @param[in] beta Scaling factor of C (host or device pointer).
+   @param[in,out] C Output matrix.
+   @param[in] ldc Leading dimension of C.
+   @return cublas status.
+*/
 template<>
 cublasStatus_t cublasGgemm(cublasHandle_t handle,
 						   cublasOperation_t transa, cublasOperation_t transb,
@@ -253,6 +361,26 @@ cublasStatus_t cublasGgemm(cublasHandle_t handle,
 	return cublasDgemm(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
+/**
+   Template specialization of cublas gemm for single precision complex:
+   C=alpha*op(A)*op(B)+beta*C.
+
+   @param[in] handle cublas handle.
+   @param[in] transa Operation on A.
+   @param[in] transb Operation on B.
+   @param[in] m Number of rows of op(A) and C.
+   @param[in] n Number of columns of op(B) and C.
+   @param[in] k Number of columns of op(A) and rows of op(B).
+   @param[in] alpha Scaling factor of the product (host or device pointer).
+   @param[in] A Input matrix.
+   @param[in] lda Leading dimension of A.
+   @param[in] B Input matrix.
+   @param[in] ldb Leading dimension of B.
+   @param[in] beta Scaling factor of C (host or device pointer).
+   @param[in,out] C Output matrix.
+   @param[in] ldc Leading dimension of C.
+   @return cublas status.
+*/
 template<>
 cublasStatus_t cublasGgemm(cublasHandle_t handle,
 						   cublasOperation_t transa, cublasOperation_t transb,
@@ -264,6 +392,26 @@ cublasStatus_t cublasGgemm(cublasHandle_t handle,
 						   float2 *C, int ldc){
 	return cublasCgemm(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
+/**
+   Template specialization of cublas gemm for double precision complex:
+   C=alpha*op(A)*op(B)+beta*C.
+
+   @param[in] handle cublas handle.
+   @param[in] transa Operation on A.
+   @param[in] transb Operation on B.
+   @param[in] m Number of rows of op(A) and C.
+   @param[in] n Number of columns of op(B) and C.
+   @param[in] k Number of columns of op(A) and rows of op(B).
+   @param[in] alpha Scaling factor of the product (host or device pointer).
+   @param[in] A Input matrix.
+   @param[in] lda Leading dimension of A.
+   @param[in] B Input matrix.
+   @param[in] ldb Leading dimension of B.
+   @param[in] beta Scaling factor of C (host or device pointer).
+   @param[in,out] C Output matrix.
+   @param[in] ldc Leading dimension of C.
+   @return cublas status.
+*/
 template<>
 cublasStatus_t cublasGgemm(cublasHandle_t handle,
 						   cublasOperation_t transa, cublasOperation_t transb,

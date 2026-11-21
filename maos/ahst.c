@@ -43,6 +43,12 @@ static TIC;
    computes the cross-coupling of NGS modes in science field.
    MCC=(M'*Ha'*W*Ha*M) where M is ngsmod on DM, Ha is propagator from DM to
    science. W is weighting in science.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstructor. recon->ngsmod must be partially set up.
+   @param[in] aper Aperture of science evaluation.
+   @param[in] wt Weight of each evaluation direction. Directions with zero weight only have the tip/tilt part computed.
+   @return Newly allocated cross-coupling matrix for each evaluation direction. The caller frees it.
 */
 static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* aper, const real* wt){
 	ngsmod_t* ngsmod=recon->ngsmod;
@@ -140,6 +146,11 @@ static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* ape
    DMs, we only put NGS modes on ground and top-most DM. 
 
    Used to create ngsmod->Modes.
+
+   @param[in,out] dmc DM actuator commands to accumulate to. Allocated if NULL.
+   @param[in] recon Reconstructor.
+   @param[in] M NGS mode vector (1x1 cell of nmod elements).
+   @param[in] gain Scaling factor of the modes.
 */
 
 static void ngsmod_dm(dcell** dmc, const recon_t* recon, const dcell* M, real gain){
@@ -219,7 +230,12 @@ static void ngsmod_dm(dcell** dmc, const recon_t* recon, const dcell* M, real ga
 }
 /**
    DM modes for all the low order modes, defined on DM grid. It uses ngsmod_dm
-   to define the modes*/
+   to define the modes. Piston is removed from each mode.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstructor.
+   @return Newly allocated modal matrix on each DM (one column per mode). The caller frees it.
+*/
 
 static dcell* ngsmod_mode(const parms_t* parms, recon_t* recon){
 	ngsmod_t* ngsmod=recon->ngsmod;
@@ -254,6 +270,10 @@ static dcell* ngsmod_mode(const parms_t* parms, recon_t* recon){
 /**
    AHST parameters that are related to the geometry only, and
    will not be updated when estimated WFS measurement noise changes.
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] recon Reconstructor. recon->ngsmod is allocated and set up.
+   @param[in] aper Aperture of science evaluation.
 */
 void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 	if(recon->ngsmod){
@@ -449,6 +469,13 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 
    It ignores those WFS whoes wfsmask is 0, and assumes the modes are ordered as
    below: T/T x, T/T y, PS1, PS2, PS3, Focus.
+
+   @param[in] GM NGS mode to gradient interaction matrix for each WFS.
+   @param[in] saneai Inverse of the gradient noise covariance (block diagonal).
+   @param[in] wfsmask Mask of WFS to use. NULL means all WFS with valid GM.
+   @param[in] ngsmod NGS mode configuration.
+   @param[in,out] pMctrl Marks the controllable modes. Allocated if NULL, otherwise reset. May be NULL.
+   @return Newly allocated reconstructor from gradients to NGS modes. The caller frees it.
 */
 static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* wfsmask, const ngsmod_t *ngsmod, lmat** pMctrl){
 	if(NY(GM)!=1){
@@ -540,7 +567,10 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* wfsmask
 	In other words, \f$ M^\dagger=(M^T W_G M)^{-1}*M^T W_G with W_G=(GA^T*W_N*GA) \f$
 
 	Projector has the properties: \f$ M*Pngs*(1-M*Pngs)=0 \f$
- */
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] recon Reconstructor. recon->ngsmod->Rngs (and Pngs if tomo.ahst_wt==1) are updated.
+*/
 void ngsmod_setup(const parms_t* parms, recon_t* recon){
 	ngsmod_t* ngsmod=recon->ngsmod;
 	if(parms->recon.split==1&&!parms->tomo.ahst_idealngs&&parms->ntipowfs){
@@ -572,7 +602,17 @@ void ngsmod_setup(const parms_t* parms, recon_t* recon){
 	}
 }
 /**
-   used in performance evaluation on science opds. accumulate to out*/
+   used in performance evaluation on science opds. The outputs are overwritten (not accumulated).
+
+   @param[out] pttr_out Variance of piston removed, tip/tilt, and piston/tip/tilt removed OPD. May be NULL.
+   @param[out] pttrcoeff_out Piston, tip, and tilt coefficients. May be NULL.
+   @param[out] ngsmod_out NGS mode coefficients (nmod elements).
+   @param[in] parms Simulation parameters.
+   @param[in] ngsmod NGS mode configuration.
+   @param[in] aper Aperture of science evaluation.
+   @param[in] opd Science OPD defined on aper->locs.
+   @param[in] ievl Index of the evaluation direction.
+*/
 void ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
 	real* ngsmod_out,
 	const parms_t* parms, const ngsmod_t* ngsmod,
@@ -617,7 +657,18 @@ void ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
 	ngsmod_dot_post(pttr_out, pttrcoeff_out, ngsmod_out, tot, coeff2, ngsmod, aper, thetax, thetay);
 }
 /**
-   Separate post processing part so that GPU code can call it. Return non zero if error happens.
+   Separate post processing part so that GPU code can call it.
+
+   @param[out] pttr_out Variance of piston removed, tip/tilt, and piston/tip/tilt removed OPD. May be NULL.
+   @param[out] pttrcoeff_out Piston, tip, and tilt coefficients. May be NULL.
+   @param[out] ngsmod_out NGS mode coefficients (nmod elements).
+   @param[in] tot Weighted sum of OPD squared.
+   @param[in] coeff Weighted sum of OPD times 1, x, y, x*x, y*y, x*y.
+   @param[in] ngsmod NGS mode configuration.
+   @param[in] aper Aperture of science evaluation.
+   @param[in] thetax Evaluation direction along x (radian).
+   @param[in] thetay Evaluation direction along y (radian).
+   @return 0 if succeeded, 1 if any computed variance is significantly negative.
 */
 int ngsmod_dot_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 	real tot, const real* coeff, const ngsmod_t* ngsmod,
@@ -686,6 +737,14 @@ int ngsmod_dot_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 }
 /**
    Obtain OPD on loc for NGS mode vector.
+
+   @param[in,out] iopd OPD to accumulate to.
+   @param[in] loc Grid of iopd.
+   @param[in] ngsmod NGS mode configuration.
+   @param[in] thetax Direction along x (radian).
+   @param[in] thetay Direction along y (radian).
+   @param[in] mode NGS mode vector (nmod elements).
+   @param[in] alpha Scaling factor.
 */
 
 void ngsmod_opd(dmat* iopd, const loc_t* loc, const ngsmod_t* ngsmod,
@@ -744,6 +803,8 @@ void ngsmod_opd(dmat* iopd, const loc_t* loc, const ngsmod_t* ngsmod,
 }
 /**
    frees ngsmod_t
+
+   @param[in] ngsmod The struct to free. May be NULL.
 */
 void ngsmod_free(ngsmod_t* ngsmod){
 	if(!ngsmod) return;
@@ -763,8 +824,12 @@ void ngsmod_free(ngsmod_t* ngsmod){
 	lfree(ngsmod->Mbias);
 	free(ngsmod);
 }
-/*
-	Split NGS mode error from dmerr 
+/**
+   Split NGS mode error from dmerr
+
+   @param[out] Merr NGS mode error. Allocated if NULL.
+   @param[in] simu Simulation data.
+   @param[in,out] dmerr DM error signal. NGS modes are removed in place.
 */
 void ngsmod_split(dcell **Merr, sim_t *simu, dcell *dmerr){
 	const ngsmod_t *ngsmod=simu->recon->ngsmod;
@@ -774,6 +839,9 @@ void ngsmod_split(dcell **Merr, sim_t *simu, dcell *dmerr){
 }
 /**
    remove NGS modes from LGS DM commands. \todo handle 3 DM case.
+
+   @param[in,out] simu Simulation data. The intermediate NGS mode vectors are updated.
+   @param[in,out] dmerr LGS DM error signal. NGS modes are removed in place.
 */
 void ngsmod_remove(sim_t* simu, dcell* dmerr){
 	const recon_t* recon=simu->recon;

@@ -26,7 +26,12 @@
 */
 
 /**
-   Apply Laplacian2 to xin and accumulates to xout.
+   Apply Laplacian2 to xin and accumulates to xout: xout+=alpha*L2'*L2*xin.
+
+   @param[in,out] xout The output; accumulated into.
+   @param[in] L2 The Laplacian operator.
+   @param[in] xin The input.
+   @param[in] alpha Scaling factor.
 */
 void apply_L2(dcell** xout, const dspcell* L2, const dcell* xin,
 	real alpha){
@@ -37,9 +42,14 @@ void apply_L2(dcell** xout, const dspcell* L2, const dcell* xin,
 }
 /**
    Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout.
-   do nothing if xb != yb, since we apply to diagonal only.
-   if xb==-1, do all blocks.
-   \todo: this is not thread safe.
+   Not thread safe for the same block: A holds the work space. Concurrent callers need a private copy of A (see setup_recon_mvr_mvm_iact()).
+
+   @param[in,out] xout The output; accumulated into. Must already be allocated.
+   @param[in] A The invpsd_t struct. Its fftxopd is used as work space.
+   @param[in] xin The input.
+   @param[in] alpha Scaling factor.
+   @param[in] xb Block index. If -1, do all blocks.
+   @param[in] yb Block index. Do nothing if xb != yb, since we apply to diagonal only.
 */
 void apply_invpsd(dcell** xout, const void* A, const dcell* xin, real alpha, int xb, int yb){
 	if(xb!=yb) return;
@@ -81,10 +91,15 @@ void apply_invpsd(dcell** xout, const void* A, const dcell* xin, real alpha, int
 }
 
 /**
-   Apply fractal regularization to x, scaled by alpha.
-   do nothing if xb != yb, since we apply to diagonal only.
-   if xb==-1, do all blocks.
-   \todo: this is not thread safe.
+   Apply fractal regularization to xin, scaled by alpha and add to xout.
+   Not thread safe for the same block: A holds the work space. Concurrent callers need a private copy of A (see setup_recon_mvr_mvm_iact()).
+
+   @param[in,out] xout The output; accumulated into. Must already be allocated.
+   @param[in] A The fractal_t struct. Its xopd is used as work space.
+   @param[in] xin The input.
+   @param[in] alpha Scaling factor.
+   @param[in] xb Block index. If -1, do all blocks.
+   @param[in] yb Block index. Do nothing if xb != yb, since we apply to diagonal only.
 */
 void apply_fractal(dcell** xout, const void* A, const dcell* xin, real alpha, int xb, int yb){
 	if(xb!=yb) return;
@@ -111,12 +126,12 @@ void apply_fractal(dcell** xout, const void* A, const dcell* xin, real alpha, in
 	}
 }
 /**
- * @brief Remove projection
- * x = x - M * (PM * x)
- * @param x 	The vector
- * @param M 	The mode
- * @param PM 	The mode projection matrix
- */
+   Remove projection onto modes: x = x - M * (PM * x).
+
+   @param[in,out] x The vector. Nothing is done if any of x, M, or PM is NULL.
+   @param[in] M The modes.
+   @param[in] PM The mode projection matrix.
+*/
 void remove_mode(dcell *x, const dcell *M, const dcell *PM){
 	if(!x || !M || !PM) return;
 	dcell* junk=NULL;
@@ -126,7 +141,13 @@ void remove_mode(dcell *x, const dcell *M, const dcell *PM){
 }
 
 /**
-   Apply weighting W0/W1 to a vector. \f$W0*x-W1*(W1'*x)\f$
+   Apply weighting W0/W1 to a vector: \f$wt*(W0*x-W1*(W1'*x))\f$.
+
+   @param[in] xin The input vector.
+   @param[in] W0 The sparse weighting matrix.
+   @param[in] W1 The low rank weighting vector.
+   @param[in] wt Scaling factor.
+   @return The weighted vector. Newly allocated (or a reference to xin if W0 or W1 is NULL); the caller frees it.
 */
 static dmat* applyWeach(dmat* xin, const dsp* W0, const dmat* W1, const real wt){
 	if(!W0||!W1){
@@ -142,8 +163,13 @@ static dmat* applyWeach(dmat* xin, const dsp* W0, const dmat* W1, const real wt)
 	return xout;
 }
 /**
-   apply weighting W0/W1 with weighting wt for each block.
-   \f$xin<-(W0-W1*W1')*xin;\f$
+   Apply weighting W0/W1 with weighting wt for each block:
+   \f$xin<-wt*(W0-W1*W1')*xin;\f$
+
+   @param[in,out] xin The vectors (one per direction in each column); replaced by the weighted vectors.
+   @param[in] W0 The sparse weighting matrix.
+   @param[in] W1 The low rank weighting vector.
+   @param[in] wt Weight of each direction (row of xin).
 */
 void applyW(dcell* xin, const dsp* W0, const dmat* W1, const real* wt){
 	const int nevl=(int)NX(xin);
@@ -157,7 +183,14 @@ void applyW(dcell* xin, const dsp* W0, const dmat* W1, const real* wt){
 }
 
 /**
-   Compute W0/W1 weighted dot product: \f$A'*(W0-W1*W1')*B\f$
+   Compute W0/W1 weighted dot product: \f$\sum_i wt_i A_i'*(W0-W1*W1')*B_i\f$ where i is the direction.
+
+   @param[in] A First operand, nevl x nA.
+   @param[in] B Second operand, nevl x nB.
+   @param[in] W0 The sparse weighting matrix.
+   @param[in] W1 The low rank weighting vector.
+   @param[in] wt Weight of each direction, nevl x 1.
+   @return nA x nB result. Newly allocated; the caller frees it.
 */
 dcell* calcWmcc(const dcell* A, const dcell* B, const dsp* W0,
 	const dmat* W1, const dmat* wt){
@@ -181,11 +214,14 @@ dcell* calcWmcc(const dcell* A, const dcell* B, const dsp* W0,
 
 
 /**
- * Convert column vector nsax2 or nsax3 to sparse matrix. The third column of nea is coupling.
- * ll: controls lower left
- * ur: controls upper right 
- * if ng>2, treat as diagonal matrix (for raw PWFS)
- */
+   Convert column vector nsax2 or nsax3 to sparse matrix. The third column of nea is coupling.
+
+   @param[in] nea NEA (or its inverse or Cholesky factor) of size nsa x ng or nsa x 3.
+   @param[in] ll Whether to fill the lower left (yx) coupling term.
+   @param[in] ur Whether to fill the upper right (xy) coupling term.
+   @param[in] ng Number of gradients per subaperture. If ng>2, treat as diagonal matrix (for raw PWFS).
+   @return The (nsa*ng) x (nsa*ng) sparse matrix. Newly allocated; the caller frees it.
+*/
 dsp* nea2sp(dmat* nea, int ll, int ur, int ng){
 	if(NY(nea) != ng && NY(nea)!=3){
 		error("nea has wrong format:%ldx%ld. Expect 2 or 3 columns.\n", NX(nea), NY(nea));
@@ -230,6 +266,10 @@ dsp* nea2sp(dmat* nea, int ll, int ur, int ng){
 }
 /**
    Check the dimension of NEA and fix if possible
+
+   @param[in,out] nea The NEA. A single column is reshaped to nsa columns. Errors out if NULL or the format is wrong.
+   @param[in] nsa Number of subapertures.
+   @param[in] ng Number of gradients per subaperture.
 */
 void nea_check(dmat *nea, long nsa, int ng){
 	if(!nea){
@@ -242,8 +282,13 @@ void nea_check(dmat *nea, long nsa, int ng){
 	}
 }
 /**
- * Common routine for the following to prepare the data.
- * */
+   Common routine for nea_chol, nea_mm, and nea_inv to prepare the output.
+
+   @param[in,out] pout The output. Allocated if NULL; resized if it needs the cross term column.
+   @param[in] in The input, nsa x ng or nsa x 3.
+   @param[in] ng Number of gradients per subaperture.
+   @return 1 if the cross term (third column) is present and ng is 2, 0 otherwise.
+*/
 static int nea_prep(dmat **pout, const dmat *in, const int ng){
 	if(NY(in)!=ng&&NY(in)!=3){
 		error("in has wrong format: %ldx%ld\n", NX(in), NY(in));
@@ -260,8 +305,11 @@ static int nea_prep(dmat **pout, const dmat *in, const int ng){
 /**
    Apply cholesky in a 2x2 symmetric matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector.
    Input and output may be the same.
-   if ng>2, treat as diagonal matrix
- */
+
+   @param[in,out] pout The lower triangular Cholesky factor in the same packing. Allocated if NULL.
+   @param[in] in The symmetric matrix of each subaperture, nsa x 2 or nsa x 3.
+   @param[in] ng Number of gradients per subaperture. If ng>2, treat as diagonal matrix.
+*/
 void nea_chol(dmat **pout, const dmat *in, const int ng){
 	const int isxy=nea_prep(pout, in, ng);
 	dmat *out=*pout;
@@ -284,8 +332,11 @@ void nea_chol(dmat **pout, const dmat *in, const int ng){
 /**
    Apply LL' to lower diagonal matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector.
    Input and output may be the same.
-   if ng>2, treat as diagonal matrix
- */
+
+   @param[in,out] pout The product LL' in the same packing. Allocated if NULL.
+   @param[in] in The lower triangular matrix L of each subaperture, nsa x 2 or nsa x 3.
+   @param[in] ng Number of gradients per subaperture. If ng>2, treat as diagonal matrix.
+*/
 void nea_mm(dmat **pout, const dmat *in, const int ng){
 	const int isxy=nea_prep(pout, in, ng);
 	dmat *out=*pout;
@@ -343,7 +394,14 @@ void nea_inv(dmat **pout, const dmat *in, int ng, real scale){
    Compute and save PSF reconstruction telemetry.  For pseudo open loop
    estimations, like high order loop, we add opdr to, and subtract dmpsol from
    the OPD.  For closed loop estimations, like ahst low order or lsr, we add
-   dmerr_lo, and dmerr to the OPD.*/
+   dmerr_lo, and dmerr to the OPD.
+
+   @param[in,out] simu The simulation struct. simu->ecov is accumulated into.
+   @param[in] opdr Tomography output (pseudo open loop estimate) on xloc. May be NULL.
+   @param[in] dmpsol DM commands used for pseudo open loop gradients. May be NULL.
+   @param[in] dmerr High order closed loop DM error signal. May be NULL.
+   @param[in] dmerr_lo Low order closed loop error signal (NGS modes). May be NULL.
+*/
 void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dmerr_lo){
 	const parms_t* parms=simu->parms;
 	recon_t* recon=simu->recon;
@@ -508,8 +566,10 @@ cn2est_t* cn2est_prepare(const parms_t* parms, const powfs_t* powfs){
 	return cn2est;
 }
 /**
-   Implemented mechanism to move height of layers.
- */
+   Implemented mechanism to move height of layers. Not yet implemented: errors out.
+
+   @param[in,out] recon The reconstruction struct. Unused.
+*/
 static void cn2est_moveht(recon_t* recon){
 	(void)recon;
 	/*cn2est_t *cn2est=recon->cn2est; */
@@ -520,7 +580,15 @@ static void cn2est_moveht(recon_t* recon){
 }
 
 /**
-   Wrapper of Cn2 Estimation operations in recon.c
+   Wrapper of Cn2 Estimation operations in recon.c. Pushes the gradients and
+   estimates the Cn2 profile every cn2.step steps, and optionally updates the
+   tomography weights.
+
+   @param[in,out] cn2res Saved results. cn2res[0] holds r0 and cn2res[1] holds the layer weights, one column per estimation. May be NULL.
+   @param[in,out] recon The reconstruction struct. recon->wt, r0, and L0 are updated if cn2.tomo is set.
+   @param[in] parms The parameter struct.
+   @param[in] grad The WFS gradients.
+   @param[out] tomo_update Set to 1 if the tomography needs to be updated.
 */
 void cn2est_isim(dcell* cn2res, recon_t* recon, const parms_t* parms, const dcell* grad, int* tomo_update){
 	cn2est_t* cn2est=recon->cn2est;

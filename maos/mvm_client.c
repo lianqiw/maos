@@ -54,6 +54,9 @@ static int sock_mvm=-1;
 
 /**
    It is called by maos to send mvm matrix to mvm server
+
+   @param[in] mvmd The MVM control matrix. It is converted to float with scaling before sending.
+   @param[in] ngpu Number of GPUs for the server to use.
 */
 void mvm_client_send_m(dmat* mvmd, int ngpu){
 	int cmd[N_CMD]={GPU_MVM_M, 0, 0, 0};
@@ -72,7 +75,12 @@ void mvm_client_send_m(dmat* mvmd, int ngpu){
 }
 /**
    Initialize connection and send the matrix.
- */
+
+   @param[in] host Host name of the MVM server.
+   @param[in] port Port of the MVM server.
+   @param[in] mvm The MVM control matrix.
+   @param[in] ngpu Number of GPUs for the server to use.
+*/
 void mvm_client_init(const char* host, int port, dmat* mvm, int ngpu){
 	if((sock_mvm=connect_port(host, port, 1, 1))<0){
 		error("Unable to connect to mvm server\n");
@@ -80,7 +88,11 @@ void mvm_client_init(const char* host, int port, dmat* mvm, int ngpu){
 	mvm_client_send_m(mvm, ngpu);
 }
 /**
-   Reconstruction
+   Send gradients grad to the MVM server and receive DM commands into dm.
+
+   @param[in] mvmsize The number of gradients sent each time (<=0 to scan different sizes for timing).
+   @param[out] dm DM commands. Must be preallocated; the content is overwritten.
+   @param[in] grad Gradients of each WFS.
 */
 void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 	if(sock_mvm<0){
@@ -151,14 +163,17 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 	free(gall);
 }
 /**
-   Close connection
- */
+   Close connection to the MVM server.
+*/
 void mvm_client_close(void){
 	if(sock_mvm!=-1){
 		close(sock_mvm);
 		sock_mvm=-1;
 	}
 }
+/**
+   Close connection to the MVM server at program exit.
+*/
 static __attribute__((destructor))void deinit(){
 	if(sock_mvm!=-1){
 		close(sock_mvm);
