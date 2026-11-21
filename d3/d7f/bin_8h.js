@@ -10,6 +10,7 @@ var bin_8h =
     [ "zflen", "d3/d7f/bin_8h.html#a0cc9385f1a99368d36091786b313dea2", null ],
     [ "zfopen", "d3/d7f/bin_8h.html#aaf11bfd20fedb311db4a1103211bdbfc", null ],
     [ "zfdopen", "d3/d7f/bin_8h.html#ae4c74009c38d112ff46c2040b661a59f", null ],
+    [ "zfdopen_as", "d3/d7f/bin_8h.html#ac1e9216577962dfa0f9e330e1f2968a0", null ],
     [ "zfname", "d3/d7f/bin_8h.html#aa8967ca7ae67be2fb41b5497a5cd4ce0", null ],
     [ "zfisfits", "d3/d7f/bin_8h.html#a01b67a362199a6b984e5759f7d84c168", null ],
     [ "zfclose", "d3/d7f/bin_8h.html#a4ed840d37c980314e41e565e7dd617d3", null ],

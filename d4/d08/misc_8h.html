@@ -325,7 +325,7 @@ nval</td>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated directory name ("." if fn has no /), or NULL if fn is NULL or empty; the caller frees it. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated directory name ("." if fn has no /, "/" for a file in or the root directory), or NULL if fn is NULL, empty, or too long; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -421,7 +421,7 @@ nval</td>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated string, or NULL if argc is 0; the caller frees it. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated string ending with a single delimiter, or NULL if argc is 0; the caller frees it. </dd></dl>
 
 </div>
 </div>

@@ -191,7 +191,7 @@ Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>the key that needs the value. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Input string </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">endptr0</td><td>Location in Input string after readed number. May be NULL. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">endptr0</td><td>Location in Input string after readed number. May be NULL. It is set to the end of the (blank) string if data is empty, and to data if parsing failed. </td></tr>
   </table>
   </dd>
 </dl>

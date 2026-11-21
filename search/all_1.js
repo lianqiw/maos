@@ -1,5 +1,7 @@
 var searchData=
 [
   ['2_20snapshot_0',['Option 2 (snapshot)',['../d3/d4c/page20_compile.html#autotoc_md11',1,'']]],
-  ['2026_2011_2019_20base_20e6403afd3_1',['Second bug hunt, 2026-11-19 (base e6403afd3)',['../df/d17/md_docs_2claude__hunt__20261119.html',1,'']]]
+  ['20_1',['Fixes for the open items of the second review, 2026-11-20',['../d7/d44/md_docs_2claude__open__20261120.html',1,'']]],
+  ['2026_2011_2019_2',['2026 11 19',['../df/dd9/md_docs_2claude__testbugs__20261119.html',1,'Bugs found by the new cmocka tests, 2026-11-19'],['../d6/d20/md_docs_2claude__cxx__20261119.html',1,'Build with a C++ compiler (CC=g++), 2026-11-19'],['../dd/d7c/md_docs_2claude__ci__cuda__20261119.html',1,'CI: CUDA build in the Linux workflow, 2026-11-19'],['../df/de8/md_docs_2claude__followup__20261119.html',1,'Follow-up fixes to the first bug-fix commit, 2026-11-19'],['../d4/d24/md_docs_2claude__covbugs__20261119.html',1,'Library bugs found by the coverage tests, 2026-11-19'],['../da/d2c/md_docs_2claude__gtk4__20261119.html',1,'monitor: GTK4 deprecated API replacement, 2026-11-19'],['../d5/dd6/md_docs_2claude__lowprio__20261119.html',1,'Remaining low-priority lib fixes from the second review, 2026-11-19'],['../df/d17/md_docs_2claude__hunt__20261119.html',1,'Second review of sys, math, lib, maos, skyc, tools, cuda and mex, 2026-11-19'],['../d5/d7b/md_docs_2claude__coverage__20261119.html',1,'Unit test coverage of sys, math and lib, 2026-11-19'],['../d7/dc4/md_docs_2claude__cmocka__20261119.html',1,'Unit tests converted to cmocka, with a status report, 2026-11-19']]],
+  ['2026_2011_2020_3',['Fixes for the open items of the second review, 2026-11-20',['../d7/d44/md_docs_2claude__open__20261120.html',1,'']]]
 ];

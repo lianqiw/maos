@@ -430,7 +430,7 @@ fieldstop</td>
       </table>
 </div><div class="memdoc">
 <p>Fresnel propagation using either FFT or angular spectrum method.</p>
-<p>For FFT method, the output sampling is z*wvl/(dxin*nxin). For angular spectrum method, the output sampling equals to the input sampling. When the output sampling equals, the two methods agree. Notice that at near field when dp is smaller than dx, the output of angular spectrum method is periodic.</p>
+<p>For FFT method, the output sampling is z*wvl/(dxin*nxin). For angular spectrum method, the output sampling equals to the input sampling. When the output sampling equals, the two methods agree. The angular spectrum method is unitary (propagating by -z reverses it) and its output is periodic.</p>
 <p>The output is normalized so that its squared sum equals to nx*ny*sum(abs(in)^2). Input argument scale should be supplied to cancel this scaling.</p>
 <p>The brutal force method (method=0) has the exact solution without using fresnel approximation. It is however very slow. The results agrees with method=1 or 2 when the sampling agrees and the approximation holds.</p>
 <dl class="params"><dt>Parameters</dt><dd>

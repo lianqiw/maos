@@ -173,6 +173,7 @@ var cmath_8h =
     [ "cspwdot", "de/d07/cmath_8h.html#a62824508f46716e09702fd380d442173", null ],
     [ "cspcellwdot", "de/d07/cmath_8h.html#a933f9928c2b64493e60566db79414e4b", null ],
     [ "ccellmm", "de/d07/cmath_8h.html#a66f8482de66f557af4884ac06ab1d2ac", null ],
+    [ "cmm_cell", "de/d07/cmath_8h.html#a6c7fe9d5593efd1d1f6f805c83265f2e", null ],
     [ "ccellmm2", "de/d07/cmath_8h.html#a8b5f257deaa78b0a9fbcd080118065b6", null ],
     [ "c2sp", "de/d07/cmath_8h.html#ab6daca88ab287c71e9a22644bf9b7498", null ],
     [ "cspfull", "de/d07/cmath_8h.html#a82ad61f4b10e923a5cab44834d12a4d8", null ],

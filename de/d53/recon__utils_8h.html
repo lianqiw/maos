@@ -200,7 +200,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout. </p><dl class="todo"><dt><b><a class="el" href="../../dd/da0/todo.html#_todo000010">Todo</a></b></dt><dd>: this is not thread safe.</dd></dl>
+<p>Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout. Not thread safe for the same block: A holds the work space. Concurrent callers need a private copy of A (see setup_recon_mvr_mvm_iact()).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>The output; accumulated into. Must already be allocated. </td></tr>
@@ -253,7 +253,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply fractal regularization to xin, scaled by alpha and add to xout. </p><dl class="todo"><dt><b><a class="el" href="../../dd/da0/todo.html#_todo000011">Todo</a></b></dt><dd>: this is not thread safe.</dd></dl>
+<p>Apply fractal regularization to xin, scaled by alpha and add to xout. Not thread safe for the same block: A holds the work space. Concurrent callers need a private copy of A (see setup_recon_mvr_mvm_iact()).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>The output; accumulated into. Must already be allocated. </td></tr>

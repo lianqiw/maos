@@ -623,7 +623,7 @@ psol</td>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">kalman</td><td>Kalman filter. Its state is reinitialized and updated. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">goff</td><td>Gradient measurement offset (fast loop). May be NULL. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">input</td><td>Time series of nmod*nstep. A single column is reshaped in place to a row (single mode). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>Time series of nmod*nstep. A single column is treated as a row (single mode). </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">flag</td><td>Servo type as described above. </td></tr>
   </table>
   </dd>

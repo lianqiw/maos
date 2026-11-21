@@ -221,7 +221,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The greatest common divisor of a and b. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The greatest common divisor of a and b (non-negative). </dd></dl>
 
 </div>
 </div>
@@ -251,7 +251,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The least common multiple of a and b, or 0 if both are 0. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The least common multiple of a and b (non-negative), or 0 if both are 0. </dd></dl>
 
 </div>
 </div>
@@ -318,8 +318,8 @@ Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>The vector. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">N</td><td>Length of p. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">max</td><td>The maximum value. Can be NULL. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">min</td><td>The minimum value. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">max</td><td>The maximum value. Can be NULL. Not modified if p is NULL or empty. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">min</td><td>The minimum value. Can be NULL. Not modified if p is NULL or empty. </td></tr>
   </table>
   </dd>
 </dl>

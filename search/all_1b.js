@@ -2,13 +2,14 @@ var searchData=
 [
   ['v_0',['V',['../d3/dc7/muv_8h.html#ad69fad8e7ca6f125c5697622dcb378bd',1,'muv_t']]],
   ['val_1',['val',['../d4/d08/misc_8h.html#a24ad5e1eedf791f851b48a567df76287',1,'argopt_t']]],
-  ['valtype_2',['valtype',['../d4/d08/misc_8h.html#a83f5c2f8367c892852a68eef3241d247',1,'argopt_t']]],
-  ['variation_3',['Sodium range variation',['../da/dc3/page30_run.html#sect-sodium',1,'']]],
-  ['vector_4',['Vector',['../d5/d21/class_array.html#a0590fa4c9b58ef6ed3b6f92e7bdf72e8',1,'Array::Vector()'],['../d1/d12/class_cell_array.html#ac444571edb54c051706ada08bafc389d',1,'CellArray::Vector()'],['../d0/d44/class_num_array.html#ae43bd1c8e365ea70ed71789ca40e7df1',1,'NumArray::Vector()'],['../d4/d0f/class_num_cell.html#a650eb7ac22fda06e06036849d9a3a00b',1,'NumCell::Vector()']]],
-  ['verbose_5',['verbose',['../d4/d38/parms_8h.html#a3b1a8d3fa4dec50dc37d08c5f8261a2b',1,'cn2est_cfg_t']]],
-  ['verdict_20tables_6',['Per-group verdict tables',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md100',1,'']]],
-  ['verification_20of_20the_20combined_20patch_7',['Verification of the combined patch',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md92',1,'']]],
-  ['vp_8',['Vp',['../d3/dc7/muv_8h.html#a3a235ce911565ce890b5e1bd780906c2',1,'muv_t']]],
-  ['vpb_9',['VpB',['../d3/dc7/muv_8h.html#af8ada30ee8a5271da7d4890150c4760e',1,'muv_t']]],
-  ['vy_10',['vy',['../df/def/type_8h.html#a1b941ccdd3db094fe026e49f9c4da998',1,'map_t']]]
+  ['valid_20default_20configs_2',['maos (no result change on valid default configs)',['../df/d17/md_docs_2claude__hunt__20261119.html#autotoc_md112',1,'']]],
+  ['valtype_3',['valtype',['../d4/d08/misc_8h.html#a83f5c2f8367c892852a68eef3241d247',1,'argopt_t']]],
+  ['variation_4',['Sodium range variation',['../da/dc3/page30_run.html#sect-sodium',1,'']]],
+  ['vector_5',['Vector',['../d5/d21/class_array.html#a0590fa4c9b58ef6ed3b6f92e7bdf72e8',1,'Array::Vector()'],['../d1/d12/class_cell_array.html#ac444571edb54c051706ada08bafc389d',1,'CellArray::Vector()'],['../d0/d44/class_num_array.html#ae43bd1c8e365ea70ed71789ca40e7df1',1,'NumArray::Vector()'],['../d4/d0f/class_num_cell.html#a650eb7ac22fda06e06036849d9a3a00b',1,'NumCell::Vector()']]],
+  ['verbose_6',['verbose',['../d4/d38/parms_8h.html#a3b1a8d3fa4dec50dc37d08c5f8261a2b',1,'cn2est_cfg_t']]],
+  ['verdict_20tables_7',['Per-group verdict tables',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md135',1,'']]],
+  ['verification_20of_20the_20combined_20patch_8',['Verification of the combined patch',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md127',1,'']]],
+  ['vp_9',['Vp',['../d3/dc7/muv_8h.html#a3a235ce911565ce890b5e1bd780906c2',1,'muv_t']]],
+  ['vpb_10',['VpB',['../d3/dc7/muv_8h.html#af8ada30ee8a5271da7d4890150c4760e',1,'muv_t']]],
+  ['vy_11',['vy',['../df/def/type_8h.html#a1b941ccdd3db094fe026e49f9c4da998',1,'map_t']]]
 ];

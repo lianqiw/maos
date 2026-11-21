@@ -112,7 +112,7 @@ Functions</h2></td></tr>
 <tr class="memitem:ae41d6ef80e08141fe51114a3fe3c50f7" id="r_ae41d6ef80e08141fe51114a3fe3c50f7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae41d6ef80e08141fe51114a3fe3c50f7">cellref</a> (const_anyarray in)</td></tr>
 <tr class="memitem:ac3b1e48f6471f91de552928b50cafba6" id="r_ac3b1e48f6471f91de552928b50cafba6"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac3b1e48f6471f91de552928b50cafba6">cellhash</a> (const_anyarray A, uint32_t key)</td></tr>
 <tr class="memitem:aeff96de0c29e77101af1829f3d61360d" id="r_aeff96de0c29e77101af1829f3d61360d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aeff96de0c29e77101af1829f3d61360d">cellconvert</a> (<a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *A, <a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *(*fun_convert)(<a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *))</td></tr>
-<tr class="memitem:a5645e40f7c15c32bdfd9ac9687e98bb6" id="r_a5645e40f7c15c32bdfd9ac9687e98bb6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5645e40f7c15c32bdfd9ac9687e98bb6">cellinit</a> (panyarray A, <a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny)</td></tr>
+<tr class="memitem:a576c4666c98925c46bd9d6bd61689530" id="r_a576c4666c98925c46bd9d6bd61689530"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a576c4666c98925c46bd9d6bd61689530">cellinit</a> (panyarray A, <a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny)</td></tr>
 <tr class="memitem:a42be36f5596cc6e188db0826d7bc3a54" id="r_a42be36f5596cc6e188db0826d7bc3a54"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a42be36f5596cc6e188db0826d7bc3a54">cellinit2</a> (panyarray A, const_anyarray B)</td></tr>
 <tr class="memitem:a8c3774a4ba86dbfea0460496940ede9b" id="r_a8c3774a4ba86dbfea0460496940ede9b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8c3774a4ba86dbfea0460496940ede9b">celldim</a> (const_anyarray A_, <a class="el" href="../../d7/d63/classlong.html">long</a> *nx, <a class="el" href="../../d7/d63/classlong.html">long</a> *ny, <a class="el" href="../../d7/d63/classlong.html">long</a> **nxs, <a class="el" href="../../d7/d63/classlong.html">long</a> **nys)</td></tr>
 <tr class="memitem:a10d0abaf1d605dd1584f4511e12587b5" id="r_a10d0abaf1d605dd1584f4511e12587b5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a10d0abaf1d605dd1584f4511e12587b5">cellresize</a> (anyarray in, <a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny)</td></tr>
@@ -121,6 +121,7 @@ Functions</h2></td></tr>
 <tr class="memitem:a1fa85d57c6028722500ee31c85d17c1d" id="r_a1fa85d57c6028722500ee31c85d17c1d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1fa85d57c6028722500ee31c85d17c1d">writedata</a> (file_t *fd, const_anyarray A, <a class="el" href="../../d7/d63/classlong.html">long</a> ncol)</td></tr>
 <tr class="memitem:a4d495d1a4f5cb93a463b10e064e993ea" id="r_a4d495d1a4f5cb93a463b10e064e993ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4d495d1a4f5cb93a463b10e064e993ea">writebin</a> (const_anyarray dc, const char *format,...)</td></tr>
 <tr class="memitem:a540518deda0537534fdc06dc6069e3ab" id="r_a540518deda0537534fdc06dc6069e3ab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a540518deda0537534fdc06dc6069e3ab">readdata</a> (file_t *fp, M_ID id, <a class="el" href="../../d3/d7f/bin_8h.html#de/d7e/structheader__t">header_t</a> *header)</td></tr>
+<tr class="memitem:a9270bc624d1d53aa95d0dbe8f3fa193d" id="r_a9270bc624d1d53aa95d0dbe8f3fa193d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9270bc624d1d53aa95d0dbe8f3fa193d">readbin_fp</a> (file_t *fp, M_ID id, int level)</td></tr>
 <tr class="memitem:ad2fe14d959a87e0d2dda87f03e442f86" id="r_ad2fe14d959a87e0d2dda87f03e442f86"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad2fe14d959a87e0d2dda87f03e442f86">readbin_id</a> (M_ID id, int level, const char *format,...)</td></tr>
 <tr class="memitem:a0bea79ccbc952d08c41fdb768002169b" id="r_a0bea79ccbc952d08c41fdb768002169b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0bea79ccbc952d08c41fdb768002169b">readbin</a> (const char *format,...)</td></tr>
 <tr class="memitem:a3318a6ff9fbfe98b18b40677f050d965" id="r_a3318a6ff9fbfe98b18b40677f050d965"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3318a6ff9fbfe98b18b40677f050d965">writecell_async</a> (const_anyarray A, <a class="el" href="../../d7/d63/classlong.html">long</a> ncol)</td></tr>
@@ -288,14 +289,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a5645e40f7c15c32bdfd9ac9687e98bb6" name="a5645e40f7c15c32bdfd9ac9687e98bb6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5645e40f7c15c32bdfd9ac9687e98bb6">&#9670;&#160;</a></span>cellinit()</h2>
+<a id="a576c4666c98925c46bd9d6bd61689530" name="a576c4666c98925c46bd9d6bd61689530"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a576c4666c98925c46bd9d6bd61689530">&#9670;&#160;</a></span>cellinit()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void cellinit </td>
+          <td class="memname">int cellinit </td>
           <td>(</td>
           <td class="paramtype">panyarray</td>          <td class="paramname"><span class="paramname"><em>A_</em></span>, </td>
         </tr>
@@ -320,6 +321,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, -1 if the existing cell array does not match. </dd></dl>
 
 </div>
 </div>
@@ -581,6 +583,42 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">fp</td><td>File to read from. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">id</td><td>Requested type of the fundamental data. 0 to use the type in the file. </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">header</td><td>Header of the block. May be NULL. Its str is taken by the returned cell array. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated data; the caller frees it. NULL if empty or if reading fails. </dd></dl>
+
+</div>
+</div>
+<a id="a9270bc624d1d53aa95d0dbe8f3fa193d" name="a9270bc624d1d53aa95d0dbe8f3fa193d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9270bc624d1d53aa95d0dbe8f3fa193d">&#9670;&#160;</a></span>readbin_fp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> * readbin_fp </td>
+          <td>(</td>
+          <td class="paramtype">file_t *</td>          <td class="paramname"><span class="paramname"><em>fp</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">M_ID</td>          <td class="paramname"><span class="paramname"><em>id</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>level</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Read array or cell array from an opened file, socket, or pipe, like readbin_id().</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fp</td><td>File to read from, e.g., from zfdopen_as(). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">id</td><td>Requested fundamental data type. 0 for native. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">level</td><td>Cell nesting level, see readdata_auto(). -1 to detect automatically. </td></tr>
   </table>
   </dd>
 </dl>

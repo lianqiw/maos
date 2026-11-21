@@ -284,7 +284,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lcellcat2</b> (<a cla
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calls LX(new) with a filename to be saved to. The data is written to the file asynchronously.</p>
+<p>Calls LX(new) with a filename to be saved to. The data is written to the file asynchronously, or when it is freed for fits files.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. </td></tr>
@@ -2041,7 +2041,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lcellcat2</b> (<a cla
       </table>
 </div><div class="memdoc">
 <p>Routines for input/output to bin/fits file. Function to write dense matrix data into a file pointer. Generally used by library developer.</p>
-<p>When ncol==-1, initializes asynchronous writing of A. When ncol&gt;0 and async is initialized, writes the first ncol columns (or elements for a row vector) asynchronously. Otherwise writes A normally to fp.</p>
+<p>When ncol==-1, initializes asynchronous writing of A. When ncol&gt;0 and async is initialized, writes the first ncol columns (or elements for a row vector) asynchronously. Otherwise writes A normally to fp. Asynchronous writing is not supported for fits files: initialization does nothing and the data is written synchronously when A is freed (see LX(free_content)).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">fp</td><td>File to write to. </td></tr>

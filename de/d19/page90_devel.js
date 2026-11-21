@@ -21,5 +21,9 @@ var page90_devel =
       [ "Debugging", "db/dda/page95_profiling.html#Debugging", null ],
       [ "Coverage", "db/dda/page95_profiling.html#Code", null ],
       [ "Profiling", "db/dda/page95_profiling.html#Profiling", null ]
+    ] ],
+    [ "Unit Test Status", "d9/d6e/page96_unittest.html", [
+      [ "Code Coverage", "d9/d6e/page96_unittest.html#unittest_coverage", null ],
+      [ "Test Results", "d9/d6e/page96_unittest.html#unittest_results", null ]
     ] ]
 ];

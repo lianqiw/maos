@@ -328,7 +328,7 @@ nodelay</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Open a port and listen to it. Calls respond(sock) to handle data. If timeout_fun is not NULL, it will be called when 1) connection is establed/handled, 2) every timeout_sec if timeout_sec&gt;0. This function only return at error. if localpath is not null and start with /, open the local unix port also. If ipaddr is not null, only bind to that ip address.</p>
+<p>Open a port and listen to it. Calls respond(sock) to handle data. If timeout_fun is not NULL, it will be called when 1) connection is establed/handled, 2) every timeout_sec if timeout_sec&gt;0. This function only return at error, upon a quit signal, or when all sockets are closed. All sockets are closed and the poll arrays are freed upon return, so it can be called again. if localpath is not null and start with /, open the local unix port also. If ipaddr is not null, only bind to that ip address.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">opt</td><td>Listening options: port, ipaddr, localpath, fd, responder, http_responder, timeout_fun, timeout_sec, and nodelay. </td></tr>

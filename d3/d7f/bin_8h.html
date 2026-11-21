@@ -183,6 +183,7 @@ Functions</h2></td></tr>
 <tr class="memitem:a0cc9385f1a99368d36091786b313dea2" id="r_a0cc9385f1a99368d36091786b313dea2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d7/d63/classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0cc9385f1a99368d36091786b313dea2">zflen</a> (file_t *fp)</td></tr>
 <tr class="memitem:aaf11bfd20fedb311db4a1103211bdbfc" id="r_aaf11bfd20fedb311db4a1103211bdbfc"><td class="memItemLeft" align="right" valign="top">file_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaf11bfd20fedb311db4a1103211bdbfc">zfopen</a> (const char *fn, const char *mod)</td></tr>
 <tr class="memitem:ae4c74009c38d112ff46c2040b661a59f" id="r_ae4c74009c38d112ff46c2040b661a59f"><td class="memItemLeft" align="right" valign="top">file_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae4c74009c38d112ff46c2040b661a59f">zfdopen</a> (int fd)</td></tr>
+<tr class="memitem:ac1e9216577962dfa0f9e330e1f2968a0" id="r_ac1e9216577962dfa0f9e330e1f2968a0"><td class="memItemLeft" align="right" valign="top">file_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac1e9216577962dfa0f9e330e1f2968a0">zfdopen_as</a> (int fd, const char *mod, const char *suffix)</td></tr>
 <tr class="memitem:aa8967ca7ae67be2fb41b5497a5cd4ce0" id="r_aa8967ca7ae67be2fb41b5497a5cd4ce0"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa8967ca7ae67be2fb41b5497a5cd4ce0">zfname</a> (file_t *fp)</td></tr>
 <tr class="memitem:a01b67a362199a6b984e5759f7d84c168" id="r_a01b67a362199a6b984e5759f7d84c168"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a01b67a362199a6b984e5759f7d84c168">zfisfits</a> (file_t *fp)</td></tr>
 <tr class="memitem:a4ed840d37c980314e41e565e7dd617d3" id="r_a4ed840d37c980314e41e565e7dd617d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4ed840d37c980314e41e565e7dd617d3">zfclose</a> (file_t *fp)</td></tr>
@@ -593,6 +594,43 @@ str</td>
 
 </div>
 </div>
+<a id="ac1e9216577962dfa0f9e330e1f2968a0" name="ac1e9216577962dfa0f9e330e1f2968a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac1e9216577962dfa0f9e330e1f2968a0">&#9670;&#160;</a></span>zfdopen_as()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">file_t * zfdopen_as </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>fd</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>mod</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>suffix</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>convert a file descriptor, socket, or pipe into file_t with the format implied by suffix.</p>
+<p>Unlike zfopen(), the format is not detected from the content, so the descriptor does not need to be seekable.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File, socket, or pipe descriptor. Closed by zfclose(). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">mod</td><td>Access mode: r for read, w for write. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">suffix</td><td>File name suffix that sets the format: .bin, .fits, with optional .gz or .zst appended. NULL is .bin. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated file_t; free it with zfclose(). NULL on failure. </dd></dl>
+
+</div>
+</div>
 <a id="aa8967ca7ae67be2fb41b5497a5cd4ce0" name="aa8967ca7ae67be2fb41b5497a5cd4ce0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa8967ca7ae67be2fb41b5497a5cd4ce0">&#9670;&#160;</a></span>zfname()</h2>
 
@@ -696,7 +734,7 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Handles byteswapping in fits file format then call zfwrite_do to do the actual writing.</p>
+<p>Handles byteswapping in fits file format then call zfwrite_do to do the actual writing. For fits files, each call writes one complete data unit padded to a full FITS block. Complex numbers must be written with size of each real component and twice the number of elements so that the real and imaginary parts are byte swapped separately (see writearr()).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">ptr</td><td>Data to write. </td></tr>
@@ -738,7 +776,7 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Handles byteswapping in fits file format then call zfread_do to do the actual reading.</p>
+<p>Handles byteswapping in fits file format then call zfread_do to do the actual reading. For fits files, each call reads one complete data unit: the padding to a full FITS block (2880 bytes) after the data is skipped for all element sizes. Complex numbers must be read with size of each real component and twice the number of elements (see readvec()).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">ptr</td><td>Buffer to read into. </td></tr>
@@ -942,14 +980,14 @@ str</td>
       </table>
 </div><div class="memdoc">
 <p>Create a mem_t object.</p>
-<p>Notice that nref is set to 0. Default is set to reference heap memory.</p>
+<p>Notice that nref is set to 0 by design: each user (e.g., X(new_do)) takes its own reference with mem_ref() and releases it with mem_unref(), which frees the object when the last reference is released. Default is set to reference heap memory.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>Memory to manage; owned by the returned mem_t. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated mem_t; release it with mem_unref(). </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated mem_t with nref=0. </dd></dl>
 
 </div>
 </div>
@@ -1114,7 +1152,7 @@ str</td>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated mem_t of the mapping; release it with mem_unref(). NULL if the file cannot be found or opened for reading. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated mem_t of the mapping with nref=0 (see mem_new()); each user takes a reference with mem_ref() and releases it with mem_unref(). NULL if the file cannot be found or opened for reading. </dd></dl>
 
 </div>
 </div>
@@ -1268,7 +1306,7 @@ str</td>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated async_t; free it with async_free(). NULL on failure. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated async_t; free it with async_free(). NULL on failure or for fits files, which are not supported. </dd></dl>
 
 </div>
 </div>
