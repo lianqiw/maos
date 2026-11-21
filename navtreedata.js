@@ -155,118 +155,18 @@ var NAVTREE =
       [ "Sky coverage results", "d5/d4c/skycoverage.html#skyres", null ]
     ] ],
     [ "Development", "de/d19/page90_devel.html", "de/d19/page90_devel" ],
-    [ "Bug fixes, unit tests and documentation by Claude, 2026-11-19 to 2026-11-20", "db/d87/md_docs_2claude__changes__20261120.html", [
+    [ "Changes by Claude, 2026-11-20", "db/d87/md_docs_2claude__changes__20261120.html", [
+      [ "Impact on simulation results", "db/d87/md_docs_2claude__changes__20261120.html#claude_results", [
+        [ "maos (CPU and GPU)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md34", null ],
+        [ "GPU only", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md35", null ],
+        [ "lib and math (shared by maos and skyc)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md36", null ],
+        [ "skyc", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md37", null ],
+        [ "Configuration and file format", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md38", null ]
+      ] ],
+      [ "Other changes (no effect on results)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md39", null ],
+      [ "Unit tests", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md40", null ],
       [ "Verification", "db/d87/md_docs_2claude__changes__20261120.html#claude_verification", null ],
-      [ "Changes that can alter results", "db/d87/md_docs_2claude__changes__20261120.html#claude_results", null ],
-      [ "Not changed", "db/d87/md_docs_2claude__changes__20261120.html#claude_not_changed", null ],
-      [ "First review of the reported bugs", "db/d87/md_docs_2claude__changes__20261120.html#claude_first_review", [
-        [ "Verification at the time", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md34", null ],
-        [ "Counts", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md35", null ],
-        [ "Your earlier fixes in 88beaf2da that were incomplete", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md36", null ],
-        [ "Fixes that can change simulation results", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md37", null ],
-        [ "Security", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md38", null ],
-        [ "Decisions (option applied unless noted)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md39", null ],
-        [ "Noticed but not changed", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md40", null ],
-        [ "Per-group verdict tables", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md41", null ],
-        [ "Group: sys", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md42", [
-          [ "sys group: fixes", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md43", null ]
-        ] ],
-        [ "Decisions", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md44", null ],
-        [ "Group: math", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md45", [
-          [ "math/ fixes", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md46", null ]
-        ] ],
-        [ "Decisions", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md47", null ],
-        [ "Related notes (outside math/, not changed)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md48", null ],
-        [ "Group: lib", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md49", [
-          [ "lib group: bug triage", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md50", null ]
-        ] ],
-        [ "mkh.c renormalization check (requested)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md51", null ],
-        [ "Decisions", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md52", null ],
-        [ "Group: maos_skyc", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md53", [
-          [ "maos_skyc fixes", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md54", null ]
-        ] ],
-        [ "Decisions", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md55", null ],
-        [ "Group: cuda", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md56", [
-          [ "cuda group: bug review", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md57", null ]
-        ] ],
-        [ "Decisions", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md58", null ],
-        [ "High-impact items", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md59", null ],
-        [ "Group: tools_mex", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md60", [
-          [ "tools_mex fixes", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md61", null ]
-        ] ],
-        [ "Decisions", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md62", null ],
-        [ "Build check", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md63", null ]
-      ] ],
-      [ "Follow-up fixes to the first review", "db/d87/md_docs_2claude__changes__20261120.html#claude_followup", [
-        [ "sys/daemonize.c: lock_file_version", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md64", null ],
-        [ "tools/scheduler_http.c", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md65", null ],
-        [ "Doc block placement", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md66", null ]
-      ] ],
-      [ "monitor: GTK4 deprecated API replacement", "db/d87/md_docs_2claude__changes__20261120.html#claude_gtk4", [
-        [ "Job list (tools/monitor_gui.c)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md67", null ],
-        [ "Dialogs (tools/monitor.c)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md68", null ],
-        [ "Bugs fixed on the way", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md69", null ]
-      ] ],
-      [ "Second review of sys, math, lib, maos, skyc, tools, cuda and mex", "db/d87/md_docs_2claude__changes__20261120.html#claude_second_review", [
-        [ "Changes that can alter results", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md70", null ],
-        [ "sys", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md71", null ],
-        [ "math", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md72", null ],
-        [ "lib", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md73", null ],
-        [ "maos (no result change on valid default configs)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md74", null ],
-        [ "skyc and tools", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md75", null ],
-        [ "mex", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md76", null ],
-        [ "Not changed in this commit", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md77", null ]
-      ] ],
-      [ "Low-priority lib fixes from the second review", "db/d87/md_docs_2claude__changes__20261120.html#claude_lowprio", null ],
-      [ "Open items of the second review", "db/d87/md_docs_2claude__changes__20261120.html#claude_open_items", [
-        [ "Changes that can alter results", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md78", null ],
-        [ "File format", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md79", null ],
-        [ "cuda", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md80", null ],
-        [ "maos", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md81", null ],
-        [ "skyc", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md82", null ],
-        [ "tools", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md83", null ],
-        [ "Not changed", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md84", null ]
-      ] ],
-      [ "Build with a C++ compiler (CC=g++)", "db/d87/md_docs_2claude__changes__20261120.html#claude_cxx", [
-        [ "configure.ac", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md85", null ],
-        [ "sys/thread.h", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md86", null ],
-        [ "sys/common.h: ADDR()", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md87", null ]
-      ] ],
-      [ "CI: CUDA build in the Linux workflow", "db/d87/md_docs_2claude__changes__20261120.html#claude_ci_cuda", null ],
-      [ "Unit tests converted to cmocka", "db/d87/md_docs_2claude__changes__20261120.html#claude_cmocka", [
-        [ "Rules for the tests", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md88", null ],
-        [ "Infrastructure", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md89", null ],
-        [ "Library additions needed by the tests", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md90", null ],
-        [ "Programs (test cases)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md91", null ]
-      ] ],
-      [ "Bugs found by the cmocka tests", "db/d87/md_docs_2claude__changes__20261120.html#claude_testbugs", [
-        [ "lib/chol.c", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md92", null ],
-        [ "sys/bin.c", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md93", null ],
-        [ "Other", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md94", null ],
-        [ "Tests", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md95", null ]
-      ] ],
-      [ "Unit test coverage of sys, math and lib", "db/d87/md_docs_2claude__changes__20261120.html#claude_coverage", [
-        [ "New programs (test cases)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md96", null ],
-        [ "Extended programs", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md97", null ],
-        [ "Not covered", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md98", null ],
-        [ "Library bugs found", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md99", null ]
-      ] ],
-      [ "Library bugs found by the coverage tests", "db/d87/md_docs_2claude__changes__20261120.html#claude_covbugs", [
-        [ "Changes that can alter results", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md100", null ],
-        [ "sys", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md101", null ],
-        [ "math", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md102", null ],
-        [ "lib", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md103", null ],
-        [ "Tests", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md104", null ]
-      ] ],
-      [ "Documentation audit and follow-up fixes", "db/d87/md_docs_2claude__changes__20261120.html#claude_audit", [
-        [ "Changes that can alter results", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md105", null ],
-        [ "Configuration", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md106", null ],
-        [ "configure", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md107", null ],
-        [ "Code", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md108", null ]
-      ] ],
-      [ "macOS unit test failures", "db/d87/md_docs_2claude__changes__20261120.html#claude_macos", null ],
-      [ "UndefinedBehaviorSanitizer", "db/d87/md_docs_2claude__changes__20261120.html#claude_ubsan", null ],
-      [ "valgrind", "db/d87/md_docs_2claude__changes__20261120.html#claude_valgrind", null ]
+      [ "Not changed", "db/d87/md_docs_2claude__changes__20261120.html#claude_not_changed", null ]
     ] ],
     [ "README", "d3/dcc/md__r_e_a_d_m_e.html", null ],
     [ "Todo List", "dd/da0/todo.html", null ],
@@ -307,13 +207,12 @@ var NAVTREEINDEX =
 "d6/d94/maos_2types_8h.html#aecfdde04f1823426a4a6bde295ae6e95",
 "d9/df5/skyc_20.html",
 "da/dfb/dmath_8h.html#ab48bc9b9c8f923e19dafc70b8fff5de2",
-"db/dd5/thread_8h.html#ac484ce8461053d81b280ae84d3d2c110",
-"dd/dc1/lmath_8h.html#a57fd9bfee0aa615e6ed2ab9ed0fece94",
-"de/d07/cmath_8h.html#ae9103b8a83d73f56aac1fb8650afa6d9",
-"de/de7/smath_8h.html#aa1ebd8e1d073034133fd5a178b624698",
-"df/def/type_8h.html#a33f7b985bf7933943eed9bb36b4676ed",
-"df/def/type_8h.html#ace7f877fd34c3f699d35a6a81c081a26",
-"globals_l.html"
+"dc/d6a/powfs_shngs.html",
+"de/d07/cmath_8h.html#a2c8c34529edf8275376a139f936260c7",
+"de/d53/recon__utils_8h.html#a74f945e450ef8677f831285a7fefce90",
+"df/d04/sock_8h.html#a06ca6a939cfb914d1b5b39b34292ecc7",
+"df/def/type_8h.html#a7107a3025720f4bb8df91f91690addad",
+"df/def/type_8h.html#d6/d98/structpts__t_8____unnamed0_____8____unnamed0_____8____unnamed0_____8____unnamed0____"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

@@ -1,29 +1,6 @@
 var searchData=
 [
-  ['g_0',['Build with a C++ compiler (CC=g++)',['../db/d87/md_docs_2claude__changes__20261120.html#claude_cxx',1,'']]],
-  ['gemini_20conf_1',['examples/gemini.conf',['../d2/d41/gemini.html',1,'page34_conf']]],
-  ['gems_5flgs_20conf_2',['examples/gems_lgs.conf',['../d9/d74/gems_lgs.html',1,'page34_conf']]],
-  ['generic_20implementation_3',['Type Generic Implementation',['../d5/d98/page91_basics.html#sect-type-generic',1,'']]],
-  ['geometry_20data_4',['Geometry Data',['../dd/da9/page40_results.html#geometry',1,'']]],
-  ['git_20preferred_5',['Git (preferred)',['../d3/d4c/page20_compile.html#compile-git',1,'']]],
-  ['glao_20conf_6',['glao.conf',['../d4/d4b/glao.html',1,'page34_conf']]],
-  ['gpu_20acceleration_7',['GPU acceleration',['../d3/d4c/page20_compile.html#compile-gpu',1,'']]],
-  ['gpu_20code_20paths_8',['GPU Code Paths',['../d7/dbf/page93_maos.html#arch-gpu',1,'']]],
-  ['gpu_20selection_9',['GPU selection',['../da/dc3/page30_run.html#sect-run-gpu',1,'']]],
-  ['gradient_20pixel_20offset_10',['gradient pixel offset',['../db/df0/powfs_8c.html#WFS',1,'']]],
-  ['graphical_20user_20interface_11',['Graphical user interface',['../d3/d4c/page20_compile.html#compile-gui',1,'']]],
-  ['group_20verdict_20tables_12',['Per-group verdict tables',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md41',1,'']]],
-  ['group_3a_20bug_20review_13',['cuda group: bug review',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md57',1,'']]],
-  ['group_3a_20bug_20triage_14',['lib group: bug triage',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md50',1,'']]],
-  ['group_3a_20cuda_15',['Group: cuda',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md56',1,'']]],
-  ['group_3a_20fixes_16',['sys group: fixes',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md43',1,'']]],
-  ['group_3a_20lib_17',['Group: lib',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md49',1,'']]],
-  ['group_3a_20maos_5fskyc_18',['Group: maos_skyc',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md53',1,'']]],
-  ['group_3a_20math_19',['Group: math',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md45',1,'']]],
-  ['group_3a_20sys_20',['Group: sys',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md42',1,'']]],
-  ['group_3a_20tools_5fmex_21',['Group: tools_mex',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md60',1,'']]],
-  ['gtk4_20deprecated_20api_20replacement_22',['monitor: GTK4 deprecated API replacement',['../db/d87/md_docs_2claude__changes__20261120.html#claude_gtk4',1,'']]],
-  ['guide_23',['guide',['../index.html#autotoc_md110',1,'Developer guide'],['../index.html#autotoc_md109',1,'User guide']]],
-  ['guide_20to_20the_20main_20parameters_24',['Guide to the main parameters',['../da/dc3/page30_run.html#sect-config-params',1,'']]],
-  ['guidelines_25',['Guidelines',['../d5/d98/page91_basics.html#sect-guide',1,'']]]
+  ['h_20band_20strehl_20ratio_0',['H band Strehl Ratio',['../d6/d3f/page43_nfiraos.html#autotoc_md26',1,'']]],
+  ['historical_20benchmarks_1',['Historical benchmarks',['../index.html#autotoc_md44',1,'']]],
+  ['hysteresis_2',['DM Hysteresis',['../da/dbe/hysteresis.html',1,'algorithm']]]
 ];
