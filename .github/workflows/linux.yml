@@ -32,7 +32,7 @@ jobs:
     - name: configure and make
       run: |
         mkdir build && cd build
-        ../maos/configure --enable-release --enable-doxygen --with-cuda=/usr --with-ccbin=gcc-12 --prefix=$(pwd)/../external
+        ../maos/configure --enable-release --enable-werror --enable-doxygen --with-cuda=/usr --with-ccbin=gcc-12 --prefix=$(pwd)/../external
         grep -q "define USE_CUDA [1-9]" config.h || { echo "CUDA is not enabled"; exit 1; }
         make -j8
         make check
@@ -58,9 +58,17 @@ jobs:
     - name: clang make
       run: |
         mkdir clang && cd clang
-        ../maos/configure --enable-release --prefix=$(pwd)/../external CC=clang --without-cuda
+        ../maos/configure --enable-release --enable-werror --prefix=$(pwd)/../external CC=clang --without-cuda
         make -j8
         make check
+    - name: clang with undefined behavior sanitizer #not a release build, so that the scheduler is built and tested
+      run: |
+        mkdir ubsan && cd ubsan
+        ../maos/configure --enable-werror --prefix=$(pwd)/../external CC=clang --without-cuda \
+          CFLAGS="-fsanitize=undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer" LDFLAGS="-fsanitize=undefined"
+        make -j8
+        make check
+        make -C test check-scheduler
     - name: maos result check
       run: cd build/bin && ../../maos/scripts/maos_check.sh 5
     - uses: actions/upload-artifact@v7
@@ -71,4 +79,5 @@ jobs:
         path: |
           */config.*
           build/test/*.log
+          ubsan/test/*.log
           build/bin/maos_check_*.*

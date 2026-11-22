@@ -328,6 +328,9 @@ mapcell* genscreen_str(const char* keywords){
 
 		static real seed=0;//avoid using the same seed
 		seed=search_keyword_num_default(keywords, "seed", seed+1);
+		if(isnan(search_keyword_num(keywords, "seed"))){//the result depends on the previous calls
+			info("seed is not specified. Use seed=%g. Specify seed to get the same surface in every run.\n", seed);
+		}
 		real petal=search_keyword_num(keywords, "petal");
 
 		if(isnan(r0) && isnan(rmsnm)){

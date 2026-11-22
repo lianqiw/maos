@@ -124,6 +124,7 @@ AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Force enable doxygen.
 AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downloading precompiled library]))
 AC_ARG_ENABLE(download, AS_HELP_STRING([--disable-download], [Disable downloading library]))
 AC_ARG_ENABLE(threadlib, AS_HELP_STRING([--disable-threadlib], [Do not use the threaded BLAS and FFTW libraries]))
+AC_ARG_ENABLE(werror, AS_HELP_STRING([--enable-werror], [Treat compiler warnings as errors (used by CI)]))
 
 if test "$enable_double" = "no" -o "$enable_single" = "yes" ;then
 	enable_single=1
@@ -343,6 +344,9 @@ AC_CONFIG_FILES( [Makefile
 	mex/Makefile
 ])
 OPTS+=" $OPTScommon $OPTS_CC $OPTSprof "
+if test "x$enable_werror" = "xyes" ;then
+	OPTS+=" -Werror" #added here so that it is not used by the configure checks or passed to nvcc (CCBIN_CFLAGS)
+fi
 #put rpath here to avoid using it when compiling 3rd party library
 LDFLAGS+=" $LDOPTS -Wl,-rpath,${libdir}" #to run artifacts from github workflow avoid using rpath
 CFLAGS+=" $FFTW_CFLAGS $OPTS $OPENMP_CFLAGS" #do not replace 
@@ -358,6 +362,10 @@ AC_SUBST(EXEFULL_LIBS)
 AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
 AC_SUBST(LIBS)
+if test "$CN" = "CLANG" && echo "$CFLAGS $LDFLAGS" | grep -q -- "-fsanitize" ;then
+	#clang does not link the sanitizer runtime into shared libraries, which then have unresolved symbols. Link the shared runtime.
+	LDSO+=" -shared-libsan -Wl,-rpath,$($CC -print-runtime-dir)"
+fi
 AC_SUBST(LDSO) #to link .so with all symbols resolved
 AC_OUTPUT
 echo SRC_DIR=$SRC_DIR

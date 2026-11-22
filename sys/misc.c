@@ -237,10 +237,10 @@ time_t myclocki(){
    returned string should not be modified.
 
    @param[in] at Time in seconds since the epoch. Uses current time if 0.
-   @return Pointer to a static buffer; do not free. Not thread safe.
+   @return Pointer to a buffer of the calling thread, overwritten by its next call; do not free.
 */
 const char* myasctime(time_t at){
-	static char st[20];
+	static __thread char st[20];//one buffer per thread, as it is used by info_time() and warning_time() from all threads
 	if(!at) at=time(NULL);
 	struct tm am;
 	localtime_r(&at, &am);
