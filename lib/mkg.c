@@ -28,7 +28,7 @@
 */
 //#define _ISOC99_SOURCE
 
-#include "../math/mathdef.h"
+#include "loc.h"
 #include "mkg.h"
 
 #ifndef DEBUG

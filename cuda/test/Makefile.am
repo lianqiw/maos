@@ -5,6 +5,7 @@ LDADD=../recon/libcurecon.la ../../lib/libaos.la $(EXEFULL_LIBS)
 HEADER_LIB=gpu_test.h
 #cuwfs.cu cuwfs.h
 EXTRA_DIST=$(HEADER_LIB)
+SRCS=mvm_daemon.cu mvm_iwfs.cu mvm_test.cu mvmfull_iwfs.cu mvmfull_pipe.cu mvmfull_real.cu gpu_test.cu
 
 if USE_CUDA
 bin_PROGRAMS=gpu_mvm_daemon gpu_mvm_test gpu_test gpu_ext
@@ -13,18 +14,4 @@ gpu_mvm_test_SOURCES=gpu_mvm_test.c mvm_iwfs.cu mvm_test.cu mvmfull_iwfs.cu mvmf
 gpu_test_SOURCES=gpu_test.cu
 TESTS=gpu_ext
 endif
-#The following does the depency generation/tracking and verbosity right.
-.cu.o:
-	$(AM_V_CC)$(NVCC) $(CUDA_CFLAGS) -c -o $@ $<
-	@mkdir -p $(DEPDIR)
-	@$(NVCC) $(CUDA_CFLAGS) -M $< -MT $@ > $(DEPDIR)/$*.Po
-
-.cu.lo:
-	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(NVCC) $(CUDA_CFLAGS) -c $< -o $@ 
-	@mkdir -p $(DEPDIR)
-	@$(NVCC) $(CUDA_CFLAGS) -M $< -MT $@ > $(DEPDIR)/$*.Po
-
--include $(SRCS:%.cu=$(DEPDIR)/%.Po)
-
-clean-local:
-	-rm -rf $(DEPDIR)/*.Po
+include $(top_srcdir)/cuda/cuda.am

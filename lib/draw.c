@@ -879,8 +879,8 @@ end2:
 	return ans;
 }
 
-#include "../math/mathdef.h"
-#include "../math/mathdef.h"
+#include "loc.h"
+#include "loc.h"
 /*
   The following routines applies the imagesc_* functions onto
   dmat,cmat,loc,map,etc, data types.

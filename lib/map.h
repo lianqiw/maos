@@ -17,11 +17,56 @@
 */
 #ifndef AOS_LIB_MAP_H
 #define AOS_LIB_MAP_H
-#include "type.h"
+#include "../math/mathdef.h"
 /**
    \file map.h
    This file defines functions relates to map_t, etc.
 */
+/**
+   OPD or Amplitude map defined on square/rectangular grids. with equal spacing
+   on x/y. Can be casted to dmat.
+*/
+struct map_t{
+    /*The OPD, takes the same form of dmat so can be casted. */
+    union{
+        MATARR(real,);
+		dmat dmat[1]; //base[1] is conveniently used to return a pointer as cell without casting which is error prone
+    };
+    real ox;      /**<Origin in x*/
+    real oy;      /**<Origin in y*/
+    real dx;      /**<Sampling along x*/
+    real dy;      /**<Sampling along y*/
+    real ht;       /**<Heigh conjugation of this surface*/
+    real vx;      /**Wind velocity. Useful for atmospheric grid*/
+    real vy;      /**Wind velocity. Useful for atmospheric grid*/
+    real iac;     /**<Inter-actuator coupling. >0: use cubic influence function*/
+	real dratio;  /**<M1 to DM demagnification ratio (>1 for shrinking beam)*/
+	real aoi;	  /**<Angle of incidence in radian for ray tracing input */
+};
+
+/**
+   Map with different x/y sampling. Can be cased to dmat
+*/
+struct rmap_t{
+    union{
+        MATARR(real,);
+        dmat dmat[1];
+    };
+    real ox;      /**<Origin in x*/
+    real oy;      /**<Origin in y*/
+    real dx;      /**<Sampling along x (first dimension)*/
+    real dy;      /**<Sampling along y (second dimension)*/
+    real txdeg;   /**<the x tilt angle in degree wrt beam (90 is prep), */
+    real tydeg;   /**<the y tilt angle in degree wrt beam (90 is prep), */
+    real ftel;    /**<Effective focal length of the telescope*/
+    real fexit;   /**<The distance between the exit pupil and the focus*/
+    real fsurf;   /**<The distance between the tilted surface (M3) and the focus*/
+};
+
+//map_t and rmap_t can be used as dmat
+TYPE_ASSERT(offsetof(map_t, dmat)==0 && offsetof(map_t, ox)>=sizeof(dmat));
+TYPE_ASSERT(offsetof(rmap_t, dmat)==0 && offsetof(rmap_t, ox)>=sizeof(dmat));
+
 map_t* map_convert(dmat* A);
 cell* map_convert_cell(cell* A);
 rmap_t* rmap_convert(dmat* A);
@@ -58,6 +103,5 @@ void rmap_parse_keywords(rmap_t* in);
 //rmap_t *rmapreaddata(file_t *fp, header_t *header);
 //void mapwritedata(file_t *fp, map_t *map);
 void map_blend(map_t *atm1, map_t *atm2, long overx, long overy);
-
 
 #endif

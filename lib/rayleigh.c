@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../math/mathdef.h"
+#include "loc.h"
 #include "rayleigh.h"
 /**
    Compute rayleigh backscatter patterns for all WFS. All input are in SI unit.

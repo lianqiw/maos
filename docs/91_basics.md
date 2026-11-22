@@ -80,7 +80,9 @@ order: the first index changes the fastest.
 \subsection sect-maos-math Fundamental Math Types
 
 MAOS uses a few structs to manage memory for basic math types. They are
-defined in \c math/type.h and the functions are declared in the \c math folder.
+defined in \c math/type.h and the functions are declared in the \c math folder,
+except #loc_t, #pts_t, and #map_t, which are defined in \c lib/loc.h and
+\c lib/map.h.
 Each array struct records its type (a magic number, see \ref sect-bin), the
 data pointer \c p, the dimensions \c nx (rows, the fast changing index) and
 \c ny (columns), optional \c keywords (a string saved with the data), and
@@ -139,7 +141,9 @@ usually on a regular grid with spacing \c dx and \c dy. #map_t describes a 2-d
 array of OPD or amplitude data together with its origin, sampling, and
 conjugation height. Its first part has the same layout as #dmat, so a map can
 be passed to #dmat functions via \c map->dmat; likewise \c loc->dmat views the
-coordinates as an \c nloc x 2 #dmat.
+coordinates as an \c nloc x 2 #dmat. \c math/type.h only declares them, so
+that the generic routines such as \c writebin() and \c cellfree() accept them,
+and checks at compile time that their layout agrees with #dmat.
 
 Numerical arrays can be stored in #cell arrays like in Matlab. Each type has
 its own cell type: for example, #dcell contains #dmat pointers, #ccell

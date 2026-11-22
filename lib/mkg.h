@@ -17,7 +17,7 @@
 */
 #ifndef AOS_LIB_MKG_H
 #define AOS_LIB_MKG_H
-#include "../math/mathdef.h"
+#include "loc.h"
 /**
    \file mkg.h
    Contains function that creates average gradient operator

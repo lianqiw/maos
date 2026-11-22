@@ -1,13 +1,13 @@
 AM_CFLAGS=-I$(top_srcdir) $(CHOL_CFLAGS)
 #if set LDCHOL here instead of in configure.ac compiles "No rule to make target ..."
 
-nobase_include_HEADERS=accphi.h aos.h cn2est.h cure.h draw.h fractal.h genotf.h gensei.h hyst.h kalman.h laplacian.h locfft.h \
+nobase_include_HEADERS=accphi.h aos.h loc.h map.h cn2est.h cure.h draw.h fractal.h genotf.h gensei.h hyst.h kalman.h laplacian.h locfft.h \
 		       libmisc.h mkdtf.h mkg.h mkh.h mkw.h mkz.h mtch.h chol.h muv.h pcg.h proj.h psd.h readcfg.h servo.h slaving.h stfun.h \
 			   turbulence.h zernike.h petal.h phase.h pywfs.h comb.h bessel_mode.h rayleigh.h
 
 EXTRA_DIST=fractal_do.c accphi_grid_do.c 
 
-AOS_SRC=readcfg.c turbulence.c mkg.c mkh.c mkz.c mkw.c accphi.c proj.c		\
+AOS_SRC=loc.c map.c readcfg.c turbulence.c mkg.c mkh.c mkz.c mkw.c accphi.c proj.c		\
 laplacian.c chol.c pcg.c muv.c draw.c genotf.c gensei.c fractal.c stfun.c servo.c hyst.c	\
 slaving.c mkdtf.c psd.c kalman.c cn2est.c libmisc.c locfft.c zernike.c cure.c mtch.c petal.c phase.c  pywfs.c \
 comb.c bessel_mode.c rayleigh.c

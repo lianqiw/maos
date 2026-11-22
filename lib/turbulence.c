@@ -21,7 +21,7 @@
 #include <sys/stat.h>
 
 #include <dirent.h>
-#include "../math/mathdef.h"
+#include "loc.h"
 #include "turbulence.h"
 #include "fractal.h"
 #include "accphi.h"

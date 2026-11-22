@@ -21,7 +21,7 @@
    \file turbulence.h
    Contains routines to generate atmospheric turbulence screens
 */
-#include "../math/mathdef.h"
+#include "loc.h"
 typedef struct genatm_t{
     rand_t *rstat;   /**<The random stream*/
     real *wt;      /**<The layer weights*/

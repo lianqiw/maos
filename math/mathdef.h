@@ -33,8 +33,6 @@
 #include "cell.h"
 #include "zfarr.h"
 #include "mathmisc.h"
-#include "loc.h"
-#include "map.h"
 #include "random.h"
 
 void fft_threads(long nx, long ny);
@@ -47,7 +45,6 @@ void fft_threads(long nx, long ny);
 */
 #define isempty(A) (!(A) || !(A)->nx || !(A)->ny)
 #define DMAT(A) ((A)?(A)->dmat:(dmat*)0)
-#define LOC(A)  ((A)?(A)->loc:(loc_t*)0)
 #define abs2(A)      ((A)*(A))
 #define cabs2f(A)    (abs2(crealf(A))+abs2(cimagf(A)))
 #define cabs2(A)     (abs2(creal(A))+abs2(cimag(A)))

@@ -17,6 +17,7 @@
 */
 #ifndef AOS_MATARRH_TYPE_H
 #define AOS_MATARRH_TYPE_H
+#include <stddef.h>
 #include "numtype.h"
 /**
    \file type.h
@@ -103,137 +104,15 @@ SPMATDEF(fcomplex, zsp);
 SPMATDEF(real, dsp);
 SPMATDEF(comp, csp);
 
-/**
-   OPD or Amplitude map defined on square/rectangular grids. with equal spacing
-   on x/y. Can be casted to dmat.
+/*
+  Types defined in lib (map.h and loc.h) that are derived from dmat. They are
+  declared here so that the generic routines (anyarray) and cell arrays can
+  take them.
 */
-typedef struct map_t{
-    /*The OPD, takes the same form of dmat so can be casted. */
-    union{
-        MATARR(real,);
-		dmat dmat[1]; //base[1] is conveniently used to return a pointer as cell without casting which is error prone
-    };
-    real ox;      /**<Origin in x*/
-    real oy;      /**<Origin in y*/
-    real dx;      /**<Sampling along x*/
-    real dy;      /**<Sampling along y*/
-    real ht;       /**<Heigh conjugation of this surface*/
-    real vx;      /**Wind velocity. Useful for atmospheric grid*/
-    real vy;      /**Wind velocity. Useful for atmospheric grid*/
-    real iac;     /**<Inter-actuator coupling. >0: use cubic influence function*/
-	real dratio;  /**<M1 to DM demagnification ratio (>1 for shrinking beam)*/
-	real aoi;	  /**<Angle of incidence in radian for ray tracing input */
-} map_t;
-
-/**
-   Map with different x/y sampling. Can be cased to dmat
-*/
-typedef struct rmap_t{
-    union{
-        MATARR(real,);
-        dmat dmat[1];
-    };
-    real ox;      /**<Origin in x*/
-    real oy;      /**<Origin in y*/
-    real dx;      /**<Sampling along x (first dimension)*/
-    real dy;      /**<Sampling along y (second dimension)*/
-    real txdeg;   /**<the x tilt angle in degree wrt beam (90 is prep), */
-    real tydeg;   /**<the y tilt angle in degree wrt beam (90 is prep), */
-    real ftel;    /**<Effective focal length of the telescope*/
-    real fexit;   /**<The distance between the exit pupil and the focus*/
-    real fsurf;   /**<The distance between the tilted surface (M3) and the focus*/
-}rmap_t;
-
-/**
-   Store starting x,y for each col
-*/
-typedef struct locstatcol_t{
-    real xstart; /**<starting x of this column*/
-    real ystart; /**<starting y of this column*/
-    long pos;    /**<starting index of this column*/
-}locstatcol_t;
-
-/**
-   Stores array of locstatcol_t
-
-*/
-typedef struct locstat_t{
-    locstatcol_t* cols; /**<Information about each column*/
-    real dx;          /**<Sampling of the grid along x*/
-    real dy;          /**<Sampling of the grid along y*/
-    real xmin;        /**<Minimum x*/
-    real ymin;        /**<Minimum y*/
-    long ncol;        /**<Number of consecutive columns found*/
-    long nx, ny;       /**<Size for embedding*/
-}locstat_t;
-
-/**
-   Struct for coordinates like plocs, xloc, aloc etc.
-*/
-typedef struct loc_t{
-    union{
-        dmat dmat[1];
-        struct{//must be the same as dmat
-            M_ID id;
-            real* locx;  /**< x coordinates of each point [allocates memory for both locx and locy]*/
-            long nloc;   /**< number of points*/
-            long two;    /**<Constant 2. to be binary compatble with rmat*/
-            char *keywords; /**<The keywords as a string*/
-		};
-	};
-	
-	real* locy;  /**< y coordinates of each point*/
-	locstat_t* stat;/**<points to column statistics*/
-	map_t* map;    /**< point to the map used for identifying neihboring points.*/
-	real dx;     /**< Sampling along x*/
-	real dy;     /**< Sampling along y*/
-	real ht;     /**< Conjugation height of the loc grid.*/
-	real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
-	real dratio;  /**<M1 to DM demagnification ratio (>1 for shrinking beam)*/
-	real aoi;	  /**<Angle of incidence in radian for ray tracing input */
-	int npad;      /*padding when create map*/
-}loc_t;
-/**
-   low left point of each subaperture.
-
-   don't change the leading elements. so that pts_t can be used as loc_t.
-*/
-typedef struct pts_t{
-	union{
-		loc_t loc[1];
-		struct{
-			union{
-				dmat dmat[1];
-				struct{
-					M_ID id;
-					real* origx;    /**<The x origin of each subaperture. Contains memory for origy*/
-					long nsa;       /**<number of subapertures.*/
-					long two;       /**<Constant 2. to be binary compatble with rmat*/
-					char *keywords; /**<The keywords as a string*/
-				};
-			};
-	        real* origy; 		/**<The y origin of each subaperture*/
-            locstat_t* stat;	/**<padding so that we can be casted to loc_t*/
-            map_t* map;    		/**<treat pts_t as loc_t and compute the MAP*/
-            union{
-                real dsa;    /**<side length of subaperture*/
-                real dsax;   /**<side length of subaperture*/
-            };
-            real dsay;   	 /**<side length of subaperture. */
-            real dummy_ht; 	 /**<Place holder*/
-            real dummy_iac;  /**<Place holder*/
-			real dratio;  	 /**<M1 to DM demagnification ratio (>1 for shrinking beam)*/
-			real aoi;	     /**<Angle of incidence in radian for ray tracing input */
-            int npad;      	 /**<padding when create map*/
-		};
-	};
-	//before this line same memory layout as loc_t
-	//the following are specific to pts_t
-	long nxsa;       /**<number of cols per subaperture*/
-	long nysa;       /**<number of rows per subaperture*/
-	real dx;     /**<sampling of points in each subaperture*/
-	real dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
-}pts_t;
+typedef struct map_t map_t;
+typedef struct rmap_t rmap_t;
+typedef struct loc_t loc_t;
+typedef struct pts_t pts_t;
 CELLDEF(cmat, ccell);
 CELLDEF(zmat, zcell);
 CELLDEF(dmat, dcell);
@@ -265,6 +144,27 @@ CELLDEF(mapcell, mapccell);
 CELLDEF(rmapcell, rmapccell);
 CELLDEF(loccell, locccell);
 
+/*
+  Check at compile time that the types that are accessed through each other
+  (by id, or by casting to cell*, dmat*, or loc_t*) keep the same memory layout.
+*/
+#ifdef __cplusplus
+#define TYPE_ASSERT(A) static_assert(A, #A)
+#else
+#define TYPE_ASSERT(A) _Static_assert(A, #A)
+#endif
+#define TYPE_ASSERT_SAME(S1, F1, S2, F2) TYPE_ASSERT(offsetof(S1, F1)==offsetof(S2, F2))
+//all arrays are accessed as cell by id
+TYPE_ASSERT(sizeof(cell)==sizeof(dmat));
+TYPE_ASSERT_SAME(dmat, p, cell, p);
+TYPE_ASSERT_SAME(dmat, fft, cell, fft);
+TYPE_ASSERT_SAME(dsp, id, cell, id);
+TYPE_ASSERT_SAME(dsp, px, cell, p);
+TYPE_ASSERT_SAME(dsp, nx, cell, nx);
+TYPE_ASSERT_SAME(dsp, ny, cell, ny);
+TYPE_ASSERT_SAME(dsp, keywords, cell, keywords);
+TYPE_ASSERT_SAME(dsp, fp, cell, fp);
+
 //CELLDEF(cell, cell);
 /*
     Reshape array without altering the number of elements.
@@ -290,9 +190,8 @@ CELLDEF(loccell, locccell);
     }\
   };ans;\
 })
-#undef ARR
 #undef CELLARR
-#undef MATARR
+//ARR and MATARR are kept for types derived from dmat (map_t in lib/map.h)
 /**
    Check whether the object pointed by id is a cell array.
 

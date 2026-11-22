@@ -17,7 +17,7 @@
 */
 #ifndef AOS_LIB_MKZ_H
 #define AOS_LIB_MKZ_H
-#include "../math/mathdef.h"
+#include "loc.h"
 /**
    \file mkz.h
    Contains function that creates ztilt gradient operator

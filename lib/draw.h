@@ -18,7 +18,7 @@
 #ifndef __DRAW_H
 #define __DRAW_H
 
-#include "../math/mathdef.h"
+#include "loc.h"
 /**
    \file draw.h
    Contains functions for data visualization.

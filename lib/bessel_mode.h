@@ -20,6 +20,6 @@
 */
 #ifndef AOS_LIB_BESSEL_MODE_H
 #define AOS_LIB_BESSEL_MODE_H
-#include "../math/mathdef.h"
+#include "loc.h"
 dmat* bessel_modes(loc_t *loc, double D, double k_cutoff, int type);
 #endif

@@ -17,7 +17,7 @@
 */
 #ifndef AOS_LIB_STFUN_H
 #define AOS_LIB_STFUN_H
-#include "../math/mathdef.h"
+#include "loc.h"
 
 /**
    \file stfun.h

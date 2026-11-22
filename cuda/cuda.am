@@ -1,0 +1,37 @@
+#Rules to compile .cu files with dependency tracking. Included by the Makefile.am
+#in each cuda folder, which defines SRCS as the list of .cu files.
+#
+#- $(DEPDIR)/*.Pcu lists the headers that each object includes (NVCC -M) and an
+#  empty rule for each header, like gcc -MP, so that a header that is moved or
+#  removed (including the CUDA headers when CUDA is updated) causes the object to
+#  be recompiled instead of failing with "No rule to make target".
+#- Each object depends on nvcc_version, which holds the output of NVCC
+#  --version and is only updated when it changes, so that all objects are
+#  recompiled when CUDA or NVCC is changed.
+#The files are named .Pcu instead of .Po so that the .Po files created by
+#the previous rules, which do not have empty rules, are not used.
+CUDA_DEPEND=mkdir -p $(DEPDIR) && $(NVCC) $(CUDA_CFLAGS) -M $< -MT $@ > $(DEPDIR)/$*.Tcu \
+	&& { cat $(DEPDIR)/$*.Tcu; echo "$@ : nvcc_version"; \
+	sed -e 's/^[^:]*://' -e 's/\\$$//' -e 's/^[[:space:]]*//' -e '/^$$/d' -e 's/$$/ :/' $(DEPDIR)/$*.Tcu; } > $(DEPDIR)/$*.Pcu \
+	&& rm -f $(DEPDIR)/$*.Tcu
+
+.cu.o:
+	$(AM_V_CC)$(NVCC) $(CUDA_CFLAGS) -c -o $@ $<
+	@$(CUDA_DEPEND)
+
+.cu.lo:
+	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(NVCC) $(CUDA_CFLAGS) -c $< -o $@
+	@$(CUDA_DEPEND)
+
+nvcc_version: FORCE
+	@{ echo "$(NVCC)"; $(NVCC) --version; } > $@.tmp 2>&1; if cmp -s $@.tmp $@; then rm -f $@.tmp; else mv -f $@.tmp $@; fi
+FORCE:
+.PHONY: FORCE
+
+#also needed before the first .Pcu file is created
+$(SRCS:.cu=.o) $(SRCS:.cu=.lo): nvcc_version
+
+-include $(SRCS:%.cu=$(DEPDIR)/%.Pcu)
+
+clean-local:
+	-rm -rf $(DEPDIR)/*.Po $(DEPDIR)/*.Pcu $(DEPDIR)/*.Tcu nvcc_version nvcc_version.tmp

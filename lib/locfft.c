@@ -15,7 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "../math/mathdef.h"
+#include "loc.h"
 #include "locfft.h"
 #define TIMING 0
 #if TIMING == 1

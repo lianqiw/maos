@@ -15,11 +15,13 @@ layers above it (this is also the \c SUBDIRS build order in \c Makefile.am):
    compression (\c bin.c, \c zstdio.c), the scheduler client
    (\c scheduler_client.c), and per OS process information (\c process_*.c).
 2. \c math/: numerical containers (#dmat, #cmat, #smat, #zmat, #lmat, sparse
-   #dsp/#csp, #cell arrays, #loc_t, #map_t) with BLAS, LAPACK, FFTW, and
+   #dsp/#csp, #cell arrays) with BLAS, LAPACK, FFTW, and
    CHOLMOD wrappers. The functions are type generic (see
    \ref sect-type-generic).
 3. \c lib/: physics and AO building blocks reusable outside of \c maos, built
-   into \c libaos together with \c sys and \c math: turbulence generation,
+   into \c libaos together with \c sys and \c math: the point and grid
+   types #loc_t, #pts_t, and #map_t derived from #dmat (\c loc.c, \c map.c),
+   turbulence generation,
    ray tracing (\c accphi.c), the \c mkg, \c mkh, \c mkz, \c mkw operators,
    PCG, servo, PSD, pyramid WFS, the configuration file parser
    (\c readcfg.c), and the plotting client (\c draw.c). Functions here take

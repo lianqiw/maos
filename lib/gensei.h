@@ -28,7 +28,7 @@
 */
 #ifndef AOS_LIB_GENSEI_H
 #define AOS_LIB_GENSEI_H
-#include "../math/mathdef.h"
+#include "loc.h"
 #include "mkdtf.h"
 void upsample_otf(cmat* out, const cmat* in);
 cccell* genseotf(const pts_t* pts, const_anyarray amp, const dcell* opdbias,

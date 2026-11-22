@@ -17,7 +17,7 @@
 */
 #ifndef AOS_LIB_SLAVING_H
 #define AOS_LIB_SLAVING_H
-#include "../math/mathdef.h"
+#include "loc.h"
 /**
    \file slaving.h
    Routines to compute interpolation matrices for stuck and floating actuators.

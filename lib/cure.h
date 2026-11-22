@@ -22,7 +22,7 @@
 
    Implementation is based on M.Rosensteiner, J. Opt. Soc. Am. A28, 2132-2138 (2011)
 */
-#include "../math/mathdef.h"
+#include "loc.h"
 void cure1d(dmat **phix, const dmat*gx, const dmat *gy, real dx);
 void cure(dmat **phix, const dmat*gx, const dmat *gy, real dx);
 void cure_loc(dmat **phix, const dmat*grad, const loc_t *gloc);

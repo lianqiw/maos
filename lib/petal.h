@@ -17,7 +17,7 @@
 */
 #ifndef AOS_LIB_PETAL_H
 #define AOS_LIB_PETAL_H
-#include "../math/mathdef.h"
+#include "loc.h"
 dsp *petal_mkh(long nx, long ny, real cx, real cy, long npetal, real theta);
 dsp *petal_mkh_loc(loc_t *loc, long npetal, real theta);
 void petal_opd(anydmat opd, real cx, real cy, long npetal, real theta, const dmat *mode);

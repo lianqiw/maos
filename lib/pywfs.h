@@ -17,7 +17,7 @@
 */
 #ifndef AOS_PYWFS_H
 #define AOS_PYWFS_H
-#include "../math/mathdef.h"
+#include "loc.h"
 #include "locfft.h"
 #include "mkh.h"
 /**

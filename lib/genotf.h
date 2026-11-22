@@ -17,7 +17,7 @@
 */
 #ifndef AOS_LIB_GENOTF_H
 #define AOS_LIB_GENOTF_H
-#include "../math/mathdef.h"
+#include "loc.h"
 /**
    \file genotf.h
    Routines to generate short/long exposure OTFs of an aperture in present of

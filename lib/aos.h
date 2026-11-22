@@ -19,6 +19,8 @@
 #define AOS_LIB_AOS_H
 
 #include "../math/mathdef.h"
+#include "map.h"
+#include "loc.h"
 #include "readcfg.h"
 #include "draw.h"
 #include "accphi.h"

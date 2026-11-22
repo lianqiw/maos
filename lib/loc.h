@@ -17,11 +17,125 @@
 */
 #ifndef AOS_LIB_LOC_H
 #define AOS_LIB_LOC_H
-#include "type.h"
+#include "../math/mathdef.h"
+#include "map.h"
 /**
    \file loc.h
    This file defines functions relates to pts_t, loc_t, map_t, etc.
  */
+/**
+   Store starting x,y for each col
+*/
+typedef struct locstatcol_t{
+    real xstart; /**<starting x of this column*/
+    real ystart; /**<starting y of this column*/
+    long pos;    /**<starting index of this column*/
+}locstatcol_t;
+
+/**
+   Stores array of locstatcol_t
+
+*/
+typedef struct locstat_t{
+    locstatcol_t* cols; /**<Information about each column*/
+    real dx;          /**<Sampling of the grid along x*/
+    real dy;          /**<Sampling of the grid along y*/
+    real xmin;        /**<Minimum x*/
+    real ymin;        /**<Minimum y*/
+    long ncol;        /**<Number of consecutive columns found*/
+    long nx, ny;       /**<Size for embedding*/
+}locstat_t;
+
+/**
+   Struct for coordinates like plocs, xloc, aloc etc.
+*/
+struct loc_t{
+    union{
+        dmat dmat[1];
+        struct{//must be the same as dmat
+            M_ID id;
+            real* locx;  /**< x coordinates of each point [allocates memory for both locx and locy]*/
+            long nloc;   /**< number of points*/
+            long two;    /**<Constant 2. to be binary compatble with rmat*/
+            char *keywords; /**<The keywords as a string*/
+		};
+	};
+	
+	real* locy;  /**< y coordinates of each point*/
+	locstat_t* stat;/**<points to column statistics*/
+	map_t* map;    /**< point to the map used for identifying neihboring points.*/
+	real dx;     /**< Sampling along x*/
+	real dy;     /**< Sampling along y*/
+	real ht;     /**< Conjugation height of the loc grid.*/
+	real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
+	real dratio;  /**<M1 to DM demagnification ratio (>1 for shrinking beam)*/
+	real aoi;	  /**<Angle of incidence in radian for ray tracing input */
+	int npad;      /*padding when create map*/
+};
+/**
+   low left point of each subaperture.
+
+   don't change the leading elements. so that pts_t can be used as loc_t.
+*/
+struct pts_t{
+	union{
+		loc_t loc[1];
+		struct{
+			union{
+				dmat dmat[1];
+				struct{
+					M_ID id;
+					real* origx;    /**<The x origin of each subaperture. Contains memory for origy*/
+					long nsa;       /**<number of subapertures.*/
+					long two;       /**<Constant 2. to be binary compatble with rmat*/
+					char *keywords; /**<The keywords as a string*/
+				};
+			};
+	        real* origy; 		/**<The y origin of each subaperture*/
+            locstat_t* stat;	/**<padding so that we can be casted to loc_t*/
+            map_t* map;    		/**<treat pts_t as loc_t and compute the MAP*/
+            union{
+                real dsa;    /**<side length of subaperture*/
+                real dsax;   /**<side length of subaperture*/
+            };
+            real dsay;   	 /**<side length of subaperture. */
+            real dummy_ht; 	 /**<Place holder*/
+            real dummy_iac;  /**<Place holder*/
+			real dratio;  	 /**<M1 to DM demagnification ratio (>1 for shrinking beam)*/
+			real aoi;	     /**<Angle of incidence in radian for ray tracing input */
+            int npad;      	 /**<padding when create map*/
+		};
+	};
+	//before this line same memory layout as loc_t
+	//the following are specific to pts_t
+	long nxsa;       /**<number of cols per subaperture*/
+	long nysa;       /**<number of rows per subaperture*/
+	real dx;     /**<sampling of points in each subaperture*/
+	real dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
+};
+//loc_t can be used as dmat with nx=nloc and ny=2
+TYPE_ASSERT_SAME(loc_t, id, dmat, id);
+TYPE_ASSERT_SAME(loc_t, locx, dmat, p);
+TYPE_ASSERT_SAME(loc_t, nloc, dmat, nx);
+TYPE_ASSERT_SAME(loc_t, two, dmat, ny);
+TYPE_ASSERT_SAME(loc_t, keywords, dmat, keywords);
+TYPE_ASSERT(offsetof(loc_t, locy)>=sizeof(dmat));
+//pts_t can be used as loc_t
+TYPE_ASSERT_SAME(pts_t, origx, loc_t, locx);
+TYPE_ASSERT_SAME(pts_t, nsa, loc_t, nloc);
+TYPE_ASSERT_SAME(pts_t, origy, loc_t, locy);
+TYPE_ASSERT_SAME(pts_t, stat, loc_t, stat);
+TYPE_ASSERT_SAME(pts_t, map, loc_t, map);
+TYPE_ASSERT_SAME(pts_t, dsax, loc_t, dx);
+TYPE_ASSERT_SAME(pts_t, dsay, loc_t, dy);
+TYPE_ASSERT_SAME(pts_t, dummy_ht, loc_t, ht);
+TYPE_ASSERT_SAME(pts_t, dummy_iac, loc_t, iac);
+TYPE_ASSERT_SAME(pts_t, dratio, loc_t, dratio);
+TYPE_ASSERT_SAME(pts_t, aoi, loc_t, aoi);
+TYPE_ASSERT_SAME(pts_t, npad, loc_t, npad);
+TYPE_ASSERT(offsetof(pts_t, nxsa)>=sizeof(loc_t));
+
+#define LOC(A)  ((A)?(A)->loc:(loc_t*)0)
 loc_t* loc_convert(dmat* A);
 cell* loc_convert_cell(cell* A);
 #define locwrite(out, A...) writebin(out, A)
