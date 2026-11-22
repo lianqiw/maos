@@ -44,8 +44,8 @@ var searchData=
   ['options_41',['options',['../da/dc3/page30_run.html#sect-run-options',1,'Command line options'],['../d3/d4c/page20_compile.html#compile-options',1,'Configure options'],['../dd/da9/page40_results.html#autotoc_md19',1,'Summary of save options']]],
   ['order_42',['order',['../d9/d19/pywfs_8h.html#a4c5562283523e060cbd64b4168075576',1,'pywfs_cfg_t::order'],['../d4/d38/parms_8h.html#ae10178a9b28ce9f3cd6c22d2c1323aa0',1,'powfs_cfg_t::order'],['../d4/d38/parms_8h.html#ad797af78c1614e5e46aa692d782dc522',1,'dm_cfg_t::order'],['../d4/d38/parms_8h.html#a7ce5a7e5353ced2fec3ac3c376cb4073',1,'moao_cfg_t::order']]],
   ['organization_43',['Organization',['../da/dc3/page30_run.html#sect-config-org',1,'']]],
-  ['origx_44',['origx',['../df/def/type_8h.html#ac5b5d67be71e2fbc9216e02b37ae94df',1,'pts_t.__unnamed0__.__unnamed0__.__unnamed0__.__unnamed0__']]],
-  ['origy_45',['origy',['../df/def/type_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d',1,'pts_t.__unnamed0__.__unnamed0__']]],
+  ['origx_44',['origx',['../d1/d83/loc_8h.html#ac5b5d67be71e2fbc9216e02b37ae94df',1,'pts_t.__unnamed0__.__unnamed0__.__unnamed0__.__unnamed0__']]],
+  ['origy_45',['origy',['../d1/d83/loc_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d',1,'pts_t.__unnamed0__.__unnamed0__']]],
   ['os_46',['os',['../dc/d59/cn2est_8h.html#a111bffff3aa695200480f268920e3932',1,'cn2est_t::os'],['../d4/d38/parms_8h.html#a0059e753de046dbae571f33227a989d1',1,'atmr_cfg_t::os'],['../d6/d94/maos_2types_8h.html#a300faac1aa46b7ffde1b98a5674d6911',1,'recon_t::os']]],
   ['other_47',['Other',['../dd/da9/page40_results.html#autotoc_md18',1,'']]],
   ['output_20folder_48',['Output folder',['../da/dc3/page30_run.html#sect-run-output',1,'']]],
@@ -56,6 +56,6 @@ var searchData=
   ['overx_53',['overx',['../d4/d38/parms_8h.html#a2f885c0eebcc84c3dffcfda28720e321',1,'atm_cfg_t']]],
   ['overy_54',['overy',['../d4/d38/parms_8h.html#ab1ffbc5086b5df46cc72f95e26af6f69',1,'atm_cfg_t']]],
   ['ovs_55',['ovs',['../dc/d59/cn2est_8h.html#a359e266f87ea2b677e39d8227359add8',1,'cn2est_t']]],
-  ['ox_56',['ox',['../d4/d38/parms_8h.html#a23689b9ee64be9c94f07bc6679665b7c',1,'llt_cfg_t::ox'],['../df/def/type_8h.html#a34eb928be06a75df224949c753beef8f',1,'map_t::ox'],['../df/def/type_8h.html#a96aa2b948f73d25358dfdfbeaa2faa31',1,'rmap_t::ox']]],
-  ['oy_57',['oy',['../d4/d38/parms_8h.html#acfe48ac926991f1b4d92111412d699ef',1,'llt_cfg_t::oy'],['../df/def/type_8h.html#a5ca3f6d7f89cf4f3c09086f1c01c4159',1,'map_t::oy'],['../df/def/type_8h.html#a39b2a96347c81b862aac48a998bfa4e5',1,'rmap_t::oy']]]
+  ['ox_56',['ox',['../dc/db7/map_8h.html#a34eb928be06a75df224949c753beef8f',1,'map_t::ox'],['../dc/db7/map_8h.html#a96aa2b948f73d25358dfdfbeaa2faa31',1,'rmap_t::ox'],['../d4/d38/parms_8h.html#a23689b9ee64be9c94f07bc6679665b7c',1,'llt_cfg_t::ox']]],
+  ['oy_57',['oy',['../dc/db7/map_8h.html#a5ca3f6d7f89cf4f3c09086f1c01c4159',1,'map_t::oy'],['../dc/db7/map_8h.html#a39b2a96347c81b862aac48a998bfa4e5',1,'rmap_t::oy'],['../d4/d38/parms_8h.html#acfe48ac926991f1b4d92111412d699ef',1,'llt_cfg_t::oy']]]
 ];

@@ -9,5 +9,5 @@ var searchData=
   ['verbose_6',['verbose',['../d4/d38/parms_8h.html#a3b1a8d3fa4dec50dc37d08c5f8261a2b',1,'cn2est_cfg_t']]],
   ['vp_7',['Vp',['../d3/dc7/muv_8h.html#a3a235ce911565ce890b5e1bd780906c2',1,'muv_t']]],
   ['vpb_8',['VpB',['../d3/dc7/muv_8h.html#af8ada30ee8a5271da7d4890150c4760e',1,'muv_t']]],
-  ['vy_9',['vy',['../df/def/type_8h.html#a1b941ccdd3db094fe026e49f9c4da998',1,'map_t']]]
+  ['vy_9',['vy',['../dc/db7/map_8h.html#a1b941ccdd3db094fe026e49f9c4da998',1,'map_t']]]
 ];

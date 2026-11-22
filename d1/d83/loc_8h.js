@@ -1,5 +1,66 @@
 var loc_8h =
 [
+    [ "locstatcol_t", "d1/d83/loc_8h.html#db/d5f/structlocstatcol__t", [
+      [ "xstart", "d1/d83/loc_8h.html#abdca30a8ba40d627cfaaac4fe1f30d62", null ],
+      [ "ystart", "d1/d83/loc_8h.html#a3bf4e5f36c19cbe051fc58f2bf162eff", null ],
+      [ "pos", "d1/d83/loc_8h.html#a7676822d04c6cb458674de1d134f744f", null ]
+    ] ],
+    [ "locstat_t", "d1/d83/loc_8h.html#db/d43/structlocstat__t", [
+      [ "cols", "d1/d83/loc_8h.html#aa938bf320ac6d8dc99350665c2e5949a", null ],
+      [ "dx", "d1/d83/loc_8h.html#af44213652f1faf2eda1b19e47614c6d2", null ],
+      [ "dy", "d1/d83/loc_8h.html#aeb40fac426ae3bc474f3edb78bef3844", null ],
+      [ "xmin", "d1/d83/loc_8h.html#a8c8c5cee19517d643f00a8535d6c61b2", null ],
+      [ "ymin", "d1/d83/loc_8h.html#a055eb815edb115e0225d517aab0d922e", null ],
+      [ "ncol", "d1/d83/loc_8h.html#a97e5f52c821e34ebf38586a6a019d652", null ],
+      [ "ny", "d1/d83/loc_8h.html#a149274579012b1df0813c6020df76c36", null ]
+    ] ],
+    [ "loc_t", "d1/d83/loc_8h.html#da/ddc/structloc__t", [
+      [ "locy", "d1/d83/loc_8h.html#a1a5d6b9152829ba7a7af0fa050ba460e", null ],
+      [ "stat", "d1/d83/loc_8h.html#aeefce377653b1be3d342783286600d47", null ],
+      [ "map", "d1/d83/loc_8h.html#ac56220a98267328ad973d6c842d07156", null ],
+      [ "dx", "d1/d83/loc_8h.html#a34c782841e745bb5bd8f4f24f73f5f42", null ],
+      [ "dy", "d1/d83/loc_8h.html#af9af538ff99023b4c999993bdffc791c", null ],
+      [ "ht", "d1/d83/loc_8h.html#a9de2c65a8077e7d4b6eca35e079866b4", null ],
+      [ "iac", "d1/d83/loc_8h.html#aca42afbecc1435f923dd21a55378afae", null ],
+      [ "dratio", "d1/d83/loc_8h.html#ab80f91d182878cd9a3d44ab7318e5ec0", null ],
+      [ "aoi", "d1/d83/loc_8h.html#aaf9b6e72a00cd854904c33648de65fa1", null ]
+    ] ],
+    [ "pts_t", "d1/d83/loc_8h.html#de/d88/structpts__t", [
+      [ "nxsa", "d1/d83/loc_8h.html#aad5d6519853adbb5af7779fcd6e74d6b", null ],
+      [ "nysa", "d1/d83/loc_8h.html#a4bbd498edc0dc8397bd16fbf4363b800", null ],
+      [ "dx", "d1/d83/loc_8h.html#a0de974d017f51d0cb3d30e6406bb0cf4", null ],
+      [ "dy", "d1/d83/loc_8h.html#a494f53b2987007bb4550f3c548ff1bf6", null ]
+    ] ],
+    [ "loc_t.__unnamed0__", "d1/d83/loc_8h.html#da/d22/unionloc__t_8____unnamed0____", null ],
+    [ "loc_t.__unnamed0__.__unnamed0__", "d1/d83/loc_8h.html#d0/d3e/structloc__t_8____unnamed0_____8____unnamed0____", [
+      [ "locx", "d1/d83/loc_8h.html#a08e1e9e92be5dac315d65cfa8562342d", null ],
+      [ "nloc", "d1/d83/loc_8h.html#a6eaa0afbec778db997a7fdcd4c3f3123", null ],
+      [ "two", "d1/d83/loc_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61", null ],
+      [ "keywords", "d1/d83/loc_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ]
+    ] ],
+    [ "pts_t.__unnamed0__", "d1/d83/loc_8h.html#d7/d66/unionpts__t_8____unnamed0____", null ],
+    [ "pts_t.__unnamed0__.__unnamed0__", "d1/d83/loc_8h.html#dc/dee/structpts__t_8____unnamed0_____8____unnamed0____", [
+      [ "origy", "d1/d83/loc_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d", null ],
+      [ "stat", "d1/d83/loc_8h.html#a77ddcb5f19832f4145345889013ab3a4", null ],
+      [ "map", "d1/d83/loc_8h.html#a1d78dc8ed51214e518b5114fe24490ae", null ],
+      [ "dsay", "d1/d83/loc_8h.html#a19dfd1eb18f0cd511ae2e820376eb615", null ],
+      [ "dummy_ht", "d1/d83/loc_8h.html#acded0299863f46bf80bd357bb35a805f", null ],
+      [ "dummy_iac", "d1/d83/loc_8h.html#a2629b85c755ad85c4278fd09d0ae1e4c", null ],
+      [ "dratio", "d1/d83/loc_8h.html#a425a0bdb6d3e0b942452d2a89ff7d3f3", null ],
+      [ "aoi", "d1/d83/loc_8h.html#ae3a76d600fec8fcd0095a48ca3c621e9", null ],
+      [ "npad", "d1/d83/loc_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ]
+    ] ],
+    [ "pts_t.__unnamed0__.__unnamed0__.__unnamed0__", "d1/d83/loc_8h.html#d6/d4d/unionpts__t_8____unnamed0_____8____unnamed0_____8____unnamed0____", null ],
+    [ "pts_t.__unnamed0__.__unnamed0__.__unnamed0__.__unnamed0__", "d1/d83/loc_8h.html#d6/d98/structpts__t_8____unnamed0_____8____unnamed0_____8____unnamed0_____8____unnamed0____", [
+      [ "origx", "d1/d83/loc_8h.html#ac5b5d67be71e2fbc9216e02b37ae94df", null ],
+      [ "nsa", "d1/d83/loc_8h.html#a8d2a959e6b154ec9215882b82f28cfcb", null ],
+      [ "two", "d1/d83/loc_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61", null ],
+      [ "keywords", "d1/d83/loc_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ]
+    ] ],
+    [ "pts_t.__unnamed0__.__unnamed0__.__unnamed1__", "d1/d83/loc_8h.html#dd/de9/unionpts__t_8____unnamed0_____8____unnamed0_____8____unnamed1____", [
+      [ "dsa", "d1/d83/loc_8h.html#a5f039b4ef0058a1d652f13d612375a5b", null ],
+      [ "dsax", "d1/d83/loc_8h.html#ac00f31f2b88090d3b65908bc03a79765", null ]
+    ] ],
     [ "loc_convert", "d1/d83/loc_8h.html#a6c79a45cbac1b110b8771a9639aded76", null ],
     [ "loc_convert_cell", "d1/d83/loc_8h.html#acbfab2375d4998abdce5a95b1eb052cd", null ],
     [ "loc_create_embed", "d1/d83/loc_8h.html#a5b4f95f472699e1de2316048f1e46a1c", null ],

@@ -1,5 +1,55 @@
 var map_8h =
 [
+    [ "map_t", "dc/db7/map_8h.html#d6/da3/structmap__t", [
+      [ "ox", "dc/db7/map_8h.html#a34eb928be06a75df224949c753beef8f", null ],
+      [ "oy", "dc/db7/map_8h.html#a5ca3f6d7f89cf4f3c09086f1c01c4159", null ],
+      [ "dx", "dc/db7/map_8h.html#ae181f26dba81f910257529c82596f699", null ],
+      [ "dy", "dc/db7/map_8h.html#a67eb3911c023e67c247677e03642927e", null ],
+      [ "ht", "dc/db7/map_8h.html#a6b60af0fddab1729b31a9e99c4dc2941", null ],
+      [ "vy", "dc/db7/map_8h.html#a1b941ccdd3db094fe026e49f9c4da998", null ],
+      [ "iac", "dc/db7/map_8h.html#a6cd3d45c39f5e6bba94a8a535172d9c1", null ],
+      [ "dratio", "dc/db7/map_8h.html#ad9e9c9b8a27a834b7500ba1aba25a991", null ],
+      [ "aoi", "dc/db7/map_8h.html#a51c4cb5688625b714cab95ddc06d1dce", null ]
+    ] ],
+    [ "rmap_t", "dc/db7/map_8h.html#d3/d27/structrmap__t", [
+      [ "ox", "dc/db7/map_8h.html#a96aa2b948f73d25358dfdfbeaa2faa31", null ],
+      [ "oy", "dc/db7/map_8h.html#a39b2a96347c81b862aac48a998bfa4e5", null ],
+      [ "dx", "dc/db7/map_8h.html#a990426f785bfea3367aa8bfe6ec861b4", null ],
+      [ "dy", "dc/db7/map_8h.html#a474494d88a42277ef93802de47a0be62", null ],
+      [ "txdeg", "dc/db7/map_8h.html#a4f35e852650c8627a3eebbfadf00de0a", null ],
+      [ "tydeg", "dc/db7/map_8h.html#a0ba307d3338a9bc91061214106f9f90c", null ],
+      [ "ftel", "dc/db7/map_8h.html#a41840a56fbfdd9eb0a25b4213f466c57", null ],
+      [ "fexit", "dc/db7/map_8h.html#ae57dd7d071af3a560a2914e7b52db00a", null ],
+      [ "fsurf", "dc/db7/map_8h.html#a8a82dce54716bb5f11ece361ebc64b8c", null ]
+    ] ],
+    [ "map_t.__unnamed0__", "dc/db7/map_8h.html#dc/de7/unionmap__t_8____unnamed0____", null ],
+    [ "map_t.__unnamed0__.__unnamed0__", "dc/db7/map_8h.html#d7/dd9/structmap__t_8____unnamed0_____8____unnamed0____", [
+      [ "id", "dc/db7/map_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
+      [ "p", "dc/db7/map_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
+      [ "nx", "dc/db7/map_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
+      [ "ny", "dc/db7/map_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
+      [ "keywords", "dc/db7/map_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
+      [ "fp", "dc/db7/map_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
+      [ "fft", "dc/db7/map_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
+      [ "mem", "dc/db7/map_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
+      [ "async", "dc/db7/map_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ],
+      [ "deinit", "dc/db7/map_8h.html#a1ab323f1c7a6d533fd118c01c53b21e6", null ],
+      [ "make_keywords", "dc/db7/map_8h.html#a4f9c74aa112ce6f3a6274b1ae075642b", null ]
+    ] ],
+    [ "rmap_t.__unnamed0__", "dc/db7/map_8h.html#d5/d8a/unionrmap__t_8____unnamed0____", null ],
+    [ "rmap_t.__unnamed0__.__unnamed0__", "dc/db7/map_8h.html#d2/dfa/structrmap__t_8____unnamed0_____8____unnamed0____", [
+      [ "id", "dc/db7/map_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
+      [ "p", "dc/db7/map_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
+      [ "nx", "dc/db7/map_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
+      [ "ny", "dc/db7/map_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
+      [ "keywords", "dc/db7/map_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
+      [ "fp", "dc/db7/map_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
+      [ "fft", "dc/db7/map_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
+      [ "mem", "dc/db7/map_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
+      [ "async", "dc/db7/map_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ],
+      [ "deinit", "dc/db7/map_8h.html#a1ab323f1c7a6d533fd118c01c53b21e6", null ],
+      [ "make_keywords", "dc/db7/map_8h.html#a4f9c74aa112ce6f3a6274b1ae075642b", null ]
+    ] ],
     [ "map_convert", "dc/db7/map_8h.html#a063262a5f31503e32c784abbc7a0855b", null ],
     [ "map_convert_cell", "dc/db7/map_8h.html#ac91d5d404f781023c525b0685f972ca1", null ],
     [ "rmap_convert", "dc/db7/map_8h.html#ac44af32fcc3487df0d7dc4f861eb64f7", null ],

@@ -50,7 +50,7 @@ var searchData=
   ['srsa_47',['srsa',['../d6/d94/maos_2types_8h.html#ac30143607f18cf7c2993d5a019a21313',1,'powfs_t']]],
   ['srsamax_48',['srsamax',['../d6/d94/maos_2types_8h.html#a1578360552fcb598c2d42d3131131d81',1,'powfs_t']]],
   ['start_49',['start',['../d4/d38/parms_8h.html#aa3b6c743a591b326d06c5d2e42d428f0',1,'sim_cfg_t']]],
-  ['stat_50',['stat',['../df/def/type_8h.html#aeefce377653b1be3d342783286600d47',1,'loc_t::stat'],['../df/def/type_8h.html#a77ddcb5f19832f4145345889013ab3a4',1,'pts_t.__unnamed0__.__unnamed0__::stat']]],
+  ['stat_50',['stat',['../d1/d83/loc_8h.html#aeefce377653b1be3d342783286600d47',1,'loc_t::stat'],['../d1/d83/loc_8h.html#a77ddcb5f19832f4145345889013ab3a4',1,'pts_t.__unnamed0__.__unnamed0__::stat']]],
   ['stateptr_51',['stateptr',['../dc/d95/structmt__state.html#aee0052353c8cec5ac527484928f36745',1,'mt_state']]],
   ['statevec_52',['statevec',['../dc/d95/structmt__state.html#a11de820957450a4b49de2e90f046f596',1,'mt_state']]],
   ['status_53',['status',['../d6/d94/maos_2types_8h.html#a31c5bb23de574b69dcdb2fc8730a11e8',1,'sim_t']]],

@@ -30,7 +30,7 @@ var searchData=
   ['cogthres_27',['cogthres',['../d4/d38/parms_8h.html#a309dc28c7e1c90cb414d20bb5fdf9f67',1,'powfs_cfg_t']]],
   ['coldtrat_28',['coldtrat',['../d4/d38/parms_8h.html#a708807d801ef0c550506f132f56d3377',1,'llt_cfg_t']]],
   ['colprep_29',['colprep',['../d4/d38/parms_8h.html#a79c6097d933b503551755bdd229f3fba',1,'llt_cfg_t']]],
-  ['cols_30',['cols',['../df/def/type_8h.html#aa938bf320ac6d8dc99350665c2e5949a',1,'locstat_t']]],
+  ['cols_30',['cols',['../d1/d83/loc_8h.html#aa938bf320ac6d8dc99350665c2e5949a',1,'locstat_t']]],
   ['colsim_31',['colsim',['../d4/d38/parms_8h.html#acfb6cf7900104ce8becafa3299b92d6f',1,'llt_cfg_t']]],
   ['commonfsm_32',['commonfsm',['../d4/d38/parms_8h.html#a3b4d29e93e775dcf3f2d5acfa7e5ffbc',1,'powfs_cfg_t']]],
   ['cone_33',['cone',['../d4/d38/parms_8h.html#a41c24c5a0d7256f1ff83af38c6a81d75',1,'tomo_cfg_t']]],

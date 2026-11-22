@@ -109,14 +109,14 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a0bc3654d66f25e423c0918176ad2e802" id="r_a0bc3654d66f25e423c0918176ad2e802"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d3/dcd/structlocfft__t">locfft_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0bc3654d66f25e423c0918176ad2e802">locfft_init</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *amp, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *wvl, const <a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *fftsize, real oversize, real fieldstop)</td></tr>
+<tr class="memitem:a0bc3654d66f25e423c0918176ad2e802" id="r_a0bc3654d66f25e423c0918176ad2e802"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d3/dcd/structlocfft__t">locfft_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0bc3654d66f25e423c0918176ad2e802">locfft_init</a> (<a class="el" href="../../d1/d83/loc_8h.html#da/ddc/structloc__t">loc_t</a> *loc, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *amp, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *wvl, const <a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *fftsize, real oversize, real fieldstop)</td></tr>
 <tr class="memitem:a98ad6dd510558a695621390d6d5f2a0f" id="r_a98ad6dd510558a695621390d6d5f2a0f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a98ad6dd510558a695621390d6d5f2a0f">locfft_free</a> (<a class="el" href="#d3/dcd/structlocfft__t">locfft_t</a> *locfft)</td></tr>
 <tr class="memitem:ae0b08b7e9e173d8c717d8edcffda2bd7" id="r_ae0b08b7e9e173d8c717d8edcffda2bd7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae0b08b7e9e173d8c717d8edcffda2bd7">locfft_psf</a> (<a class="el" href="../../df/def/type_8h.html#d8/d42/structccell">ccell</a> **psfs, const <a class="el" href="#d3/dcd/structlocfft__t">locfft_t</a> *locfft, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *opd, const <a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *psfsize, int sum2one)</td></tr>
 <tr class="memitem:ad6a8b056a1313211eb30662fe342937c" id="r_ad6a8b056a1313211eb30662fe342937c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad6a8b056a1313211eb30662fe342937c">locfft_fieldstop</a> (const <a class="el" href="#d3/dcd/structlocfft__t">locfft_t</a> *locfft, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *opd, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *wvlwts)</td></tr>
 <tr class="memitem:ac2e0f90fbeca9d5351cfb28aa169f7f0" id="r_ac2e0f90fbeca9d5351cfb28aa169f7f0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac2e0f90fbeca9d5351cfb28aa169f7f0">fresnel_prop</a> (<a class="el" href="../../df/def/type_8h.html#db/d16/structcmat">cmat</a> **out, real *dxout, const <a class="el" href="../../df/def/type_8h.html#db/d16/structcmat">cmat</a> *in, real dxin, real wvl, real z, real scale, int method)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Routines used to embed OPDs defined on <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> to square array with embeding factor and compute PSF using FFT. </p>
+<div class="textblock"><p>Routines used to embed OPDs defined on <a class="el" href="../../d1/d83/loc_8h.html#da/ddc/structloc__t">loc_t</a> to square array with embeding factor and compute PSF using FFT. </p>
 </div><hr/><h2 id="header-inline_5Fclasses" class="groupheader">Data Structure Documentation</h2>
 <a name="d3/dcd/structlocfft__t" id="d3/dcd/structlocfft__t"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#d3/dcd/structlocfft__t">&#9670;&#160;</a></span>locfft_t</h2>
@@ -136,7 +136,7 @@ Functions</h2></td></tr>
 <div class="center"><img src="../../db/dea/structlocfft__t__coll__graph.png" border="0" usemap="#alocfft__t_coll__map" loading="lazy" alt="Collaboration graph"/></div>
 <map name="alocfft__t_coll__map" id="alocfft__t_coll__map">
 <area shape="rect" title=" " alt="" coords="197,623,253,695"/>
-<area shape="rect" href="../../df/def/type_8h.html#da/ddc/structloc__t" title=" " alt="" coords="115,381,156,453"/>
+<area shape="rect" href="../../d1/d83/loc_8h.html#da/ddc/structloc__t" title=" " alt="" coords="115,381,156,453"/>
 <area shape="poly" title=" " alt="" coords="129,451,127,500,129,525,135,549,157,589,187,624,182,624,153,592,130,551,123,526,121,500,127,456"/>
 <area shape="rect" title=" " alt="" coords="96,5,151,78"/>
 <area shape="poly" title=" " alt="" coords="100,80,66,149,46,193,29,242,16,294,9,348,11,401,23,452,36,482,53,509,95,559,142,600,186,632,180,633,139,604,92,563,49,513,31,484,18,454,5,402,4,347,10,293,24,241,41,191,61,146,102,75"/>
@@ -157,7 +157,7 @@ Functions</h2></td></tr>
 <table class="fieldtable">
 <tr><th colspan="3">Data Fields</th></tr>
 <tr><td class="fieldtype">
-<a id="af7a3e82c83c7f6e2f29e75d2c0e3e32e" name="af7a3e82c83c7f6e2f29e75d2c0e3e32e"></a><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *</td>
+<a id="af7a3e82c83c7f6e2f29e75d2c0e3e32e" name="af7a3e82c83c7f6e2f29e75d2c0e3e32e"></a><a class="el" href="../../d1/d83/loc_8h.html#da/ddc/structloc__t">loc_t</a> *</td>
 <td class="fieldname">
 loc</td>
 <td class="fielddoc">
@@ -229,7 +229,7 @@ fieldstop</td>
         <tr>
           <td class="memname"><a class="el" href="#d3/dcd/structlocfft__t">locfft_t</a> * locfft_init </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *</td>          <td class="paramname"><span class="paramname"><em>loc</em></span>, </td>
+          <td class="paramtype"><a class="el" href="../../d1/d83/loc_8h.html#da/ddc/structloc__t">loc_t</a> *</td>          <td class="paramname"><span class="paramname"><em>loc</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

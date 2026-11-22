@@ -44,9 +44,9 @@ var searchData=
   ['refp_3c_20t_2c_20dev_20_3e_41',['RefP&lt; T, Dev &gt;',['../dd/db6/class_ref_p.html',1,'']]],
   ['refp_3c_20t_2c_20gpu_20_3e_42',['RefP&lt; T, Gpu &gt;',['../dd/db6/class_ref_p.html',1,'']]],
   ['refp_3c_20t_2c_20pinned_20_3e_43',['RefP&lt; T, Pinned &gt;',['../dd/db6/class_ref_p.html',1,'']]],
-  ['rmap_5ft_44',['rmap_t',['../df/def/type_8h.html#d3/d27/structrmap__t',1,'']]],
-  ['rmap_5ft_2e_5f_5funnamed0_5f_5f_45',['rmap_t.__unnamed0__',['../df/def/type_8h.html#d5/d8a/unionrmap__t_8____unnamed0____',1,'']]],
-  ['rmap_5ft_2e_5f_5funnamed0_5f_5f_2e_5f_5funnamed0_5f_5f_46',['rmap_t.__unnamed0__.__unnamed0__',['../df/def/type_8h.html#d2/dfa/structrmap__t_8____unnamed0_____8____unnamed0____',1,'']]],
+  ['rmap_5ft_44',['rmap_t',['../dc/db7/map_8h.html#d3/d27/structrmap__t',1,'']]],
+  ['rmap_5ft_2e_5f_5funnamed0_5f_5f_45',['rmap_t.__unnamed0__',['../dc/db7/map_8h.html#d5/d8a/unionrmap__t_8____unnamed0____',1,'']]],
+  ['rmap_5ft_2e_5f_5funnamed0_5f_5f_2e_5f_5funnamed0_5f_5f_46',['rmap_t.__unnamed0__.__unnamed0__',['../dc/db7/map_8h.html#d2/dfa/structrmap__t_8____unnamed0_____8____unnamed0____',1,'']]],
   ['rmapccell_47',['rmapccell',['../df/def/type_8h.html#d3/d5f/structrmapccell',1,'']]],
   ['rmapcell_48',['rmapcell',['../df/def/type_8h.html#de/db0/structrmapcell',1,'']]]
 ];

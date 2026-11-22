@@ -436,7 +436,7 @@ var searchData=
   ['ssvd_5fpow_433',['ssvd_pow',['../de/de7/smath_8h.html#a0ca2676a6933557a90aff84863adb672',1,'stmp.c']]],
   ['ssvd_5fpow2_434',['ssvd_pow2',['../de/de7/smath_8h.html#a5c1301e373f60c1868f01edc1d745e40',1,'stmp.c']]],
   ['start_435',['start',['../d3/d4c/page20_compile.html#compile-quick',1,'Quick start'],['../d4/d38/parms_8h.html#aa3b6c743a591b326d06c5d2e42d428f0',1,'sim_cfg_t::start']]],
-  ['stat_436',['stat',['../df/def/type_8h.html#aeefce377653b1be3d342783286600d47',1,'loc_t::stat'],['../df/def/type_8h.html#a77ddcb5f19832f4145345889013ab3a4',1,'pts_t.__unnamed0__.__unnamed0__::stat']]],
+  ['stat_436',['stat',['../d1/d83/loc_8h.html#aeefce377653b1be3d342783286600d47',1,'loc_t::stat'],['../d1/d83/loc_8h.html#a77ddcb5f19832f4145345889013ab3a4',1,'pts_t.__unnamed0__.__unnamed0__::stat']]],
   ['stateptr_437',['stateptr',['../dc/d95/structmt__state.html#aee0052353c8cec5ac527484928f36745',1,'mt_state']]],
   ['statevec_438',['statevec',['../dc/d95/structmt__state.html#a11de820957450a4b49de2e90f046f596',1,'mt_state']]],
   ['status_439',['Unit Test Status',['../d9/d6e/page96_unittest.html',1,'page90_devel']]],
