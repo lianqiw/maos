@@ -7,6 +7,8 @@ code.
   format, and coding guidelines.
 - \subpage page93_maos -- library layering, the simulation flow, key data
   structures, threading, and how to add a parameter.
+- \subpage page94_scheduler -- how maos, monitor, drawdaemon, and the browser
+  talk to the scheduler.
 - \subpage page95_profiling -- debugging, memory checking, code coverage, and
   profiling.
 - \subpage page96_unittest -- results of the unit tests and code coverage.

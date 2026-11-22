@@ -46,6 +46,7 @@ version.h
 test/*
 !test/*.[chm]
 !test/unittest_*.sh
+!test/scheduler/
 bin/*
 build
 !Makefile.am

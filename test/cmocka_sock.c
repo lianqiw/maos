@@ -141,6 +141,17 @@ static void sock_stio_str(void **state){
 	//negative count is rejected
 	assert_int_equal(stwriteint(sv[0], -3), 0);
 	assert_int_equal(streadstrarr(sv[1], &arr2, &narr), -1);
+	//too large length is rejected
+	assert_int_equal(stwriteint(sv[0], 1<<30), 0);
+	str=(char *)"x";
+	assert_int_equal(streadstr(sv[1], &str), -1);
+	assert_null(str);
+	//string without NUL is terminated
+	assert_int_equal(stwriteint(sv[0], 3), 0);
+	assert_int_equal(stwrite(sv[0], "abc", 3), 0);
+	assert_int_equal(streadstr(sv[1], &str), 0);
+	assert_string_equal(str, "abc");
+	free(str);
 	//truncated string: length 10 but only 3 bytes before the connection is closed.
 	assert_int_equal(stwriteint(sv[0], 10), 0);
 	assert_int_equal(stwrite(sv[0], "abc", 3), 0);
@@ -184,6 +195,12 @@ static void sock_fd_pass(void **state){
 	assert_int_equal(stwritefd(fd[0], 0), -1);
 	assert_int_equal(streadfd(fd[0], &fd2), -1);
 	close(fd[0]);
+	//data without a descriptor, or a closed peer, is an error
+	char byte=1;
+	assert_int_equal(stwrite(sv[0], &byte, 1), 0);
+	assert_int_equal(streadfd(sv[1], &fd2), -1);
+	shutdown(sv[0], SHUT_WR);
+	assert_int_equal(streadfd(sv[1], &fd2), -1);
 	close(sv[0]);
 	close(sv[1]);
 	DISARM_ALARM;

@@ -9,6 +9,8 @@ Usage:
 """
 import os
 import socket
+import hashlib
+import base64
 import readbin
 
 sock=None #saves the socket
@@ -18,6 +20,7 @@ port=None
 pid=0
 
 CMD_MAOSCLI=13 #scheduler command to link a client to maos (sys/scheduler_client.h)
+CMD_AUTH=19    #scheduler command to authenticate a TCP connection
 MAOS_VAR=20    #maos command to get or put a variable
 MAOS_PAUSE=21  #maos command to pause or resume
 
@@ -39,6 +42,28 @@ def _recv_int(s):
             raise ConnectionError('connection closed')
         data+=chunk
     return int.from_bytes(data, byteorder='little', signed=True)
+
+def _recv_str(s):
+    '''Receive a string written by stwritestr().'''
+    n=_recv_int(s)
+    data=b''
+    while len(data)<n:
+        chunk=s.recv(n-len(data))
+        if not chunk:
+            raise ConnectionError('connection closed')
+        data+=chunk
+    return data.rstrip(b'\0')
+
+def _auth(s):
+    '''Authenticate with the scheduler as scheduler_auth() does, using the password in ~/.aos/htpasswd.'''
+    with open(os.path.expanduser('~/.aos/htpasswd'), 'rb') as f:
+        passwd=f.readline().strip()
+    s.sendall(_pack_int(CMD_AUTH)+_pack_int(0))
+    nonce=_recv_str(s)
+    key=base64.b64encode(hashlib.sha1(nonce+passwd).digest()).decode()
+    s.sendall(_pack_str(key))
+    if _recv_int(s)!=0:
+        raise ConnectionError('authentication failed: ~/.aos/htpasswd must be the same as on the scheduler host')
 
 def _hashlittle(key, initval=0):
     '''Port of hashlittle() in sys/hashlittle.c for byte strings.'''
@@ -170,6 +195,7 @@ def connect(host_=None, port_=None, pid_=None):
     try:
         sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((host, port))
+        _auth(sock)
         sock.sendall(_pack_int(CMD_MAOSCLI)+_pack_int(pid))
         ans=_recv_int(sock)
         if ans==-1:

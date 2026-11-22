@@ -392,6 +392,13 @@ data in real time. `maos` prints its address at startup, for example
 - The page is protected with HTTP basic authentication. The user name is
   your login name and the password is the first line of `~/.aos/htpasswd`,
   which is created with a random password on the first connection.
+- The same password authenticates every TCP connection to the scheduler:
+  `monitor` and `drawdaemon` connecting to a host, `maos` launching jobs on
+  another host, and `scripts/maos_client.py`. The password is not sent over
+  the network; the client answers a random challenge with it. When the
+  home folder is not shared between hosts, copy `~/.aos/htpasswd` from the
+  host that runs the scheduler (keep it readable only by you). Connections
+  within the same host through the unix socket are not authenticated.
 - When OpenSSL was found at configure time and a certificate and key exist in
   `~/.aos/HOSTNAME.crt` and `~/.aos/HOSTNAME.key` (or `~/.aos/Server.crt` and
   `~/.aos/Server.key`), the same port also accepts HTTPS.
@@ -439,8 +446,10 @@ To monitor jobs on several machines, create the following files in the
   allows it.
 
 After changing these files, kill the running `scheduler`; `maos` starts a new
-one when it runs. The GTK monitor connection itself is not authenticated, so
-protect the port (e.g., with a firewall) on shared networks.
+one when it runs. The connections are authenticated with `~/.aos/htpasswd`
+(see \ref compile-browser) but not encrypted, so on untrusted networks protect
+the port with a firewall or use an SSH tunnel. The protocol is described in
+\ref page94_scheduler.
 
 <img src="monitor-gtk3.jpg" alt="Monitor" width="60%">
 

@@ -118,17 +118,21 @@ int stwritestr(int sfd, const char* str){
 	}
 }
 /**
-   Read a string written by stwritestr().
+   Read a string written by stwritestr(). The string is always NUL terminated.
 
    @param[in] sfd Socket or file descriptor.
    @param[out] str Newly allocated string; the caller frees it. Set to NULL for an empty string or on failure.
-   @return 0 on success, nonzero on failure.
+   @return 0 on success, nonzero on failure, including length above 1 MiB.
 */
 int streadstr(int sfd, char** str){
 	int len;
 	int ans=streadint(sfd, &len);
+	if(!ans&&len>(1<<20)){//protect against corrupted or malicious length
+		warning("string length %d is too large\n", len);
+		ans=-1;
+	}
 	if(!ans&&len>0){
-		*str=mycalloc(len, char);
+		*str=mycalloc(len+1, char);//+1 in case the sender did not include NUL
 		ans=stread(sfd, *str, (size_t)len);
 		if(ans){
 			free(*str);
@@ -224,13 +228,20 @@ int streadfd(int sfd, int* fd){
 	char cms[CMSG_SPACE(sizeof(int))];
 	msg.msg_control=cms;
 	msg.msg_controllen=CMSG_LEN(sizeof(int));
-	struct cmsghdr* cmsg=CMSG_FIRSTHDR(&msg);
-	if(recvmsg(sfd, &msg, 0)<0){
+	if(recvmsg(sfd, &msg, 0)<=0){
 		warning("recvmsg failed to receive fd over %d\n", sfd);
 		ans=-1;
 	} else{
-		memmove(fd, CMSG_DATA(cmsg), sizeof(int));
-		ans=0;
+		//cmsg is NULL if the peer did not send a descriptor (e.g., over TCP).
+		struct cmsghdr* cmsg=CMSG_FIRSTHDR(&msg);
+		if(!cmsg || cmsg->cmsg_level!=SOL_SOCKET || cmsg->cmsg_type!=SCM_RIGHTS
+			|| cmsg->cmsg_len<CMSG_LEN(sizeof(int))){
+			warning("no file descriptor is received over %d\n", sfd);
+			ans=-1;
+		}else{
+			memmove(fd, CMSG_DATA(cmsg), sizeof(int));
+			ans=0;
+		}
 	}
 	return ans;
 }

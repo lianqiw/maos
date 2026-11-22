@@ -3,13 +3,13 @@ AM_CFLAGS=-I $(top_srcdir)
 ICONS=icon-avg.png icon-cancel.png icon-clear.png icon-connect.png icon-draw-small.png icon-draw.png icon-error.png \
 icon-finished.png icon-log.png icon-monitor.png icon-play.png icon-save.png icon-skip.png icon-waiting.png favicon.ico
 
-noinst_HEADERS=monitor.h drawdaemon.h scheduler.h mygtk.h monitor.html gtk3-css.h
+noinst_HEADERS=monitor.h drawdaemon.h scheduler.h scheduler_job.h mygtk.h monitor.html gtk3-css.h
 EXTRA_DIST=resources.xml monitor.html monitor.js monitor.css monitor_utils.js monitor_draw_utils.js monitor_draw.js $(ICONS)
 PROGS=
 
 if USE_SCHEDULER
 PROGS+=../bin/scheduler
-___bin_scheduler_SOURCES=scheduler.c scheduler_http.c scheduler_proxy.c
+___bin_scheduler_SOURCES=scheduler.c scheduler_job.c scheduler_http.c scheduler_proxy.c
 ___bin_scheduler_LDADD=../sys/libaosys.la $(OPENSSL_LIBS) $(ZSTD_LIBS) $(EXE_LIBS)
 ___bin_scheduler_LDFLAGS=$(OPENSSL_LDFLAGS) $(AM_LDFLAGS)
 ___bin_scheduler_CFLAGS=$(OPENSSL_INCLUDES) $(ZSTD_CFLAGS)

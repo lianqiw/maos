@@ -72,39 +72,57 @@ static void ws_proxy_add(ws_proxy_t ws){
 	//info_time("ws_proxy_add: fd=%d for %p\n", sock_tcp, userdata);
 }
 /**
-   Remove an existing proxy link, removing its socket from listen_port and
-   closing the socket passed to maos.
+   Remove the proxy links of a client, removing their sockets from listen_port
+   and closing the sockets passed to maos.
 
-   @param[in] userdata Parameter to identify the proxy.
+   @param[in] userdata Parameter to identify the client.
    @param[in] toclose Close the socket if set.
+   @param[in] keep_monitor Keep the link of a direct monitor (whose socket is the client itself).
 */
-void ws_proxy_remove(void *userdata, int toclose){
+static void ws_proxy_remove_do(void *userdata, int toclose, int keep_monitor){
+	int found=0;
 	for(int iws=0; iws<nws_proxy; iws++){
-		if(ws_proxy[iws].userdata==userdata){
+		if(ws_proxy[iws].userdata==userdata && !(keep_monitor && ws_proxy[iws].ismonitor)){
+			found=1;
 			if(ws_proxy[iws].ismonitor){
 				monitor_remove((int)(long)(ws_proxy[iws].userdata));
 			}
-			listen_port_del(ws_proxy[iws].fd, toclose, "ws_proxy_remove");
+			if(ws_proxy[iws].fd>=0){//-1 if the link is already closed by ws_proxy_read
+				listen_port_del(ws_proxy[iws].fd, toclose, "ws_proxy_remove");
+			}
 			//info_time("ws_proxy_remove: fd=%d for %p\n", ws_proxy[iws].fd, userdata);
 			if(ws_proxy[iws].fd_remote>0)close(ws_proxy[iws].fd_remote);//notify maos that the proxy is closed
 			
 			ws_proxy[iws].fd_remote=-1;
 			ws_proxy[iws].fd=-1;
+			ws_proxy[iws].ismonitor=0;
 			ws_proxy[iws].userdata=NULL;
-			return;
 		}
 	}
-	dbg_time("%p not found.\n", userdata);//ok, may not be registered yet.
+	if(!found){
+		dbg_time("%p not found.\n", userdata);//ok, may not be registered yet.
+	}
 }
 /**
-   Obtain the server socket number for the proxy link.
+   Remove all proxy links of a client, removing their sockets from listen_port
+   and closing the sockets passed to maos.
 
-   @param[in] userdata Parameter to identify the proxy.
+   @param[in] userdata Parameter to identify the client.
+   @param[in] toclose Close the socket if set.
+*/
+void ws_proxy_remove(void *userdata, int toclose){
+	ws_proxy_remove_do(userdata, toclose, 0);
+}
+/**
+   Obtain the server socket number for the proxy link of a client. The link of
+   a direct monitor is skipped as its socket is the client itself.
+
+   @param[in] userdata Parameter to identify the client.
    @return fd for the socket, or -1 if not found.
 */
 static int ws_proxy_get_fd(void *userdata){
 	for(int iws=0; iws<nws_proxy; iws++){
-		if(ws_proxy[iws].userdata==userdata){
+		if(ws_proxy[iws].userdata==userdata && !ws_proxy[iws].ismonitor && ws_proxy[iws].fd>=0){
 			return ws_proxy[iws].fd;
 		}
 	}
@@ -118,14 +136,7 @@ static int ws_proxy_get_fd(void *userdata){
    @return -1 to indicate error (the link is closed), 0 otherwise.
 */
 static int ws_proxy_read(struct pollfd *pfd, int flag){
-	if(!pfd||pfd->fd==-1||(pfd->revents&POLLIN)==0) return 0;
-	if(pfd->revents&POLLHUP){
-		warning_time("POLLHUP is received. fd=%d\n", pfd->fd);
-		return -1;
-	}
-	if(flag==-1){//ask client to shutdown
-		stwriteint(pfd->fd, -1);
-	}
+	if(!pfd||pfd->fd==-1) return 0;
 	int iws;
 	for(iws=0; iws<nws_proxy; iws++){
 		if(ws_proxy[iws].fd==pfd->fd){
@@ -136,42 +147,56 @@ static int ws_proxy_read(struct pollfd *pfd, int flag){
 		warning("unable to find ws_proxy entry.\n");
 		return -1;
 	}
-
 	int sock=ws_proxy[iws].fd;
-
-	int cmd[3]={0};
-	int nlen2=(int)recv(sock, cmd, sizeof(cmd), MSG_PEEK);//peek at the command. do not consume it as the proxy needs it
-	if(nlen2<(int)sizeof(int)){
-		warning_time("failed to peek; nlen2=%d, revents=%d\n", nlen2, pfd->revents);
-		return -1;//break the link
-	}
-	if(cmd[0]==DRAW_HEARTBEAT){
-		if(recv(sock, cmd, sizeof(int), MSG_DONTWAIT)<(ssize_t)sizeof(int)){
-			warning_time("Unable to read 1 int, close connection.\n");
-			return -1;
+	int ans=0;
+	if(flag==-1){//ask client to shutdown
+		stwriteint(sock, -1);
+	}else if(!(pfd->revents&POLLIN)){//POLLERR, POLLNVAL, or POLLHUP without data. poll() would return immediately again.
+		warning_time("revents=%d is received. fd=%d\n", pfd->revents, sock);
+		ans=-1;
+	}else{
+		int cmd[3]={0};
+		int nlen2=(int)recv(sock, cmd, sizeof(cmd), MSG_PEEK);//peek at the command. do not consume it as the proxy needs it
+		if(nlen2>=(int)sizeof(int) && cmd[0]==DRAW_ENTRY && nlen2<(int)sizeof(cmd)){//wait for the full header
+			nlen2=(int)recv(sock, cmd, sizeof(cmd), MSG_PEEK|MSG_WAITALL);
 		}
-		return 0;//ignored
-	}
-	if(cmd[0]==DRAW_ENTRY){
-		int nlen=cmd[1];
-		int mode=cmd[2]==-1?0:1;
-		if(cmd[2]==0){//text data, the client does not need the header. read and drop the header
-			if(recv(sock, cmd, sizeof(cmd), MSG_DONTWAIT)<(ssize_t)sizeof(cmd)){
-				warning_time("Unable to read 3 int, close connection.\n");
-				return -1;
+		if(nlen2<(int)sizeof(int)){
+			warning_time("failed to peek; nlen2=%d, revents=%d\n", nlen2, pfd->revents);
+			ans=-1;//break the link
+		}else if(cmd[0]==DRAW_HEARTBEAT){//ignored
+			if(stread(sock, cmd, sizeof(int))){
+				warning_time("Unable to read 1 int, close connection.\n");
+				ans=-1;
 			}
-		} else{//binary data. the client wants the header as well.
-			nlen+=3*sizeof(int);
+		}else if(cmd[0]==DRAW_ENTRY && nlen2==(int)sizeof(cmd)){
+			//cmd[1] is the payload length. cmd[2] is -1 for text from the scheduler, or the draw command for binary data.
+			int nlen=cmd[1];
+			int mode=cmd[2]==-1?0:1;
+			if(nlen<0 || nlen>INT_MAX-(int)sizeof(cmd)){
+				warning_time("invalid length %d, close connection.\n", nlen);
+				ans=-1;
+			}else if(mode==0){//text data, the client does not need the header. read and drop the header
+				if(stread(sock, cmd, sizeof(cmd))){
+					warning_time("Unable to read 3 int, close connection.\n");
+					ans=-1;
+				}
+			} else{//binary data. the client wants the header as well.
+				nlen+=(int)sizeof(cmd);
+			}
+			if(!ans && ws_proxy[iws].forward(sock, nlen, mode, ws_proxy[iws].userdata)){
+				ans=-1;
+			}
+		} else{
+			warning("cmd=%d is not prefixed by DRAW_ENTRY. close connection.\n", cmd[0]);
+			ans=-1;
 		}
-		if(ws_proxy[iws].forward(sock, nlen, mode, ws_proxy[iws].userdata)){
-			ws_proxy[iws].fd=-1;
-			return -1;
-		}
-	} else{
-		warning("cmd=%d is not prefixed by DRAW_ENTRY. close connection.\n", cmd[0]);
-		return -1;
 	}
-	return 0;
+	if(ans){//listen_port closes the socket.
+		if(ws_proxy[iws].fd_remote>0) close(ws_proxy[iws].fd_remote);
+		ws_proxy[iws].fd_remote=-1;
+		ws_proxy[iws].fd=-1;
+	}
+	return ans;
 }
 
 /**
@@ -239,10 +264,10 @@ void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
 			if(ws.forward){//forward mode
 				if(ws_proxy_get_fd(ws.userdata)>-1){
 					dbg_time("Reopen monitor for %p.\n", ws.userdata);
-					ws_proxy_remove(ws.userdata, 1);
+					ws_proxy_remove_do(ws.userdata, 1, 1);
 				}
 				int sock=scheduler_connect_self(1);
-				int cmd[2]={CMD_MONITOR, 1<<31|1<<2|1<<1};
+				int cmd[2]={CMD_MONITOR, INT_MIN|1<<2|1<<1};
 				if(sock==-1 || stwriteintarr(sock, cmd, 2)){
 					warning("Unable to talk to scheduler");
 					if(sock!=-1) close(sock);
@@ -253,7 +278,7 @@ void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
 					listen_port_add(sock, POLLIN, ws_proxy_read, "ws_proxy_read");
 				}
 			} else if(ws.send){
-				monitor_add((int)(long)(ws.userdata), 1<<31|1<<2|1<<1, ws.send, ws.userdata);
+				monitor_add((int)(long)(ws.userdata), INT_MIN|1<<2|1<<1, ws.send, ws.userdata);
 				ws.fd=(int)(long)(ws.userdata);
 				ws.ismonitor=1;
 				ws_proxy_add(ws);//keep reference so that we can disconnect it when browser disconnects
@@ -262,7 +287,7 @@ void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
 			int sock=ws_proxy_get_fd(ws.userdata);
 			if(sock>-1){
 				dbg_time("Reopen drawing for %p.\n", ws.userdata);
-				ws_proxy_remove(ws.userdata, 1);
+				ws_proxy_remove_do(ws.userdata, 1, 1);
 			}
 			
 			int sv2[2];//socket pair for communication.

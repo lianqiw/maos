@@ -63,7 +63,8 @@ lws_respond(struct pollfd *pollfd, int flag){
 		context=0;
 		return 0;
 	} else{
-		return lws_service_fd(context, pollfd);
+		struct pollfd pollfd2=*pollfd;//lws may call listen_port_add(), which may reallocate the array of pollfd.
+		return lws_service_fd(context, &pollfd2);
 	}
 }
 /**
@@ -117,6 +118,7 @@ struct protocol_t{//per client
 	dlist *ptail;//active proxy data list tail
 	int p_count;//messages pending.
 	int p_drop;
+	int fifo;//keep all messages in order (monitor) instead of sending the newest first (drawing).
 };
 
 /**
@@ -144,7 +146,8 @@ callback_maos(struct lws *wsi, enum lws_callback_reasons reason, void *user, voi
 	case LWS_CALLBACK_ESTABLISHED:
 		lwsl_notice("LWS_CALLBACK_ESTABLISHED for %s\n", pname);
 		pss->wsi=wsi;
-		if(!strcmp(pname, "maos-monitor-protocol")){
+		pss->fifo=!strcmp(pname, "maos-monitor-protocol");
+		if(pss->fifo){
 			char cmd[11]="1&MONITOR;";
 			ws_proxy_command(cmd, strlen(cmd), (ws_proxy_t){ .forward=lws_forward_tcp, .userdata=pss });
 		}
@@ -198,9 +201,14 @@ callback_maos(struct lws *wsi, enum lws_callback_reasons reason, void *user, voi
 							pss->p_drop=0;
 						}
 						msg_t *pdata=(msg_t*)remove_head(&pss->phead, &pss->ptail);
-						pdata->len=0;//set data as empty
-						pdata->offset=0;//reset offset
-						add_tail(&pss->phead, &pss->ptail, pdata->list);
+						if(pss->fifo){//empty slots are not used
+							free(pdata->p);
+							free(pdata);
+						}else{
+							pdata->len=0;//set data as empty
+							pdata->offset=0;//reset offset
+							add_tail(&pss->phead, &pss->ptail, pdata->list);
+						}
 						pss->p_count--;
 					} else{
 						msg->offset+=len;//wait for next run
@@ -250,6 +258,10 @@ static const struct lws_http_mount mount={
 */
 int start_lws(short port){
 	if(context) return 0;
+#ifndef LWS_WITH_EXTERNAL_POLL //defined in lws_config.h, which scheduler.c does not include.
+	warning_time("libwebsockets is not compiled with external_poll. disabled\n");
+	return -1;
+#endif
 	struct lws_context_creation_info info;
 	memset(&info, 0, sizeof info);
 	info.port=port;
@@ -281,8 +293,13 @@ lws_forward_tcp(int fd, int nlen, int mode, void *userdata){
 	struct protocol_t *pss=(struct protocol_t *)userdata;
 	struct lws *wsi=pss->wsi;
 
+	if(pss->fifo && pss->p_count>10000){//close the client, which reconnects and receives the full status.
+		warning_time("too many messages are pending for the client. close it.\n");
+		lws_set_timeout(wsi, PENDING_TIMEOUT_CLOSE_SEND, LWS_TO_KILL_ASYNC);
+		return -1;
+	}
 	msg_t *pdata=(msg_t*)pss->ptail;
-	if(pdata&&(!pdata->len||pss->p_count>100)){//empty slot or too much being buffered.
+	if(!pss->fifo&&pdata&&(!pdata->len||pss->p_count>100)){//empty slot or too much being buffered.
 		pdata=(msg_t*)remove_tail(&pss->phead, &pss->ptail);
 	} else{//allocate new data
 		pdata=mycalloc(1, msg_t);
@@ -305,12 +322,21 @@ lws_forward_tcp(int fd, int nlen, int mode, void *userdata){
 	int *p2=(int *)(pdata->p+LWS_PRE);
 	if(stread(fd, p2, nlen)){
 		warning_time("read tcp failed\n");
-		pdata->len=0;//return as empty slot to avoid leaking pdata
-		add_tail(&pss->phead, &pss->ptail, pdata->list);
+		if(pss->fifo){
+			free(pdata->p);
+			free(pdata);
+		}else{
+			pdata->len=0;//return as empty slot to avoid leaking pdata
+			add_tail(&pss->phead, &pss->ptail, pdata->list);
+		}
 		pss->p_count--;
 		return -1;
 	}
-
+	if(pss->fifo){//monitor: send in order
+		add_tail(&pss->phead, &pss->ptail, pdata->list);
+		lws_callback_on_writable(wsi);
+		return 0;
+	}
 	msg_t *msg=(msg_t*)pss->phead;
 	if(msg&&msg->offset!=0){//do not disturb a partially send frame
 		msg=(msg_t*)remove_head(&pss->phead, &pss->ptail);

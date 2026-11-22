@@ -85,6 +85,9 @@ typedef struct http_context_t{
 #endif	
 	char *auth;//basic auth
 	char *cookie;//session cookie
+	char *prev;//payload of a fragmented websocket message received so far
+	size_t nprev;//length of prev
+	int oprev;//opcode of the fragmented message
 	int(*recv)(struct http_context_t*ctx, char *buf, size_t nbuf);
 	int(*send)(struct http_context_t*ctx, const char *buf, size_t nbuf);
 }http_context_t;
@@ -162,6 +165,7 @@ static void http_context_remove(http_context_t *ctx){
 #endif
 	free(ctx->auth); ctx->auth=NULL;
 	free(ctx->cookie); ctx->cookie=NULL;
+	free(ctx->prev); ctx->prev=NULL; ctx->nprev=0; ctx->oprev=0;
 }
 #if HAVE_OPENSSL
 /**
@@ -195,7 +199,7 @@ static int https_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 			buf=buf+nsend;
 			nbuf-=nsend;
 		}
-	}while(nbuf && (nsend>0||SSL_get_error(ctx->ssl, (int)nsend)==SSL_ERROR_WANT_WRITE));
+	}while(nbuf && nsend>0);//the socket is blocking: SSL_ERROR_WANT_WRITE means the send timeout expired
 	if(nbuf){
 		warning_time("https_writer failed, nsend=%zd, nbuf=%zu.\n", nsend, nbuf);
 		http_context_remove(ctx);
@@ -236,7 +240,8 @@ static int http_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 			buf=buf+nsend;
 			nbuf-=nsend;
 		}
-	}while(nbuf && (nsend>0||errno==EAGAIN || errno==EWOULDBLOCK) );
+		//the socket is blocking: EAGAIN means the send timeout expired. Do not retry to avoid hanging.
+	}while(nbuf && (nsend>0||(nsend<0 && errno==EINTR)));
 	if(nbuf){
 		warning_time("http_writer failed, nsend=%zd, nbuf=%zu.\n", nsend, nbuf);
 		http_context_remove(ctx);
@@ -360,28 +365,9 @@ static http_context_t *http_context_create(int fd){
 	dbg_time("http_context created for %d\n", http_context[jc].fd);
 	//parse user password
 	char fn[PATH_MAX];
-	snprintf(fn, PATH_MAX, "%s/.aos/htpasswd", HOME);
 	FILE *fp=NULL;
-	char *line=NULL;
-	int nline;
-	if((fp=fopen(fn, "r"))){
-		line=read_line_trim(&nline, fp);
-		fclose(fp);
-	}else if((fp=fopen_private(fn))){
-		line=generate_session_cookie();
-		nline=line?(int)strlen(line):0;
-		if(nline>16){
-			line[16]=0;
-			nline=16;
-		}
-		if(line){
-			fprintf(fp, "%s\n", line);
-			info_time("Created web password in %s for user %s.\n", fn, USER);
-		}
-		fclose(fp);
-	}else{
-		nline=0;
-	}
+	char *line=scheduler_password(1);
+	int nline=line?(int)strlen(line):0;
 	if(nline>2){
 		char *user_pass=stradd(USER, ":", line, NULL);
 		nline=(int)strlen(user_pass);
@@ -448,10 +434,12 @@ static int ws_send(char *buf, int nlen, int mode, void *userdata){
 		header[1]=nlen;
 	}else if(nlen>UINT16_MAX){//8 byte length
 		header[1]=127;
-		*((uint64_t*)&header[2])=swap8bytes((long)nlen);
+		uint64_t nlen8=swap8bytes((long)nlen);
+		memcpy(&header[2], &nlen8, sizeof(nlen8));//header may not be aligned
 	}else{//2 byte length
 		header[1]=126;
-		*((uint16_t*)&header[2])=swap2bytes(nlen);
+		uint16_t nlen2=swap2bytes(nlen);
+		memcpy(&header[2], &nlen2, sizeof(nlen2));
 	}
 	int fd_dest=(int)(long)userdata;
 	http_context_t* ctx=http_context_get(fd_dest);
@@ -567,6 +555,10 @@ static int ws_forward(int fd, int nlen, int mode, void *userdata){
 	static char *buf=0;//persistent buffer
 	static int size=0;
 	int offset=http_padding;//max possible padding.
+	if(nlen<0 || nlen>INT_MAX-offset){
+		warning_time("invalid length %d\n", nlen);
+		return -1;
+	}
 	if(size<offset+nlen){
 		size=offset+nlen;
 		buf=myrealloc(buf, size, char);
@@ -606,7 +598,8 @@ static void ws_write_close(http_context_t* ctx){
 }
 static int ws_fail(int fd, const char *format, ...) CHECK_ARG(2);
 /**
-   Log a websocket failure and remove the proxy link of fd, closing it.
+   Log a websocket failure, remove the http context and the proxy link of fd,
+   and close it.
 
    @param[in] fd Socket descriptor of the websocket client.
    @param[in] format printf style format of the message.
@@ -615,12 +608,47 @@ static int ws_fail(int fd, const char *format, ...) CHECK_ARG(2);
 static int ws_fail(int fd, const char *format, ...) {
 	format2fn;
 	dbg_time("sock %d: %s\n", fd, fn);
+	http_context_t *ctx=http_context_get(fd);
+	if(ctx) http_context_remove(ctx);
 	ws_proxy_remove((void*)(long)fd, 1);
 	return -1;
 }
 /**
+   Read exactly n bytes.
+
+   @param[in] ctx The context.
+   @param[out] buf Buffer to receive data.
+   @param[in] n Number of bytes to read.
+   @return 0 on success, -1 on failure or if the connection is closed.
+*/
+static int http_read_all(http_context_t *ctx, char *buf, size_t n){
+	for(size_t nr=0; nr<n;){
+		int ans=ctx->recv(ctx, buf+nr, n-nr);
+		if(ans<=0) return -1;
+		nr+=(size_t)ans;
+	}
+	return 0;
+}
+/**
+   Check whether received data is buffered in the context (TLS), where poll()
+   does not see it.
+
+   @param[in] ctx The context.
+   @return 1 if data is pending, 0 otherwise.
+*/
+static int http_pending(http_context_t *ctx){
+#if HAVE_OPENSSL
+	if(ctx->ssl) return SSL_pending(ctx->ssl)>0;
+#endif
+	(void)ctx;
+	return 0;
+}
+/**maximum size of a websocket message from a client*/
+#define WS_MAX_MSG (1<<20)
+/**
    Receive websocket messages and call ws_proxy_command to handle it. Handles
-   fragmented messages, ping, and close frames.
+   fragmented messages, ping, and close frames. Each frame is read exactly, so
+   that frames that arrive together are all handled.
 
    @param[in] pfd Poll entry of the websocket client.
    @param[in] flag -1 asks the client to close.
@@ -630,107 +658,115 @@ static int ws_receive(struct pollfd *pfd, int flag){
 	const int fd=pfd->fd;
 	http_context_t* ctx=http_context_get(fd);
 	if(!ctx){
-		warning_time("http_context is not found for %d\n", fd);
-		return -1;
+		return ws_fail(fd, "http_context is not found");
 	}
 	if(flag==-1){//server ask browser client to close
 		ws_write_close(ctx);//send browser client close frame
 		shutdown(fd, SHUT_WR);//make sure we don't reply to the close message.
 		return ws_fail(fd, "listen_sock requests shutdown");
-	}	
-	static char *prev=NULL;//save previous message to handle continuation
-	static size_t nprev=0;//length of previous message
-	static int oprev=0;//opcode of previous message
-    char buf0[BUF_SIZE];
-	char *buf=buf0;
-	const int len = ctx->recv(ctx, buf, BUF_SIZE-1);
-	if (len<6){//server received msg must be at least 6 bytes
-		return ws_fail(fd, "len=%d", len);
 	}
-	const int FIN=((unsigned char)(buf[0])>>7);//must be unsigned char for this to be 1.
-	int opcode=(unsigned char)(buf[0]) & 0x0F;
-	int offset=6;//offset of payload from buf for small message (2 byte opcode+msg size, 4 byte mask)
-	size_t msg_len = buf[1] & 0x7F;
-	if(msg_len==127){
-		msg_len=swap8bytes(*((uint64_t*)&buf[2]));
-		offset+=8;//additional offset
-	}else if(msg_len==126){
-		msg_len=swap2bytes(*((uint16_t*)&buf[2]));
-		offset+=2;
-	}
-	if(msg_len+offset>BUF_SIZE-1){//buffer is too small. We read the remaining data in block mode.
-		//dbg_time("Buffer is too small\n");
-		buf=(char*)malloc(msg_len+offset+1);
-		memcpy(buf, buf0, len);
-	}
-	for(size_t nrecv=len; nrecv<msg_len+offset;){//read the remaining data
-		int nr=ctx->recv(ctx, buf+nrecv, msg_len+offset-nrecv);
-		if(nr<=0){
-			if(buf!=buf0) free(buf);
-			return ws_fail(fd, "recv");
+	do{
+		unsigned char head[8];
+		if(http_read_all(ctx, (char*)head, 2)){
+			return ws_fail(fd, "unable to read frame header");
 		}
-		nrecv+=nr;
-	}
-	buf[msg_len+offset]=0;//always terminate string
-	/*Unmask message from client. A client must mask all frames sent to the
-	server. A server must not mask any frames sent to the client*/
-	char mask[4];
-	memcpy(mask, &buf[offset-4], 4);
-	for (size_t i = 0; i < msg_len; i++){
-		buf[offset + i] ^= mask[i % 4];
-	}
-	//dbg_time("FIN=%d, opcode=%d, prev=%p, nprev=%ld, msg_len=%ld\n", FIN, opcode, prev, nprev, msg_len);
-	if(FIN==0 || (FIN==1 && opcode==0)){//there is segmentation
+		const int FIN=head[0]>>7;
+		int opcode=head[0]&0x0F;
+		if(!(head[1]&0x80)){//A client must mask all frames sent to the server.
+			return ws_fail(fd, "frame is not masked");
+		}
+		size_t msg_len=head[1]&0x7F;
+		if(msg_len>=126){//2 or 8 byte length in network byte order
+			const size_t nlen=msg_len==126?2:8;
+			if(http_read_all(ctx, (char*)head, nlen)){
+				return ws_fail(fd, "unable to read frame length");
+			}
+			msg_len=0;
+			for(size_t i=0; i<nlen; i++){
+				msg_len=(msg_len<<8)|head[i];
+			}
+		}
+		if(opcode>=0x8 && (msg_len>125 || !FIN)){
+			return ws_fail(fd, "invalid control frame");
+		}
+		if(msg_len>WS_MAX_MSG || ctx->nprev+msg_len>WS_MAX_MSG){
+			return ws_fail(fd, "message is too large: %zu", ctx->nprev+msg_len);
+		}
+		unsigned char mask[4];
+		if(http_read_all(ctx, (char*)mask, 4)){
+			return ws_fail(fd, "unable to read frame mask");
+		}
+		char *buf=mymalloc(msg_len+1, char);
+		if(http_read_all(ctx, buf, msg_len)){
+			free(buf);
+			return ws_fail(fd, "unable to read frame payload");
+		}
+		for(size_t i=0; i<msg_len; i++){
+			buf[i]^=mask[i%4];
+		}
+		buf[msg_len]=0;//always terminate string
+		//dbg_time("FIN=%d, opcode=%d, nprev=%zu, msg_len=%zu\n", FIN, opcode, ctx->nprev, msg_len);
+		if(opcode==0x8){//client requests close
+			free(buf);
+			ws_write_close(ctx);
+			return ws_fail(fd, "client requests close");
+		}else if(opcode==0x9){//client sent a ping. we reply with pong
+			char pong[2+125];
+			pong[0]=(char)0x8A;
+			pong[1]=(char)msg_len;
+			memcpy(pong+2, buf, msg_len);
+			free(buf);
+			if(ctx->send(ctx, pong, msg_len+2)){
+				return ws_fail(fd, "pong");
+			}
+			continue;
+		}else if(opcode==0xA){//pong
+			free(buf);
+			continue;
+		}else if(opcode>0x2){
+			free(buf);
+			return ws_fail(fd, "unknown opcode %d", opcode);
+		}
+		//segmentation
 		//first segment: FIN=0, opcode=1 or 2
 		//middle segment: FIN=0, opcode=0
 		//final segment: FIN=1, opcode=0
-		
-		if(opcode!=0){//first segment
-			oprev=opcode;//save opcode
-			if(prev || nprev){
-				warning("unexpected. free prev\n");
-				free(prev); prev=NULL; nprev=0;
+		if(opcode!=0){//a new message
+			if(ctx->prev){
+				warning_time("fragmented message is not finished. drop it.\n");
+				free(ctx->prev); ctx->prev=NULL; ctx->nprev=0;
 			}
-		}
-		prev=myrealloc(prev, (nprev+msg_len+1), char);//save data
-		memcpy(prev+nprev, buf+offset, msg_len+1); nprev+=msg_len;//save length
-		offset=0;//in prev, no offset
-		if(FIN==1 && opcode==0){//assemble the final message
-			if(buf!=buf0){
+			if(!FIN){//first segment
+				ctx->prev=buf; ctx->nprev=msg_len; ctx->oprev=opcode;
+				buf=NULL;
+			}
+		}else{//continuation
+			if(!ctx->prev){
 				free(buf);
+				return ws_fail(fd, "unexpected continuation frame");
 			}
-			opcode=oprev;
-			buf=prev;
-			msg_len=nprev;
-			prev=NULL;
-			nprev=0;
+			ctx->prev=myrealloc(ctx->prev, ctx->nprev+msg_len+1, char);
+			memcpy(ctx->prev+ctx->nprev, buf, msg_len+1); ctx->nprev+=msg_len;
+			free(buf); buf=NULL;
+			if(FIN){//assemble the final message
+				opcode=ctx->oprev;
+				buf=ctx->prev;
+				msg_len=ctx->nprev;
+				ctx->prev=NULL;
+				ctx->nprev=0;
+			}
 		}
-	}else if(opcode==0x8){//client replied//request close
-		if(buf!=buf0) free(buf);
-		ws_write_close(ctx);
-		return ws_fail(fd, "client requests close");
-	}else if(opcode==0x9){//client sent a ping. we reply with pong
-		buf[offset-2]=0x8A;//pong
-		buf[offset-1]=msg_len;//cannot be more than 126
-		int ans=ctx->send(ctx, buf+offset-2, msg_len+2);
-		if(buf!=buf0) free(buf);
-		if(ans){
-			return ws_fail(fd, "pong");
-		}else{
-			return 0;
+		if(buf){//a complete message
+			if(opcode==0x1){
+				ws_proxy_command(buf, msg_len, (ws_proxy_t){.forward=ws_forward, .userdata=(void*)(long)fd});
+			}else{
+				warning_time("opcode=%d is not handled\n", opcode);
+			}
+			free(buf);
 		}
-	}
-	if(FIN==1){
-		if(opcode==0x1){
-			ws_proxy_command(buf+offset, msg_len, (ws_proxy_t){.forward=ws_forward, .userdata=(void*)(long)fd});
-		}else if(opcode==0x2){
-			warning_time("opcode=%d is not handled\n", opcode);
-		}
-	}
-	if(buf!=buf0){//heap memory is allocated.
-		free(buf);
-	}
-    return 0;
+		//the context may be removed by ws_proxy_command.
+	}while((ctx=http_context_get(fd)) && http_pending(ctx));
+	return 0;
 }
 /**
    Parse the value of a key from the http header.
@@ -826,11 +862,15 @@ int http_handler(struct pollfd *pfd, int flag){
 	char header[256];
 
 	int n= ctx->recv(ctx, buf, sizeof(buf) - 1);
-	if (n <= 0) return -1;
+	if (n <= 0){
+		http_context_remove(ctx);
+		return -1;
+	}
 	buf[n] = 0;
 	//info_time("received '%s'\n", buf);
     if (strncmp(buf, "GET ", 4) != 0){
 		warning_time("buf shall start with 'GET': '%s'. close connection. fd=%d\n", buf, fd);
+		http_context_remove(ctx);
 		return -1;//error
 	}
 	int set_cookie=0;
@@ -844,7 +884,7 @@ int http_handler(struct pollfd *pfd, int flag){
 			dbg("Authentication failed. Sending 401 Unauthorized.\n");
 			mysnprintf(header, sizeof(header), 
 			"HTTP/1.1 401 Unauthorized\r\n"
-			"WWW-Authenticate: Basic realm='Private Area'\r\n"
+			"WWW-Authenticate: Basic realm=\"Private Area\"\r\n"
 			"Content-Type: text/html; charset=UTF-8\r\n"
 			"Content-Length: 85\r\n"
 			"Connection: close\r\n"
@@ -864,7 +904,10 @@ int http_handler(struct pollfd *pfd, int flag){
 		const char *path = buf + 4;
 		const char* close=strstr(buf, "Connection: close")?"Connection: close\r\n":"";
 		char *sp = strchr(buf+4, ' ');
-		if (!sp) return -1;
+		if (!sp){
+			http_context_remove(ctx);
+			return -1;
+		}
 		*sp = 0;
 		if (strcmp(path, "/") == 0){
         	path = "/monitor.html";
@@ -924,6 +967,9 @@ int http_handler(struct pollfd *pfd, int flag){
 		}
 		if(close[0]!=0){//close connection
 			ans=-1;
+		}
+		if(ans){
+			http_context_remove(ctx);
 		}
 		return ans;
 		

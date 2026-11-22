@@ -54,7 +54,10 @@ typedef struct status_t{
     time_t timstart;//Job launch time
     time_t timlast; //last status change
 }status_t;
-/*Commands handled by scheduler server. Do not modify existing values*/
+/*Commands handled by scheduler server. Do not modify existing values. A command
+  is sent as int[2]={command, arg}. arg is the pid of maos for commands from
+  maos about its own job; its meaning for the others and the payload and reply
+  of each command are listed in docs/94_scheduler.md.*/
 enum{
     CMD_START=1,/*1: called by maos to check whether it can start*/
     CMD_FINISH, /*2: called by maos to report finishes*/
@@ -74,6 +77,7 @@ enum{
 	CMD_KILLED, /*16: called by maos to indicate that job is cancelled or killed*/
     CMD_DUMMY,	/*17. no action. for probing connection with no reply anticipated*/
 	CMD_LAUNCH,	/*18: called from maos from another machine to start a job in this machine*/
+	CMD_AUTH,	/*19: called by a TCP client to authenticate before other commands*/
 };
 /*Command handled by maos built-in server. Do not modify existing values.*/
 enum{
@@ -158,7 +162,7 @@ enum {
 	DRAW_ID_BIN,
 	DRAW_ID_TOT
 };
-#define scheduler_version 53
+#define scheduler_version 54
 
 extern int nhost;
 extern char **hosts;
@@ -171,6 +175,8 @@ void init_hosts();
 const char *lookup_hostaddr(const char *hostname);
 const char *lookup_hostname(const char *hostaddr);
 /*called by maos */
+char *scheduler_password(int create);
+int scheduler_auth(int sock);
 int scheduler_connect(const char* hostname);
 int scheduler_connect_self(int block);
 pthread_t scheduler_listen(thread_fun fun);

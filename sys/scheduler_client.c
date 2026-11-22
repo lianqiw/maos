@@ -40,6 +40,7 @@
 #include "hashlittle.h"
 #include "scheduler_client.h"
 #include "daemonize.h"
+#include "sha1.h"
 
 /**
    \file scheduler_client.c
@@ -232,8 +233,79 @@ static void launch_scheduler(int retry){
 }
 #endif
 /**
-   Connect to the scheduler at hostname using PORT. Returns the socket or -1 if
-   failed or the scheduler is disabled.
+   Read the password that authenticates TCP connections to the scheduler,
+   including the browser monitor, from the first line of ~/.aos/htpasswd.
+
+   @param[in] create If the file does not exist, create it with a random password.
+   @return Newly allocated password; the caller frees it. NULL if not available.
+*/
+char *scheduler_password(int create){
+	char fn[PATH_MAX];
+	snprintf(fn, PATH_MAX, "%s/.aos/htpasswd", HOME);
+	char *line=NULL;
+	FILE *fp=fopen(fn, "r");
+	if(fp){
+		char buf[256];
+		if(fgets(buf, sizeof(buf), fp)){
+			size_t n=strlen(buf);
+			while(n>0 && isspace((int)buf[n-1])){
+				buf[--n]=0;
+			}
+			if(n>0) line=mystrdup(buf);
+		}
+		fclose(fp);
+	}else if(create){
+		int fd=open(fn, O_WRONLY|O_CREAT|O_EXCL, 0600);//only the owner can read it
+		if(fd>=0){
+			if((line=generate_session_cookie())){
+				line[16]=0;
+				if(write(fd, line, strlen(line))<0||write(fd, "\n", 1)<0){
+					warning("Failed to write %s\n", fn);
+				}else{
+					info_time("Created password in %s for user %s.\n", fn, USER);
+				}
+			}
+			close(fd);
+		}
+	}
+	return line;
+}
+/**
+   Authenticate a TCP connection to the scheduler. The scheduler sends a random
+   nonce and the client replies with base64(sha1(nonce+password)), so that the
+   password is not sent over the network.
+
+   @param[in] sock Socket connected to the scheduler.
+   @return 0 on success, -1 on failure.
+*/
+int scheduler_auth(int sock){
+	int ans=-1;
+	char *pass=scheduler_password(0);
+	if(!pass){
+		warning("%s/.aos/htpasswd is not found. Copy it from the host that runs the scheduler.\n", HOME);
+		return ans;
+	}
+	int cmd[2]={CMD_AUTH, 0};
+	char *nonce=NULL;
+	if(!stwriteintarr(sock, cmd, 2)&&!streadstr(sock, &nonce)&&nonce){
+		char *src=stradd(nonce, pass, NULL);
+		char key[64];
+		base64_sha1(src, key);
+		free(src);
+		if(stwritestr(sock, key)||streadint(sock, &ans)){
+			ans=-1;
+		}
+	}
+	if(ans){
+		warning("Authentication failed. %s/.aos/htpasswd must be the same as on the host that runs the scheduler.\n", HOME);
+	}
+	free(nonce);
+	free(pass);
+	return ans;
+}
+/**
+   Connect to the scheduler at hostname using PORT and authenticate. Returns
+   the socket or -1 if failed or the scheduler is disabled.
 
    @param[in] hostname Host name or address of the scheduler.
    @return The socket, or -1 on failure.
@@ -242,7 +314,12 @@ int scheduler_connect(const char *hostname){
 #if MAOS_DISABLE_SCHEDULER
 	(void)hostname; return -1;
 #else		
-	return connect_port(hostname, PORT, 0, 0);
+	int sock=connect_port(hostname, PORT, 0, 0);
+	if(sock>-1 && hostname[0]!='/' && scheduler_auth(sock)){//TCP connection needs authentication
+		close(sock);
+		sock=-1;
+	}
+	return sock;
 #endif
 }
 /**
@@ -266,6 +343,10 @@ int scheduler_connect_self(int block){
 			snprintf(fn, PATH_MAX, "localhost");
 		}
 		sock=connect_port(fn, PORT, 0, 0);
+		if(sock>-1 && fn[0]!='/' && scheduler_auth(sock)){//TCP connection needs authentication
+			close(sock);
+			return -1;
+		}
 		if(sock<0){
 			launch_scheduler(block?10:0);
 			mysleep(1);
@@ -482,7 +563,7 @@ int scheduler_launch_exe(char* hostarr, int argc, const char* argv[]){
 		} else{
 			host3=NULL;
 		}
-		int sock=connect_port(host, PORT, 0, 0);
+		int sock=scheduler_connect(host);
 		if(sock<=-1){
 			warning("Failed to connect to %s:%d.\n", host, PORT);
 			ret=-1;

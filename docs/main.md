@@ -28,6 +28,7 @@ written in C, runs on multi-core CPUs, and can optionally use Nvidia GPUs.
 - \ref page90_devel
   - \ref page91_basics &ndash; coding conventions and the basic data types.
   - \ref page93_maos &ndash; the structure of the `maos` simulator.
+  - \ref page94_scheduler &ndash; the scheduler protocol.
   - \ref page95_profiling &ndash; debugging and profiling.
   - \ref page96_unittest &ndash; the latest unit test results.
 

@@ -455,6 +455,7 @@ void listen_port_del(int sock, int toclose, const char *caller){
 				pfd_handler[ifd].handler=NULL;//prevent stale handler
 				pfd_handler[ifd].name=NULL;
 				pfd[ifd].fd=-1;//-1 is ignored in polling.
+				pfd[ifd].revents=0;//do not handle pending events in the current loop of listen_port().
 				if(sock>=0){//just this one
 					break;
 				}

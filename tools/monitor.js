@@ -186,9 +186,10 @@ function App() {
               i[2] = parseInt(i[2]);//pid
               i[11] = parseInt(i[11]);//remaining time
               i[12] = parseInt(i[12]);//total time
-              const icon = (i[12] > 0 || i[3] != 11) ? iconName[i[3]] : "⏭️";
-              const frac = Math.round(100 * (1 - (i[12] == 0 ? 1 : i[11] / i[12]))) + '%';
-              let prog = i[12] == 0 ? "" : i[7] + '/' + i[8] + ' ' + step2str(i[9]) + '/' + step2str(i[10])+' '+sec2str(i[3]==1?i[11]:i[12])
+              const nostep = parseInt(i[8]) == 0 || parseInt(i[10]) == 0;//nseed or nsim is 0: no simulation step is reported.
+              const icon = (nostep && i[3] == 11) ? "⏭️" : iconName[i[3]];//skipped. a job that finishes within 1 second has a total time of 0.
+              const frac = Math.round(100 * (i[12] == 0 ? (i[3] == 11 ? 1 : 0) : 1 - i[11] / i[12])) + '%';
+              let prog = nostep ? "" : i[7] + '/' + i[8] + ' ' + step2str(i[9]) + '/' + step2str(i[10])+' '+sec2str(i[3]==1?i[11]:i[12])
               if (i[5] === '0.00') i[5] = '';
               if (i[6] === '0.00') i[6] = '';
               if (i[13] === '0.000') i[13] = '';
