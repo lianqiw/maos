@@ -197,9 +197,9 @@ var NAVTREEINDEX =
 "dc/d85/classcuwfs__t.html#a28b47e2cdf7b0a5fc4b657ff13998fee",
 "de/d07/cmath_8h.html#a3750ef8ea62567ab3d6829020567e8c4",
 "de/d53/recon__utils_8h.html#ad5e4f268e97c577eb4c5688ec0d595a0",
-"df/d04/sock_8h.html#a7e9e0dd0702c7f7fbd7217a964a5047e",
-"df/def/type_8h.html#a77502e1c90f739c19a7fa4d46c1c1774",
-"df/def/type_8h.html#d7/dd9/structmap__t_8____unnamed0_____8____unnamed0____"
+"df/d04/sock_8h.html#a0fadbb4ac1bc4bee3c07ebeec41e6118",
+"df/def/type_8h.html#a71be2e4edd9c472b42e25f45efc063ed",
+"df/def/type_8h.html#d6/da3/structmap__t"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

@@ -1,5 +1,11 @@
 var NAVTREEINDEX15 =
 {
+"df/def/type_8h.html#a71be2e4edd9c472b42e25f45efc063ed":[14,0,3,9,0,3],
+"df/def/type_8h.html#a720d6cb28c51822fefa2e456bcf37a30":[14,0,3,9,38,2],
+"df/def/type_8h.html#a740ad3c2e76d06da584ebe3328750115":[14,0,3,9,60],
+"df/def/type_8h.html#a750da6c5c22aeb95ced9571b92eebfdf":[14,0,3,9,6,0],
+"df/def/type_8h.html#a7676822d04c6cb458674de1d134f744f":[14,0,3,9,13,2],
+"df/def/type_8h.html#a7700a424ce66fe3a873b3f2d6b35f480":[14,0,3,9,37,0],
 "df/def/type_8h.html#a77502e1c90f739c19a7fa4d46c1c1774":[14,0,3,9,41,0],
 "df/def/type_8h.html#a778f9b68589cb7135babe3f7e222e7d8":[14,0,3,9,10,7],
 "df/def/type_8h.html#a77d5149d835d4cb355395b4284fe333e":[14,0,3,9,10,9],
@@ -243,11 +249,5 @@ var NAVTREEINDEX15 =
 "df/def/type_8h.html#d6/d2e/structdcccell":[14,0,3,9,33],
 "df/def/type_8h.html#d6/d4d/unionpts__t_8____unnamed0_____8____unnamed0_____8____unnamed0____":[14,0,3,9,50],
 "df/def/type_8h.html#d6/d6f/structimat":[14,0,3,9,6],
-"df/def/type_8h.html#d6/d98/structpts__t_8____unnamed0_____8____unnamed0_____8____unnamed0_____8____unnamed0____":[14,0,3,9,51],
-"df/def/type_8h.html#d6/da3/structmap__t":[14,0,3,9,11],
-"df/def/type_8h.html#d6/ddb/structdspcell":[14,0,3,9,22],
-"df/def/type_8h.html#d6/de5/structcccell":[14,0,3,9,26],
-"df/def/type_8h.html#d7/d25/structmapccell":[14,0,3,9,39],
-"df/def/type_8h.html#d7/d66/unionpts__t_8____unnamed0____":[14,0,3,9,48],
-"df/def/type_8h.html#d7/da0/structlmat":[14,0,3,9,5]
+"df/def/type_8h.html#d6/d98/structpts__t_8____unnamed0_____8____unnamed0_____8____unnamed0_____8____unnamed0____":[14,0,3,9,51]
 };

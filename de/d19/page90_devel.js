@@ -31,6 +31,13 @@ var page90_devel =
       [ "Logging", "d7/dbf/page93_maos.html#arch-log", null ],
       [ "Scheduler, Monitor, and Drawdaemon", "d7/dbf/page93_maos.html#arch-scheduler", null ]
     ] ],
+    [ "Scheduler Protocol", "de/db2/page94_scheduler.html", [
+      [ "Source Files", "de/db2/page94_scheduler.html#sched-files", null ],
+      [ "Connections", "de/db2/page94_scheduler.html#sched-conn", null ],
+      [ "Message Format", "de/db2/page94_scheduler.html#sched-format", null ],
+      [ "Messages to Monitors", "de/db2/page94_scheduler.html#sched-monitor", null ],
+      [ "Testing", "de/db2/page94_scheduler.html#sched-test", null ]
+    ] ],
     [ "Debugging", "db/dda/page95_profiling.html", [
       [ "Debug Build", "db/dda/page95_profiling.html#debug-build", null ],
       [ "Debugging Tools", "db/dda/page95_profiling.html#debug-tools", null ],

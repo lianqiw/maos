@@ -365,7 +365,7 @@ Monitor</h2>
 <li><span class="tt">~/.aos/hosts</span>: one machine per line, as <span class="tt">hostname</span> or <span class="tt">shortname=hostname:port</span>. Lines starting with <span class="tt">#</span> are ignored.</li>
 <li><span class="tt">~/.aos/port</span>: the port that the <span class="tt">scheduler</span> listens on, so that the monitor can connect to it. Any non-privileged port (e.g., 10000) works, but different users on the same machine need different ports. The port must be the same on all machines unless it is given in <span class="tt">hosts</span>. If this file does not exist, the port is computed from the user name. Make sure the firewall allows it.</li>
 </ul>
-<p>After changing these files, kill the running <span class="tt">scheduler</span>; <span class="tt">maos</span> starts a new one when it runs. The GTK monitor connection itself is not authenticated, so protect the port (e.g., with a firewall) on shared networks.</p>
+<p>After changing these files, kill the running <span class="tt">scheduler</span>; <span class="tt">maos</span> starts a new one when it runs. The connections are authenticated with <span class="tt">~/.aos/htpasswd</span> (see <a class="el" href="#compile-browser">Browser based monitor</a>) but not encrypted, so on untrusted networks protect the port with a firewall or use an SSH tunnel. The protocol is described in <a class="el" href="../../de/db2/page94_scheduler.html">Scheduler Protocol</a>.</p>
 <p><img src="../../monitor-gtk3.jpg" alt="Monitor" width="60%" class="inline"/></p>
 <h2 class="doxsection"><a class="anchor" id="compile-drawdaemon"></a>
 Drawdaemon</h2>
