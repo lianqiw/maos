@@ -23,7 +23,10 @@ layers above it (this is also the \c SUBDIRS build order in \c Makefile.am):
    types #loc_t, #pts_t, and #map_t derived from #dmat (\c loc.c, \c map.c),
    turbulence generation,
    ray tracing (\c accphi.c), the \c mkg, \c mkh, \c mkz, \c mkw operators,
-   PCG, servo, PSD, pyramid WFS, the configuration file parser
+   PCG, servo, PSD, pyramid WFS, Shack-Hartmann WFS subaperture geometry and
+   CoG (\c shwfs.c), the laser launch telescope (\c llt.c), NEA conversions
+   (\c nea.c), dithering (\c dither.c), the Fourier domain preconditioner of
+   the tomography (\c fdpcg.c), the configuration file parser
    (\c readcfg.c), and the plotting client (\c draw.c). Functions here take
    basic types, not \c maos structs. \c lib/aolib.c builds \c bin/aolib.so,
    which is used by the Python (\c scripts/libaos.py) and Matlab interfaces.

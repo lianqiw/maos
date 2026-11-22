@@ -18,7 +18,8 @@
 /**
    \file maos/fdpcg.h
 
-   Fourier Domain Preconditioner for Tomography step.
+   Fourier Domain Preconditioner for Tomography step. The implementation is in
+   lib/fdpcg.c.
 
 */
 #ifndef AOS_RECON_FDPCG
@@ -27,5 +28,4 @@
 fdpcg_t *fdpcg_prepare(const parms_t *parms, const recon_t *recon, 
 		       const powfs_t *powfs, mapcell *atm);
 void fdpcg_precond(dcell **xout, const void *A, const dcell *xin);
-void fdpcg_free(fdpcg_t *fdpcg);
 #endif

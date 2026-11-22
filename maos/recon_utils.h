@@ -26,11 +26,6 @@ void remove_mode(dcell *x, const dcell *M, const dcell *PM);
 void applyW(dcell *xin, const dsp *W0, const dmat *W1, const real *wt);
 dcell* calcWmcc(const dcell* A, const dcell* B, const dsp* W0, const dmat* W1, const dmat* wt);
 
-dsp *nea2sp(dmat *nea, int ll, int ur, int ng);
-void nea_chol(dmat **pout, const dmat *in, int ng);
-void nea_inv(dmat **pout, const dmat *in, int ng, real scale);
-void nea_mm(dmat **pout, const dmat *in, int ng);
-void nea_check(dmat *nea, long nsa, int ng);
 
 void psfr_calc(sim_t *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dmerr_lo);
 cn2est_t* cn2est_prepare(const parms_t *parms, const powfs_t *powfs);

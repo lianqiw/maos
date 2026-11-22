@@ -616,3 +616,78 @@ void wfe_fov_fill(dccell *reseach, const dcell *clep, int ipath, int isim){
 	}
 	
 }
+/**
+   Create WFS amplitude map from coordinate, masked with annular defined by (D,Din).
+
+   @param[in] loc Coordinate of the amplitude map.
+   @param[in] aper Aperture map. If not NULL, it is ray traced to loc instead of using (D,Din).
+   @param[in] misregx Misregistration along x (m).
+   @param[in] misregy Misregistration along y (m).
+   @param[in] D Outer diameter (m).
+   @param[in] Din Inner diameter (m).
+   @return Newly allocated amplitude; the caller frees it.
+*/
+dmat* mkamp(const loc_t* loc, const map_t* aper, real misregx, real misregy, real D, real Din){
+	dmat* amp=dnew(loc->nloc, 1);
+	if(aper){
+		prop(ADDR((propdata_t){.mapin=aper, .locout=loc, .phiout=P(amp), .misregx=misregx, .misregy=misregy}));
+	}else{
+		loc_circle_add(amp, loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
+	}
+	/*if(misregx || misregy){//apply centered circular mask
+		loc_circle_mul(amp, loc, 0, 0, D*0.5, 0, 1);
+	}*/
+	return amp;
+}
+/**
+   Fit 3 points around the peak of a 1-d profile.
+
+   @param[in] corr The 1-d profile.
+   @return Peak location (in pixels) relative to the center.
+*/
+real parabolic_peak_1d(dmat* corr){
+	if(corr->nx<3) return 0;
+	real valmax=-INFINITY;
+	int jx=1;
+	for(int ix=1; ix<corr->nx-1; ix++){
+		if(P(corr, ix)>valmax){
+			jx=ix;
+			valmax=P(corr, ix);
+		}
+	}
+	//Parabolic fit.
+	real px[2];
+	px[0]=(P(corr, jx+1)+P(corr, jx-1))*0.5-P(corr, jx);
+	px[1]=(P(corr, jx+1)-P(corr, jx-1))*0.5;
+	return px[0]==0?0:(-px[1]/(2*px[0])+jx-(corr->nx-1)*0.5);
+}
+/**
+   First sum along 1 dimension, then fit 3 points around the peak. More robust than the old method.
+
+   @param[out] grad Peak location along x and y (in pixels) relative to the center.
+   @param[in] corr The 2-d correlation.
+   @param[in] nbox Size of the central box to use. Use the full array if not positive or too large.
+*/
+void parabolic_peak_sum(real* grad, dmat* corr, int nbox){
+	const long nx=NX(corr);
+	const long ny=NY(corr);
+	if(nbox<=0||nbox>nx) nbox=(int)nx;
+	if(nbox<=0||nbox>ny) nbox=(int)ny;
+	dmat* corrx=dnew(nbox, 1);
+	dmat* corry=dnew(nbox, 1);
+	const long offx=(nx-nbox)/2;
+	const long offy=(ny-nbox)/2;
+	for(int iy=0; iy<nbox; iy++){
+		for(int ix=0; ix<nbox; ix++){
+			P(corrx, ix)+=P(corr, ix+offx, iy+offy);
+			P(corry, iy)+=P(corr, ix+offx, iy+offy);
+		}
+	}
+	grad[0]=parabolic_peak_1d(corrx);
+	grad[1]=parabolic_peak_1d(corry);
+	if(0){
+		info2("grad=%g, %g\n", grad[0], grad[1]);
+		writebin(corr, "corr");
+		exit(0);
+	}
+}

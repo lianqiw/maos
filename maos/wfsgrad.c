@@ -377,11 +377,9 @@ void* wfsgrad_iwfs(thread_t* info){
 				dzero(*gradcalc);
 			}
 			if(parms->powfs[ipowfs].gtype_sim==GTYPE_Z){ /*compute ztilt. */
-				pts_ztilt(gradcalc, powfs[ipowfs].pts,
-					PR(powfs[ipowfs].saimcc, wfsind, 0),
-					P(amp), P(opd));
+				shwfs_grad_geom(gradcalc, powfs[ipowfs].pts, opd, amp, NULL, PR(powfs[ipowfs].saimcc, wfsind, 0));
 			} else{/*G tilt */
-				dspmm(gradcalc, PR(powfs[ipowfs].GS0, wfsind, 0), opd, "nn", 1);
+				shwfs_grad_geom(gradcalc, powfs[ipowfs].pts, opd, amp, PR(powfs[ipowfs].GS0, wfsind, 0), NULL);
 			}
 			if(gradcalc!=gradacc){
 				dadd(gradacc, 1, *gradcalc, 1);

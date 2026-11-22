@@ -30,7 +30,6 @@ arg_t* parse_args(int argc, const char *argv[]);
 void free_arg(arg_t** parg);
 char *evl_keywords(const parms_t *parms, const aper_t *aper, int ievl, int iwvl, int isim);
 
-dmat *mkamp(const loc_t *loc, const map_t *aper, real misregx, real misregy, real D, real Din);
 void maxapriori(real *g, const dmat *ints, const parms_t *parms, 
 		const powfs_t *powfs, int iwfs, long isa, int noisy,
 		real bkgrnd, real rne);

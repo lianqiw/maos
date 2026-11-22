@@ -11,7 +11,7 @@ bin_PROGRAMS=cmocka_sys cmocka_threadpool cmocka_readstr cmocka_fits \
 	cmocka_accphi cmocka_proj cmocka_fdpcg cmocka_atm cmocka_fractal cmocka_rayleigh \
 	cmocka_sock cmocka_sysutil cmocka_map cmocka_cell cmocka_mathmisc \
 	cmocka_wfs cmocka_recon cmocka_modes cmocka_pywfs \
-	cmocka_servo cmocka_cfg cmocka_libmisc cmocka_scheduler
+	cmocka_servo cmocka_cfg cmocka_libmisc cmocka_scheduler cmocka_shwfs cmocka_wfsutil
 LDADD+=$(CMOCKA_LIBS)
 AM_CFLAGS+=$(CMOCKA_CFLAGS)
 endif

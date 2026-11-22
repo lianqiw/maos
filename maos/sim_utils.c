@@ -818,7 +818,7 @@ static void init_simu_wfs(sim_t* simu){
 				P(simu->ints, iwfs)=dcellnew_same(1, 1, powfs[ipowfs].saloc->nloc, powfs[ipowfs].pywfs->cfg->nside);
 			}
 		}
-		if(parms->powfs[ipowfs].llt){
+		if(powfs[ipowfs].llt){//only set up for physical optics, as is lltopd in wfsgrad
 			P(simu->lltopd, iwfs)=dnew(powfs[ipowfs].llt->pts->nxsa, powfs[ipowfs].llt->pts->nysa);
 		}
 		if(parms->powfs[ipowfs].phystep!=0||P(parms->save.gradgeom, iwfs)||parms->powfs[ipowfs].pistatout){

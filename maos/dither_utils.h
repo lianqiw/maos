@@ -24,8 +24,6 @@
 #define AOS_DITHER_UTILS_H
 #include "common.h"
 void gradoff_acc(sim_t* simu, int ipowfs);
-void dither_position(real* cs, real* ss, int alfsm, int dtrat, int npoint, int isim, real deltam);
-real dither_amp_calc(dmat **res, const dmat *signal, long dtrat, long npoint, int detrend, int combine);
 void dither_acc_i0(const parms_t *parms, dither_t* pd, dcell *ints, int iwfs, int isim);
 void dither_acc(sim_t* simu, int iwfs);
 void dither_post(sim_t* simu);

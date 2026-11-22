@@ -162,26 +162,6 @@ typedef struct ngsmod_t{
     int indps;     /**<Include plate scale in NGS controlled modes. Records the index*/
     int indastig;  /**<Include astigmatism mode in NGS controlled modes. Records the index*/
 }ngsmod_t;
-/**
-   contains data for Fourier Domain Preconditioner.
- */
-typedef struct fdpcg_t{
-    loccell *xloc;  /**<record recon->xloc*/
-    csp *Minv;     /**<inverse of fourier domain preconditioner matrix M.*/
-    ccell *Mbinv;  /**<block version of Minv. (in permuted order)*/
-    lmat *perm;    /**<Permutation vector to get block diagonal matrix*/
-    lmat *permhf;  /**<Permutation vector to be used when complex2real fft is used. Size is about half of perm.*/
-    long nxtot;    /**<Total number of reconstructed phase points*/
-    int square;    /**<Whether xloc is square*/
-    int scale;     /**<Do we need to scale after fft.*/
-    long nbx;      /**<Basic frequency range in x*/
-    long nby;      /**<Basic frequency range in y nb=nbx*nby.*/
-    long bs;       /**<Size of each diagonal block.*/
-    /*Temperary Data used during execution*/
-    /*Cannot save xhat here because we may be calling fdpcg from multiple
-     * threads simultanously during assembly of control matrix*/
-    //ccell *xhat, *xhat2, /**<FFT of each xout and multiplied. */
-}fdpcg_t;
 
 /**
    contains MOAO related data
