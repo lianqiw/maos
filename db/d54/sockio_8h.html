@@ -348,7 +348,7 @@ header</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read a string written by stwritestr().</p>
+<p>Read a string written by stwritestr(). The string is always NUL terminated.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">sfd</td><td>Socket or file descriptor. </td></tr>
@@ -356,7 +356,7 @@ header</td>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>0 on success, nonzero on failure. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, nonzero on failure, including length above 1 MiB. </dd></dl>
 
 </div>
 </div>

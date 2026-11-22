@@ -1,4 +1,32 @@
 var searchData=
 [
-  ['91_5fbasics_20md_0',['Conventions (from &lt;span class=&quot;tt&quot;&gt;docs/91_basics.md&lt;/span&gt;)',['../d6/d23/md__c_l_a_u_d_e.html#autotoc_md6',1,'']]]
+  ['backscatter_0',['Rayleigh backscatter',['../da/dc3/page30_run.html#pixel-background',1,'']]],
+  ['band_20strehl_20ratio_1',['band Strehl Ratio',['../d6/d3f/page43_nfiraos.html#autotoc_md26',1,'H band Strehl Ratio'],['../d6/d3f/page43_nfiraos.html#autotoc_md25',1,'J band Strehl Ratio'],['../d6/d3f/page43_nfiraos.html#autotoc_md27',1,'K band Strehl Ratio']]],
+  ['based_20monitor_2',['Browser based monitor',['../d3/d4c/page20_compile.html#compile-browser',1,'']]],
+  ['beam_20propagation_3',['Physical Optics Beam Propagation',['../da/d48/pop.html',1,'algorithm']]],
+  ['benchmarks_4',['Historical benchmarks',['../index.html#autotoc_md36',1,'']]],
+  ['bessel_5fmode_2eh_5',['bessel_mode.h',['../d6/d1d/bessel__mode_8h.html',1,'']]],
+  ['bessel_5fmodes_6',['bessel_modes',['../d6/d1d/bessel__mode_8h.html#adfcdbf7c5ca41663b7b973a1b6fcc33d',1,'bessel_mode.c']]],
+  ['bgs_7',['bgs',['../d3/dc7/muv_8h.html#ae31c91e7bded161b089819de993bb5ee',1,'muv_t::bgs'],['../d4/d38/parms_8h.html#aab059096759e6a895e2c52935a5cb695',1,'tomo_cfg_t::bgs'],['../d4/d38/parms_8h.html#a6a352da6dab6ef9ad69ec5a100430f04',1,'fit_cfg_t::bgs'],['../d4/d38/parms_8h.html#a15e318faa040a437f927fa7c142ec24a',1,'lsr_cfg_t::bgs']]],
+  ['bin_20file_20format_8',['Bin file format',['../d5/d98/page91_basics.html#sect-bin',1,'']]],
+  ['bin_20file_20format_9',['.bin file format',['../dd/da9/page40_results.html#autotoc_md12',1,'']]],
+  ['bin_2eh_10',['bin.h',['../d3/d7f/bin_8h.html',1,'']]],
+  ['binaries_11',['Pre-compiled binaries',['../d3/d4c/page20_compile.html#compile-binary',1,'']]],
+  ['bind_5fsocket_12',['bind_socket',['../df/d04/sock_8h.html#a45c181941f5420133e33bb8bdca7374d',1,'sock.c']]],
+  ['bkgrnd_13',['bkgrnd',['../d4/d38/parms_8h.html#abf927de595f5de271256c33761ee6685',1,'powfs_cfg_t::bkgrnd'],['../d6/d94/maos_2types_8h.html#af1f72dd5af2b9727a8c6b3e4d3125956',1,'powfs_t::bkgrnd']]],
+  ['bkgrnd2_14',['bkgrnd2',['../dc/d85/classcuwfs__t.html#afefe432f2f46393338bd42e38599362b',1,'cuwfs_t']]],
+  ['bkgrnd2c_15',['bkgrnd2c',['../dc/d85/classcuwfs__t.html#a5b5611f26b4a3dcc3a499697cd4e9752',1,'cuwfs_t']]],
+  ['bkgrndc_16',['bkgrndc',['../d4/d38/parms_8h.html#ad7c3d57edb63a934d807e5092a72924d',1,'powfs_cfg_t::bkgrndc'],['../d6/d94/maos_2types_8h.html#a80ed321fccc435961197365971c22781',1,'powfs_t::bkgrndc']]],
+  ['bkgrndfn_17',['bkgrndfn',['../d4/d38/parms_8h.html#a0629333af272f924e422e60dc1a257b6',1,'powfs_cfg_t']]],
+  ['bkgrndfnc_18',['bkgrndfnc',['../d4/d38/parms_8h.html#a0cac4ae7a580e731c9c5751e1db54137',1,'powfs_cfg_t']]],
+  ['blas_19',['blas',['../dc/de6/classstream__t.html#a9d12fc304cba20376b9a2b7196f25f7c',1,'stream_t']]],
+  ['bm_20',['BM',['../df/d07/kalman_8h.html#ae61350fd025a9299577092a971f7ed03',1,'kalman_t']]],
+  ['breakdown_21',['Error Budget Breakdown',['../da/dc3/page30_run.html#sect-ebb',1,'']]],
+  ['browser_20based_20monitor_22',['Browser based monitor',['../d3/d4c/page20_compile.html#compile-browser',1,'']]],
+  ['bs_23',['bs',['../d6/d94/maos_2types_8h.html#a2cf5f2b6cccc798f5a1f3f144f0544b7',1,'fdpcg_t']]],
+  ['budget_20breakdown_24',['Error Budget Breakdown',['../da/dc3/page30_run.html#sect-ebb',1,'']]],
+  ['build_25',['Build',['../d6/d23/md__c_l_a_u_d_e.html#autotoc_md1',1,'Build'],['../d3/d4c/page20_compile.html#compile-build',1,'Build'],['../db/dda/page95_profiling.html#debug-build',1,'Debug Build']]],
+  ['build_26',['C++ build',['../d3/d4c/page20_compile.html#compile-cpp',1,'']]],
+  ['build_20directories_27',['Build Directories',['../de/d19/page90_devel.html#devel-build',1,'']]],
+  ['bytes_5fheader_28',['bytes_header',['../d3/d7f/bin_8h.html#aeb64008115e1bf526705974a7031a4c3',1,'bin.c']]]
 ];

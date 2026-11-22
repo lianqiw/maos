@@ -1,30 +1,5 @@
 var searchData=
 [
-  ['tagged_20snapshot_0',['Tagged snapshot',['../d3/d4c/page20_compile.html#compile-snapshot',1,'']]],
-  ['tarball_1',['Release tarball',['../d3/d4c/page20_compile.html#compile-release',1,'']]],
-  ['telemetry_20data_2',['Telemetry Data',['../dd/da9/page40_results.html#telemetry',1,'']]],
-  ['telescope_3',['Telescope',['../da/d9f/page10_intro.html#intro-telescope',1,'']]],
-  ['test_20results_4',['Test Results',['../d9/d6e/page96_unittest.html#unittest_results',1,'']]],
-  ['test_20status_5',['Unit Test Status',['../d9/d6e/page96_unittest.html',1,'page90_devel']]],
-  ['tests_6',['Tests',['../d6/d23/md__c_l_a_u_d_e.html#autotoc_md2',1,'Tests'],['../de/d19/page90_devel.html#devel-unittest',1,'Unit Tests']]],
-  ['tests_7',['Unit tests',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md40',1,'']]],
-  ['tests_20and_20documentation_8',['Unit tests and documentation',['../d3/d4c/page20_compile.html#compile-test',1,'']]],
-  ['the_20code_9',['Compile the Code',['../d3/d4c/page20_compile.html',1,'']]],
-  ['the_20code_10',['Download the code',['../d3/d4c/page20_compile.html#compile-download',1,'']]],
-  ['the_20main_20parameters_11',['Guide to the main parameters',['../da/dc3/page30_run.html#sect-config-params',1,'']]],
-  ['threading_12',['Threading',['../d7/dbf/page93_maos.html#arch-thread',1,'']]],
-  ['tmt_20conf_13',['examples/tmt.conf',['../d8/d0f/tmt.html',1,'page34_conf']]],
-  ['to_20a_20running_20maos_14',['Interface to a running maos',['../d3/d4c/page20_compile.html#compile-maos-client',1,'']]],
-  ['to_20end_20regression_15',['End-to-end Regression',['../de/d19/page90_devel.html#devel-regression',1,'']]],
-  ['to_20sphere_20propagation_16',['Sphere to sphere propagation',['../da/d48/pop.html#pop-sphere',1,'']]],
-  ['to_20the_20main_20parameters_17',['Guide to the main parameters',['../da/dc3/page30_run.html#sect-config-params',1,'']]],
-  ['todo_20list_18',['Todo List',['../dd/da0/todo.html',1,'']]],
-  ['tomography_20results_19',['Split tomography results',['../dd/da9/page40_results.html#autotoc_md14',1,'']]],
-  ['tools_20',['Debugging Tools',['../db/dda/page95_profiling.html#debug-tools',1,'']]],
-  ['tree_21',['Source tree',['../da/d9f/page10_intro.html#intro-source',1,'']]],
-  ['troubleshooting_22',['Troubleshooting',['../d3/d4c/page20_compile.html#compile-trouble',1,'']]],
-  ['turbulence_20profile_23',['Turbulence profile',['../d6/d3f/page43_nfiraos.html#autotoc_md20',1,'']]],
-  ['two_20dimension_20pointers_24',['Two Dimension Pointers',['../d5/d98/page91_basics.html#sect-2d-pointer',1,'']]],
-  ['type_20generic_20implementation_25',['Type Generic Implementation',['../d5/d98/page91_basics.html#sect-type-generic',1,'']]],
-  ['types_26',['Types',['../d5/d98/page91_basics.html#sect-maos-math',1,'Fundamental Math Types'],['../d5/d98/page91_basics.html#sect-maos-data',1,'MAOS Data Types'],['../d5/d98/page91_basics.html#sect-specific-type',1,'Specific Types']]]
+  ['variables_0',['Environment variables',['../da/dc3/page30_run.html#sect-run-env',1,'']]],
+  ['variation_1',['Sodium range variation',['../da/dc3/page30_run.html#sect-sodium',1,'']]]
 ];

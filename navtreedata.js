@@ -155,19 +155,6 @@ var NAVTREE =
       [ "Sky coverage results", "d5/d4c/skycoverage.html#skyres", null ]
     ] ],
     [ "Development", "de/d19/page90_devel.html", "de/d19/page90_devel" ],
-    [ "Changes by Claude, 2026-11-20", "db/d87/md_docs_2claude__changes__20261120.html", [
-      [ "Impact on simulation results", "db/d87/md_docs_2claude__changes__20261120.html#claude_results", [
-        [ "maos (CPU and GPU)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md34", null ],
-        [ "GPU only", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md35", null ],
-        [ "lib and math (shared by maos and skyc)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md36", null ],
-        [ "skyc", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md37", null ],
-        [ "Configuration and file format", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md38", null ]
-      ] ],
-      [ "Other changes (no effect on results)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md39", null ],
-      [ "Unit tests", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md40", null ],
-      [ "Verification", "db/d87/md_docs_2claude__changes__20261120.html#claude_verification", null ],
-      [ "Not changed", "db/d87/md_docs_2claude__changes__20261120.html#claude_not_changed", null ]
-    ] ],
     [ "README", "d3/dcc/md__r_e_a_d_m_e.html", null ],
     [ "Todo List", "dd/da0/todo.html", null ],
     [ "Data Structures", "annotated.html", [
@@ -202,17 +189,17 @@ var NAVTREEINDEX =
 "d4/d38/parms_8h.html#a1b3586fba1bd11580eac766c9f17c889",
 "d4/d38/parms_8h.html#a82246fadaaa26d5b45f53e4064f43faf",
 "d4/d38/parms_8h.html#ae65ef8c7e32ec1905c34e73156b779de",
-"d5/ddb/atm_mk25p_g_l_50p_f_a.html",
-"d6/d94/maos_2types_8h.html#a63cf2faff093d3cee8e594ad00c56bea",
-"d6/d94/maos_2types_8h.html#aecfdde04f1823426a4a6bde295ae6e95",
-"d9/df5/skyc_20.html",
-"da/dfb/dmath_8h.html#ab48bc9b9c8f923e19dafc70b8fff5de2",
-"dc/d6a/powfs_shngs.html",
-"de/d07/cmath_8h.html#a2c8c34529edf8275376a139f936260c7",
-"de/d53/recon__utils_8h.html#a74f945e450ef8677f831285a7fefce90",
-"df/d04/sock_8h.html#a06ca6a939cfb914d1b5b39b34292ecc7",
-"df/def/type_8h.html#a7107a3025720f4bb8df91f91690addad",
-"df/def/type_8h.html#d6/d98/structpts__t_8____unnamed0_____8____unnamed0_____8____unnamed0_____8____unnamed0____"
+"d5/db6/atm_mk13n15p.html",
+"d6/d94/maos_2types_8h.html#a62e8893405865fb512a00038307a99e3",
+"d6/d94/maos_2types_8h.html#aecc7b6a6b8fdc5d501910af0fc5bb2ac",
+"d9/dca/mkw_8h.html#a3b65c8711d5fd4e09f68a920665d3da3",
+"da/dfb/dmath_8h.html#aafe051c9890c2da7f2eb36fa71be7a73",
+"dc/d85/classcuwfs__t.html#a28b47e2cdf7b0a5fc4b657ff13998fee",
+"de/d07/cmath_8h.html#a3750ef8ea62567ab3d6829020567e8c4",
+"de/d53/recon__utils_8h.html#ad5e4f268e97c577eb4c5688ec0d595a0",
+"df/d04/sock_8h.html#a7e9e0dd0702c7f7fbd7217a964a5047e",
+"df/def/type_8h.html#a77502e1c90f739c19a7fa4d46c1c1774",
+"df/def/type_8h.html#d7/dd9/structmap__t_8____unnamed0_____8____unnamed0____"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

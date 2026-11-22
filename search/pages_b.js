@@ -1,17 +1,12 @@
 var searchData=
 [
-  ['idl_0',['IDL',['../dd/da9/page40_results.html#sect-idl',1,'']]],
-  ['imager_1',['IRIS Imager',['../d6/d3f/page43_nfiraos.html#autotoc_md23',1,'']]],
-  ['impact_20on_20simulation_20results_2',['Impact on simulation results',['../db/d87/md_docs_2claude__changes__20261120.html#claude_results',1,'']]],
-  ['implementation_3',['Implementation',['../da/d9f/page10_intro.html#intro-impl',1,'Implementation'],['../d4/d15/algorithm.html#autotoc_md32',1,'Implementation'],['../da/dbe/hysteresis.html#hyst-impl',1,'Implementation'],['../da/d48/pop.html#pop-impl',1,'Implementation'],['../d5/d98/page91_basics.html#sect-type-generic',1,'Type Generic Implementation']]],
-  ['influence_20function_4',['DM Actuator Influence Function',['../d4/d15/algorithm.html#sect-dm-actuator',1,'']]],
-  ['influence_20function_5',['influence function',['../d4/d15/algorithm.html#autotoc_md31',1,'Cubic influence function'],['../d4/d15/algorithm.html#autotoc_md30',1,'Linear influence function']]],
-  ['integral_6',['Fresnel diffraction integral',['../da/d48/pop.html#pop-fresnel-integral',1,'']]],
-  ['integration_7',['Continuous Integration',['../de/d19/page90_devel.html#devel-ci',1,'']]],
-  ['integration_8',['Continuous integration',['../d3/d4c/page20_compile.html#compile-ci',1,'']]],
-  ['interface_9',['interface',['../d3/d4c/page20_compile.html#compile-gui',1,'Graphical user interface'],['../d3/d4c/page20_compile.html#compile-mex',1,'MATLAB mex interface']]],
-  ['interface_20to_20a_20running_20maos_10',['Interface to a running maos',['../d3/d4c/page20_compile.html#compile-maos-client',1,'']]],
-  ['introduction_11',['Introduction',['../da/d9f/page10_intro.html',1,'']]],
-  ['iris_20imager_12',['IRIS Imager',['../d6/d3f/page43_nfiraos.html#autotoc_md23',1,'']]],
-  ['is_20modeled_13',['What is modeled',['../da/d9f/page10_intro.html#intro-model',1,'']]]
+  ['k_20band_20strehl_20ratio_0',['K band Strehl Ratio',['../d6/d3f/page43_nfiraos.html#autotoc_md27',1,'']]],
+  ['keck_20conf_1',['examples/keck.conf',['../d8/d82/keck.html',1,'page34_conf']]],
+  ['keck_5f2dm30_20conf_2',['examples/keck_2dm30.conf',['../d2/d72/keck_2dm30.html',1,'page34_conf']]],
+  ['keck_5f2dm60_20conf_3',['examples/keck_2dm60.conf',['../d9/da8/keck_2dm60.html',1,'page34_conf']]],
+  ['keck_5f3dm60_20conf_4',['examples/keck_3dm60.conf',['../d3/dbb/keck_3dm60.html',1,'page34_conf']]],
+  ['keck_5fkapa_20conf_5',['examples/keck_kapa.conf',['../d8/d5b/keck_kapa.html',1,'page34_conf']]],
+  ['keck_5fngs_20conf_6',['examples/keck_ngs.conf',['../da/dac/keck_ngs.html',1,'page34_conf']]],
+  ['key_20data_20structures_7',['Key Data Structures',['../d7/dbf/page93_maos.html#arch-structs',1,'']]],
+  ['keys_8',['Overriding and checking keys',['../da/dc3/page30_run.html#sect-config-override',1,'']]]
 ];

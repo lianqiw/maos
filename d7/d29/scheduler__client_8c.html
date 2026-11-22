@@ -117,6 +117,8 @@ Functions</h2></td></tr>
 <tr class="memitem:aff3729eaeaa11e6b58769cb1e930684f" id="r_aff3729eaeaa11e6b58769cb1e930684f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aff3729eaeaa11e6b58769cb1e930684f">init_hosts</a> ()</td></tr>
 <tr class="memitem:a66ce638173a027fd06e7d714a40d71a6" id="r_a66ce638173a027fd06e7d714a40d71a6"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a66ce638173a027fd06e7d714a40d71a6">lookup_hostaddr</a> (const char *hostname)</td></tr>
 <tr class="memitem:afb6b3f2cfe62dbcf0437cacd8328ab5d" id="r_afb6b3f2cfe62dbcf0437cacd8328ab5d"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afb6b3f2cfe62dbcf0437cacd8328ab5d">lookup_hostname</a> (const char *hostaddr)</td></tr>
+<tr class="memitem:aa29d06fbaa48e451677bb90dc8a8dfee" id="r_aa29d06fbaa48e451677bb90dc8a8dfee"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa29d06fbaa48e451677bb90dc8a8dfee">scheduler_password</a> (int create)</td></tr>
+<tr class="memitem:a3eda31ea0dccef8d1e77c019db72bf8f" id="r_a3eda31ea0dccef8d1e77c019db72bf8f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3eda31ea0dccef8d1e77c019db72bf8f">scheduler_auth</a> (int sock)</td></tr>
 <tr class="memitem:a937c9f864f3c274f2ad154e29e73461f" id="r_a937c9f864f3c274f2ad154e29e73461f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a937c9f864f3c274f2ad154e29e73461f">scheduler_connect</a> (const char *hostname)</td></tr>
 <tr class="memitem:a58bf53ff0d18a7c82955c024e31fe525" id="r_a58bf53ff0d18a7c82955c024e31fe525"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a58bf53ff0d18a7c82955c024e31fe525">scheduler_connect_self</a> (int block)</td></tr>
 <tr class="memitem:a25cea5f5488b400b89f7cac75f93b815" id="r_a25cea5f5488b400b89f7cac75f93b815"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a25cea5f5488b400b89f7cac75f93b815">scheduler_report_path</a> (const char *path)</td></tr>
@@ -287,6 +289,56 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="aa29d06fbaa48e451677bb90dc8a8dfee" name="aa29d06fbaa48e451677bb90dc8a8dfee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa29d06fbaa48e451677bb90dc8a8dfee">&#9670;&#160;</a></span>scheduler_password()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char * scheduler_password </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>create</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Read the password that authenticates TCP connections to the scheduler, including the browser monitor, from the first line of ~/.aos/htpasswd.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">create</td><td>If the file does not exist, create it with a random password. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated password; the caller frees it. NULL if not available. </dd></dl>
+
+</div>
+</div>
+<a id="a3eda31ea0dccef8d1e77c019db72bf8f" name="a3eda31ea0dccef8d1e77c019db72bf8f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3eda31ea0dccef8d1e77c019db72bf8f">&#9670;&#160;</a></span>scheduler_auth()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int scheduler_auth </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>sock</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Authenticate a TCP connection to the scheduler. The scheduler sends a random nonce and the client replies with base64(sha1(nonce+password)), so that the password is not sent over the network.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sock</td><td>Socket connected to the scheduler. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, -1 on failure. </dd></dl>
+
+</div>
+</div>
 <a id="a937c9f864f3c274f2ad154e29e73461f" name="a937c9f864f3c274f2ad154e29e73461f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a937c9f864f3c274f2ad154e29e73461f">&#9670;&#160;</a></span>scheduler_connect()</h2>
 
@@ -301,7 +353,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Connect to the scheduler at hostname using PORT. Returns the socket or -1 if failed or the scheduler is disabled.</p>
+<p>Connect to the scheduler at hostname using PORT and authenticate. Returns the socket or -1 if failed or the scheduler is disabled.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">hostname</td><td>Host name or address of the scheduler. </td></tr>

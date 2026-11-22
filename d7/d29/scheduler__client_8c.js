@@ -6,6 +6,8 @@ var scheduler__client_8c =
     [ "init_hosts", "d7/d29/scheduler__client_8c.html#aff3729eaeaa11e6b58769cb1e930684f", null ],
     [ "lookup_hostaddr", "d7/d29/scheduler__client_8c.html#a66ce638173a027fd06e7d714a40d71a6", null ],
     [ "lookup_hostname", "d7/d29/scheduler__client_8c.html#afb6b3f2cfe62dbcf0437cacd8328ab5d", null ],
+    [ "scheduler_password", "d7/d29/scheduler__client_8c.html#aa29d06fbaa48e451677bb90dc8a8dfee", null ],
+    [ "scheduler_auth", "d7/d29/scheduler__client_8c.html#a3eda31ea0dccef8d1e77c019db72bf8f", null ],
     [ "scheduler_connect", "d7/d29/scheduler__client_8c.html#a937c9f864f3c274f2ad154e29e73461f", null ],
     [ "scheduler_connect_self", "d7/d29/scheduler__client_8c.html#a58bf53ff0d18a7c82955c024e31fe525", null ],
     [ "scheduler_report_path", "d7/d29/scheduler__client_8c.html#a25cea5f5488b400b89f7cac75f93b815", null ],
