@@ -749,7 +749,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 					ttx+=simu->ttmreal->p[0];
 					tty+=simu->ttmreal->p[1];
 				}
-				if(simu->fsmreal&&PN(simu->fsmreal, iwfs)&&!powfs[ipowfs].llt){
+				if(simu->fsmreal&&PN(simu->fsmreal, iwfs)&&!parms->powfs[ipowfs].llt){
 					ttx+=simu->fsmreal->p[iwfs]->p[0];
 					tty+=simu->fsmreal->p[iwfs]->p[1];
 				}
@@ -826,6 +826,30 @@ void *gpu_wfsgrad_queue(thread_t* info){
 					CUDA_CHECK_ERROR;
 					ctoc("shwfs");
 				}/*do phy */
+			}
+			if(powfs[ipowfs].llt&&!do_phy&&do_geom){
+				/*In geometric optics, the uplink tip/tilt shifts the spot as in
+				  physical optics. Same as the CPU code in wfsgrad_iwfs(). gradacc
+				  is already scaled by 1/(dtrat*nhs).*/
+				dmat* lltopd=wfsgrad_lltopd(simu, iwfs, isim, hs);
+				if(save_opd){
+					zfarr_push(simu->save->wfslltopd[iwfs], isim, lltopd);
+				}
+				real ttx=0, tty=0;
+				wfsgrad_lltopd_tt(&ttx, &tty, powfs[ipowfs].llt, lltopd);
+				const dmat* saa=PR(powfs[ipowfs].saa, wfsind);
+				const real scale=1./(dtrat*nhs);
+				dmat* gtt=dnew(nsa*2, 1);
+				for(long isa=0; isa<nsa; isa++){
+					if(P(saa, isa)<parms->powfs[ipowfs].saat) continue;//vignetted subapertures are not measured
+					P(gtt, isa)=-ttx*scale;
+					P(gtt, isa+nsa)=-tty*scale;
+				}
+				curmat cgtt;
+				cp2gpu(cgtt, gtt, stream);
+				Add(gradacc, (Real)1, cgtt, (Real)1, stream);
+				CUDA_SYNC_STREAM;
+				dfree(gtt);
 			}
 			if(dtrat_output && (ihs+1)==nhs){
 				Real rne=0, bkgrnd=0;

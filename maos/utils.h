@@ -61,6 +61,8 @@ static inline real fc2lp(real fc, real dt){
 }
 real average_powfs(dmat* vec, lmat* wfs, int replace);
 void wfsgrad_llt_tt(real *ttx, real *tty, sim_t *simu, int iwfs, int isim);
+dmat *wfsgrad_lltopd(sim_t *simu, int iwfs, int isim, real hs);
+void wfsgrad_lltopd_tt(real *ttx, real *tty, const llt_t *llt, const dmat *lltopd);
 void wait_dmreal(sim_t*simu, int isim);
 void post_dmreal(sim_t *simu);
 void addlow2dm(dcell** dmval, const parms_t *parms, const recon_t *recon, const dcell* low_val, real gain);

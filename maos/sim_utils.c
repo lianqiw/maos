@@ -818,7 +818,7 @@ static void init_simu_wfs(sim_t* simu){
 				P(simu->ints, iwfs)=dcellnew_same(1, 1, powfs[ipowfs].saloc->nloc, powfs[ipowfs].pywfs->cfg->nside);
 			}
 		}
-		if(powfs[ipowfs].llt){//only set up for physical optics, as is lltopd in wfsgrad
+		if(powfs[ipowfs].llt){//set up for LGS WFS in physical and geometric optics (see setup_shwfs_phy())
 			P(simu->lltopd, iwfs)=dnew(powfs[ipowfs].llt->pts->nxsa, powfs[ipowfs].llt->pts->nysa);
 		}
 		if(parms->powfs[ipowfs].phystep!=0||P(parms->save.gradgeom, iwfs)||parms->powfs[ipowfs].pistatout){
@@ -841,7 +841,13 @@ static void init_simu_wfs(sim_t* simu){
 	if(recon->ngsmod->Mbias){
 		simu->Mbias=dcellnew_same(1, 1, recon->ngsmod->nmod, 1);
 	}
-	if(parms->nphypowfs){
+	int hasfsm=0;//LGS uplink FSM or FSM dithering, in geometric or physical optics.
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(parms->powfs[ipowfs].llt||parms->powfs[ipowfs].dither==1){
+			hasfsm=1;
+		}
+	}
+	if(parms->nphypowfs||hasfsm){
 		//TODO: split implementation for each POWFS.
 		long nnx[nwfs];
 		for(int iwfs=0; iwfs<nwfs; iwfs++){

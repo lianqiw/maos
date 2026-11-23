@@ -1709,6 +1709,9 @@ void setup_shwfs_phy(const parms_t* parms, powfs_t* powfs){
 			if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy){
 				setup_shwfs_phygrad(powfs, parms, ipowfs);
 			}
+		}else if(parms->powfs[ipowfs].nwfs&&parms->powfs[ipowfs].type==WFS_SH&&parms->powfs[ipowfs].llt){
+			//geometric optics only: the uplink tip/tilt is applied as in physical optics (see wfsgrad_lltopd()).
+			setup_powfs_llt(powfs, parms, ipowfs);
 		}
 	}/*ipowfs */
 	toc2("setup_shwfs_phy");

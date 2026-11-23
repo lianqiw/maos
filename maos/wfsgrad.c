@@ -129,6 +129,101 @@ void wfsgrad_llt_tt(real*ttx, real*tty, sim_t* simu, int iwfs, int isim){
 	}
 }
 /**
+   Compute the uplink OPD of the laser launch telescope (LLT) of an LGS WFS: the
+   LLT NCPA, the uplink turbulence, and the tip/tilt of the uplink FSM (or the
+   ideal FSM, which removes the tip/tilt completely and updates
+   simu->fsmreal), jitter, and pointing errors. Used by physical optics through
+   wfsints() and, by its tip/tilt, by geometric optics.
+
+   @param[in,out] simu Simulation data. simu->lltopd is updated.
+   @param[in] iwfs Index of the WFS.
+   @param[in] isim Time step index.
+   @param[in] hs Height of the guide star (or of the sodium sublayer).
+   @return simu->lltopd[iwfs].
+*/
+dmat* wfsgrad_lltopd(sim_t* simu, int iwfs, int isim, real hs){
+	const parms_t* parms=simu->parms;
+	const powfs_t* powfs=simu->powfs;
+	const mapcell* atm=simu->atm;
+	const int ipowfs=parms->wfs[iwfs].powfs;
+	const int wfsind=(int)P(parms->powfs[ipowfs].wfsind, iwfs);
+	const int nps=parms->atm.nps;
+	const real atmscale=(simu->atmscale&&!parms->atm.dtrat)?P(simu->atmscale, isim):1;
+	const real dt=parms->sim.dt;
+	dmat* lltopd=P(simu->lltopd, iwfs);
+	if(powfs[ipowfs].llt->ncpa){//start with NCPA
+		dadd(&lltopd, 0, PR(powfs[ipowfs].llt->ncpa, wfsind, 0), 1);
+	}else{//start with zero.
+		dzero(lltopd);
+	}
+	const long illt=P(parms->powfs[ipowfs].llt->i, wfsind);
+	if(atm){/*LLT OPD */
+		real wt=1;
+		for(int ips=0; ips<nps; ips++){
+			const real hl=P(atm, ips)->ht;
+			const real scale=1.-hl/hs;
+			if(scale<0) continue;
+			const real ox=P(parms->powfs[ipowfs].llt->ox, illt);
+			const real oy=P(parms->powfs[ipowfs].llt->oy, illt);
+			const real thetax=parms->wfs[iwfs].thetax-ox/hs;
+			const real thetay=parms->wfs[iwfs].thetay-oy/hs;
+			real vx=0;
+			real vy=0;
+			map_t *atmi;
+			if(parms->atm.dtrat>0){
+				int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, (int)NX(atm), parms->atm.interp);
+				atmi=P(atm, iframe);
+			}else{
+				vx=P(atm, ips)->vx;
+				vy=P(atm, ips)->vy;
+				atmi=P(atm, ips);
+			}
+		
+			prop(ADDR((propdata_t){.mapin=atmi, .ptsout=powfs[ipowfs].llt->pts,
+				.phiout=P(lltopd), .alpha=atmscale*wt, .hs=hs, 
+				.thetax=thetax, .thetay=thetay,
+				.shiftx=ox-vx*isim*dt, .shifty=oy-vy*isim*dt,
+				.wrap=1}));
+		}
+	}
+	if(parms->powfs[ipowfs].idealfsm){
+		/* remove tip/tilt completely */
+		dmat* lltg=P(simu->fsmreal, iwfs);
+		dzero(lltg);
+		pts_ztilt(&lltg, powfs[ipowfs].llt->pts,
+			powfs[ipowfs].llt->imcc,
+			P(powfs[ipowfs].llt->amp),
+			P(lltopd));
+		dscale(lltg, -1);
+		real ptt[3]={0, P(P(simu->fsmreal, iwfs), 0), P(P(simu->fsmreal, iwfs), 1)};
+		loc_add_ptt(lltopd, ptt, powfs[ipowfs].llt->loc);
+	}else{
+		real ttx=0, tty=0;//uplink jitter and correction
+		wfsgrad_llt_tt(&ttx, &tty, simu, iwfs, isim);
+		if(ttx!=0||tty!=0){ /* add tip/tilt to llt opd */
+			real ptt[3]={0, ttx, tty};
+			loc_add_ptt(lltopd, ptt, powfs[ipowfs].llt->loc);
+		}
+	}
+	return lltopd;
+}
+/**
+   Compute the tip/tilt of the uplink OPD (zernike best fit weighted by the
+   beam amplitude).
+
+   @param[out] ttx Tip (rad).
+   @param[out] tty Tilt (rad).
+   @param[in] llt The LLT.
+   @param[in] lltopd Uplink OPD from wfsgrad_lltopd().
+*/
+void wfsgrad_lltopd_tt(real* ttx, real* tty, const llt_t* llt, const dmat* lltopd){
+	dmat* lltg=dnew(2, 1);
+	pts_ztilt(&lltg, llt->pts, llt->imcc, P(llt->amp), P(lltopd));
+	*ttx=P(lltg, 0);
+	*tty=P(lltg, 1);
+	dfree(lltg);
+}
+/**
    computes close loop and pseudo open loop gradidents for both gometric and
    physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in
    physical optics mode.
@@ -262,7 +357,7 @@ void* wfsgrad_iwfs(thread_t* info){
 				ptt[2]-=P(simu->ttmreal, 1);
 			}
 			//For dithering with downlink instead of uplink FSM
-			if(simu->fsmreal&&NE(simu->fsmreal, iwfs)&&!powfs[ipowfs].llt){
+			if(simu->fsmreal&&NE(simu->fsmreal, iwfs)&&!parms->powfs[ipowfs].llt){
 				ptt[1]-=P(P(simu->fsmreal, iwfs), 0);
 				ptt[2]-=P(P(simu->fsmreal, iwfs), 1);
 			}
@@ -303,61 +398,7 @@ void* wfsgrad_iwfs(thread_t* info){
 		}
 		dmat* lltopd=NULL;
 		if(powfs[ipowfs].llt){//If there is LLT, apply FSM onto LLT
-			lltopd=P(simu->lltopd, iwfs);
-			if(powfs[ipowfs].llt->ncpa){//start with NCPA
-				dadd(&lltopd, 0, PR(powfs[ipowfs].llt->ncpa, wfsind, 0), 1);
-			}else{//start with zero.
-				dzero(lltopd);
-			}
-			const long illt=P(parms->powfs[ipowfs].llt->i, wfsind);
-			if(atm){/*LLT OPD */
-				real wt=1;
-				for(int ips=0; ips<nps; ips++){
-					const real hl=P(atm, ips)->ht;
-					const real scale=1.-hl/hs;
-					if(scale<0) continue;
-					const real ox=P(parms->powfs[ipowfs].llt->ox, illt);
-					const real oy=P(parms->powfs[ipowfs].llt->oy, illt);
-					const real thetax=parms->wfs[iwfs].thetax-ox/hs;
-					const real thetay=parms->wfs[iwfs].thetay-oy/hs;
-					real vx=0;
-					real vy=0;
-					map_t *atmi;
-					if(parms->atm.dtrat>0){
-						int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, (int)NX(atm), parms->atm.interp);
-						atmi=P(atm, iframe);
-					}else{
-						vx=P(atm, ips)->vx;
-						vy=P(atm, ips)->vy;
-						atmi=P(atm, ips);
-					}
-				
-					prop(ADDR((propdata_t){.mapin=atmi, .ptsout=powfs[ipowfs].llt->pts,
-						.phiout=P(lltopd), .alpha=atmscale*wt, .hs=hs, 
-						.thetax=thetax, .thetay=thetay,
-						.shiftx=ox-vx*isim*dt, .shifty=oy-vy*isim*dt,
-						.wrap=1}));
-				}
-			}
-			if(parms->powfs[ipowfs].idealfsm){
-				/* remove tip/tilt completely */
-				dmat* lltg=P(simu->fsmreal, iwfs);
-				dzero(lltg);
-				pts_ztilt(&lltg, powfs[ipowfs].llt->pts,
-					powfs[ipowfs].llt->imcc,
-					P(powfs[ipowfs].llt->amp),
-					P(lltopd));
-				dscale(lltg, -1);
-				real ptt[3]={0, P(P(simu->fsmreal, iwfs), 0), P(P(simu->fsmreal, iwfs), 1)};
-				loc_add_ptt(lltopd, ptt, powfs[ipowfs].llt->loc);
-			}else{
-				real ttx=0, tty=0;//uplink jitter and correction
-				wfsgrad_llt_tt(&ttx, &tty, simu, iwfs, isim);
-				if(ttx!=0||tty!=0){ /* add tip/tilt to llt opd */
-					real ptt[3]={0, ttx, tty};
-					loc_add_ptt(lltopd, ptt, powfs[ipowfs].llt->loc);
-				}
-			}
+			lltopd=wfsgrad_lltopd(simu, iwfs, isim, hs);
 			if(save_opd){
 				zfarr_push(simu->save->wfslltopd[iwfs], isim, lltopd);
 			}
@@ -422,6 +463,21 @@ void* wfsgrad_iwfs(thread_t* info){
 			}
 		}
 		TIM(3);
+		if(lltopd&&!do_phy&&do_geom){
+			/*In geometric optics, the uplink tip/tilt shifts the spot as in
+			  physical optics, where wfsints() multiplies the downlink OTF with
+			  the conjugate of the uplink OTF. It is added after wfsints(), which
+			  uses lltopd directly and gradcalc as the tip/tilt reference.*/
+			real ttx=0, tty=0;
+			wfsgrad_lltopd_tt(&ttx, &tty, powfs[ipowfs].llt, lltopd);
+			const long nsa=NX(*gradacc)/2;
+			const dmat* saa=PR(powfs[ipowfs].saa, wfsind);
+			for(long isa=0; isa<nsa; isa++){
+				if(P(saa, isa)<parms->powfs[ipowfs].saat) continue;//vignetted subapertures are not measured
+				P(*gradacc, isa)-=ttx;
+				P(*gradacc, isa+nsa)-=tty;
+			}
+		}
 		if(simu->wfsflags[ipowfs].gradout && (ihs+1)==nhs){
 			if(do_geom){
 				if(dtrat!=1||nhs!=1){
@@ -628,16 +684,15 @@ void* wfsgrad_post(thread_t* info){
 				dadd(&P(simu->gradcl, iwfs), 1, P(parms->dbg.gradoff, iwfs, icol), -1);
 			}
 
-			if(do_phy){
-				if(NE(simu->fsmerr_store, iwfs)){
-					wfsgrad_fsm(simu, iwfs);//compute fsmerr from gradients
-				}
-				if(parms->powfs[ipowfs].dither){
-					dither_acc(simu, iwfs);
-				}
-				if(!parms->powfs[ipowfs].trs&&parms->powfs[ipowfs].skip!=2&&simu->fsmerr){
-					dzero(P(simu->fsmerr, iwfs));//do not close fsm loop when t/t is used for AO.
-				}
+			if(NE(simu->fsmerr_store, iwfs)){
+				//compute fsmerr from gradients. The LGS uplink FSM loop is closed in geometric optics as in physical optics.
+				wfsgrad_fsm(simu, iwfs);
+			}
+			if(do_phy&&parms->powfs[ipowfs].dither){
+				dither_acc(simu, iwfs);
+			}
+			if(!parms->powfs[ipowfs].trs&&parms->powfs[ipowfs].skip!=2&&simu->fsmerr){
+				dzero(P(simu->fsmerr, iwfs));//do not close fsm loop when t/t is used for AO.
 			}
 			if(parms->powfs[ipowfs].llt){
 				dmm(&P(simu->LGSfocus, iwfs), 0, P(simu->recon->RFlgsg, iwfs, iwfs), P(simu->gradcl, iwfs), "nn", 1);
