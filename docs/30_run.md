@@ -37,7 +37,7 @@ maos -c scao_ngs.conf sim.seeds=[1 10] -d -o scao_ngs override.conf
 | `-h`, `--help` | Print the help message and exit. |
 | `-c FILE.conf`, `--conf=FILE.conf` | Use `FILE.conf` as the baseline (main) configuration instead of `default.conf`. |
 | `-o DIR`, `--output=DIR` | Save results to `DIR` (created if needed). maos changes into `DIR` before running. Without `-o`, nothing is saved, and options that require saving (`save.setup`, `save.all`, `sim.skysim`, `evl.psfmean`, `evl.psfhist`) cause an error. |
-| `-n N`, `--nthread=N` | Use `N` threads. The default is the number of online CPU cores, or `OMP_NUM_THREADS` if it is smaller. |
+| `-n N`, `--nthread=N` | Use `N` threads. The default is the number of physical CPU cores (hyperthreads are not counted), or `OMP_NUM_THREADS` if it is set and smaller than the number of online processors. The best value depends on the configuration: more threads than needed add synchronization overhead. |
 | `-g i`, `--gpu=i` | Use GPU `i` (in `nvidia-smi` order). Repeat to use several GPUs, e.g. `-g0 -g2`. `-g-1` disables the GPU. Default: automatic. |
 | `-G N`, `--ngpu=N` | Use `N` GPUs, chosen automatically. When both `-g` and `-G` are given, `-g` takes priority. |
 | `-d`, `--detach` | Detach from the terminal and run in the background. Requires `-o`. |
@@ -157,7 +157,7 @@ them in the shell.
 | `MAOS_GPU_DISABLE_<i>` | (unset) | Set to a nonzero value to exclude GPU `<i>` (nvidia-smi index). |
 | `MAOS_MISREG_SEQ` | 1 | Random seed used to randomize WFS misregistration set by `powfs.misregx`, `powfs.misregy`, and `powfs.misregc`. |
 | `MAOS_DRAW_NOREUSE` | 0 | Set to 1 to start a new `drawdaemon` window instead of reusing an existing one. |
-| `OMP_NUM_THREADS` | (unset) | When smaller than the number of CPU cores, limits the default number of threads (see `-n`). |
+| `OMP_NUM_THREADS` | (unset) | When smaller than the number of online processors, sets the default number of threads (see `-n`). |
 | `CUDA_LAUNCH_BLOCKING` | (unset) | When nonzero, maos uses only the default CUDA stream. |
 | `MAOS_DIRECT_LAUNCH` | (internal) | Set by the scheduler when it launches a job. Do not set it. |
 

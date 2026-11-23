@@ -40,6 +40,38 @@
    \file process.c
    A few routines handles process resource.
 */
+/**
+   Return the number of physical cores, which is smaller than the number of
+   online processors (get_ncpu()) when simultaneous multithreading
+   (hyperthreading) is enabled. Falls back to get_ncpu() if unknown.
+
+   @return Number of physical cores.
+*/
+static int get_ncore(void){
+	int ncore=0;
+#if defined(__linux__)
+	//count the processors that are the first of their core
+	const int nproc=get_ncpu();
+	for(int iproc=0; iproc<nproc; iproc++){
+		char fn[PATH_MAX];
+		snprintf(fn, sizeof(fn), "/sys/devices/system/cpu/cpu%d/topology/thread_siblings_list", iproc);
+		FILE *fp=fopen(fn, "r");
+		if(!fp) continue;
+		int first=-1;
+		if(fscanf(fp, "%d", &first)==1&&first==iproc){
+			ncore++;
+		}
+		fclose(fp);
+	}
+#elif defined(__APPLE__)
+	size_t len=sizeof(ncore);
+	if(sysctlbyname("hw.physicalcpu", &ncore, &len, NULL, 0)){
+		ncore=0;
+	}
+#endif
+	if(ncore<=0) ncore=get_ncpu();
+	return ncore;
+}
 /**True number of cores*/
 int NCPU=0;
 /**Number of hyper threads. may be larger than NCPU. MAXTHREAD=2*NCPU when hyperthreading is enabled.*/
@@ -176,16 +208,21 @@ void init_process(void){
 	
 	NCPU=get_ncpu();
 	MAXTHREAD=(int)sysconf(_SC_NPROCESSORS_ONLN);
+	int nthread_env=0;
 #if _OPENMP
 	//The openmp library may have not yet initialized, so we parse OMP_NUM_THREADS instead.
 	if(getenv("OMP_NUM_THREADS")){
 		int nthread=(int)strtol(getenv("OMP_NUM_THREADS"), 0, 10);
 		if(nthread<MAXTHREAD&&nthread>0){
 			MAXTHREAD=nthread;
+			nthread_env=nthread;
 		}
 	}
 #endif
-	if(!NTHREAD) NTHREAD=MAXTHREAD;
+	/*By default use one thread per physical core. Hyperthreads do not help the
+	  memory bound computations and the synchronization overhead grows with
+	  the number of threads.*/
+	if(!NTHREAD) NTHREAD=nthread_env?nthread_env:MIN(get_ncore(), MAXTHREAD);
 	TCK=(int)sysconf(_SC_CLK_TCK);
 #if defined(__linux__)
 	FILE* fp=fopen("/proc/meminfo", "r");

@@ -35,7 +35,7 @@ static void print_usage(int junk){
 		"-h, --help        to print out this message\n"
 		"-d, --detach      to detach from terminal and run in background\n"
 		"-f, --force       force starting simulation without scheduler\n"
-		"-n N, --nthread=N Use N threads, default is all CPU cores\n"
+		"-n N, --nthread=N Use N threads, default is the number of physical cores\n"
 		"-o DIR, --output=DIR\n"
 		"                  output the results to DIR.\n"
 		"-c FILE.conf, --conf=FILE.conf\n"

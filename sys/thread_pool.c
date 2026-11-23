@@ -33,9 +33,9 @@
 
 */
 /*
-  The jobs are keep in a linked list. thread_pool_queue will queue the jobs to
-  the head or end of the list while each thread will remove jobs from the
-  beginning of the list when they are waked.
+  The jobs are kept in lock free stacks (urgent and normal). thread_pool_queue
+  pushes each batch of jobs, in order, to the top of the stack, and the threads
+  take jobs from the top. Batches are therefore run last in first out.
 
   2010-12-13: Improved the thread scheduling by test pool->nidle instead of
   pool->jobstail. This reduces the tomography of 100 steps down to 0.65s from
@@ -287,9 +287,9 @@ typedef union{
 
 /**all jobs are allocated here. The first element has next set to 0 to indicate end of list*/
 static jobs_t *jobsall=NULL;
-/**Start of the fifo list of pending jobs*/
+/**Top of the stack of pending jobs*/
 static jobshead_t jobsnormal={0L};
-/**Start of the fifo list of urgent jobs*/
+/**Top of the stack of urgent jobs*/
 static jobshead_t jobsurgent={0L};
 /**saving unused jobs_t*/
 static jobshead_t jobspool={0L};

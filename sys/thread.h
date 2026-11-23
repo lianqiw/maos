@@ -157,8 +157,13 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
 #else
 #define expect_level(n)
 #endif
-#define OMP_FOR(nthread)    expect_level(0);DO_PRAGMA(omp parallel for default(shared) num_threads(nthread))
-#define OMP_FOR_COLLAPSE(n, nthread) expect_level(0);DO_PRAGMA(omp parallel for default(shared) collapse(n) num_threads(nthread))
+/*The number of threads is limited to NTHREAD (maos -n). Inside a parallel region with
+  one thread (-n 1), which is not active, the loop would otherwise create a team of
+  nthread threads at every call.*/
+extern int NTHREAD;
+#define OMP_NTHREAD(nthread) ((NTHREAD>0&&NTHREAD<(nthread))?NTHREAD:(nthread))
+#define OMP_FOR(nthread)    expect_level(0);DO_PRAGMA(omp parallel for default(shared) num_threads(OMP_NTHREAD(nthread)))
+#define OMP_FOR_COLLAPSE(n, nthread) expect_level(0);DO_PRAGMA(omp parallel for default(shared) collapse(n) num_threads(OMP_NTHREAD(nthread)))
 #define OMP(A) DO_PRAGMA(omp A)
 #define OMP_TASK_FOR(ntask)      expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(ntask) priority(1))
 #define OMP_TASK_FOR_COLLAPSE(n, ntask) expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(ntask) collapse(n) priority(1))

@@ -78,7 +78,7 @@ static void print_usage(int junk){
 		"-d, --detach      to detach from terminal and run in background. Requires -o.\n"
 		"-f, --force       force starting simulation without waiting for the scheduler\n"
 		"-O, --override    rerun seeds that are already finished (Res_seed.done exists)\n"
-		"-n, --nthread=N   Use N threads, default is all CPU cores\n"
+		"-n, --nthread=N   Use N threads, default is the number of physical cores\n"
 		"-o, --output=DIR  output the results to DIR.\n"
 		"-c, --conf=FILE.conf\n"
 		"                  Use FILE.conf as the baseline config instead of default.conf\n"
