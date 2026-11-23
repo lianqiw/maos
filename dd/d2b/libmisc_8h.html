@@ -113,6 +113,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a805adf2e9f909d6fcda91fd6a2a66ae2" id="r_a805adf2e9f909d6fcda91fd6a2a66ae2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a805adf2e9f909d6fcda91fd6a2a66ae2">loc_calib</a> (const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *GA, <a class="el" href="../../d3/d84/lib_2accphi_8h.html#d9/db3/structpropdata__t">propdata_t</a> *propdata, int maxorder)</td></tr>
 <tr class="memitem:a210f7b71835167dc3ff695d7f38a3a7f" id="r_a210f7b71835167dc3ff695d7f38a3a7f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a210f7b71835167dc3ff695d7f38a3a7f">polyfit</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *x, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *y, int maxorder)</td></tr>
 <tr class="memitem:ac019db172581dae2348fd2ffe1b371d3" id="r_ac019db172581dae2348fd2ffe1b371d3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac019db172581dae2348fd2ffe1b371d3">polyval</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *x, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *coeff, int separate)</td></tr>
+<tr class="memitem:a9d77bf8d1060f2b89962556f1b3b8d3e" id="r_a9d77bf8d1060f2b89962556f1b3b8d3e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9d77bf8d1060f2b89962556f1b3b8d3e">mkamp</a> (const <a class="el" href="../../d1/d83/loc_8h.html#da/ddc/structloc__t">loc_t</a> *loc, const <a class="el" href="../../dc/db7/map_8h.html#d6/da3/structmap__t">map_t</a> *aper, real misregx, real misregy, real D, real Din)</td></tr>
+<tr class="memitem:ae0ab18841f7e0806ad6ec56db89b97f0" id="r_ae0ab18841f7e0806ad6ec56db89b97f0"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae0ab18841f7e0806ad6ec56db89b97f0">parabolic_peak_1d</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *corr)</td></tr>
+<tr class="memitem:a6c35528d5c4a26cef5db89bca4a82c16" id="r_a6c35528d5c4a26cef5db89bca4a82c16"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6c35528d5c4a26cef5db89bca4a82c16">parabolic_peak_sum</a> (real *grad, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *corr, int nbox)</td></tr>
 <tr class="memitem:abcdf356d4561aff928599f962b9e9cae" id="r_abcdf356d4561aff928599f962b9e9cae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d7/d63/classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abcdf356d4561aff928599f962b9e9cae">wrap_seq</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> index, <a class="el" href="../../d7/d63/classlong.html">long</a> n)</td></tr>
 <tr class="memitem:a5b60d683c9be737576399efb2096b1f6" id="r_a5b60d683c9be737576399efb2096b1f6"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5b60d683c9be737576399efb2096b1f6">wrap2range</a> (real val, real low, real high)</td></tr>
 <tr class="memitem:a25f8efb8afacde9b737e6a9d9ce27c8a" id="r_a25f8efb8afacde9b737e6a9d9ce27c8a"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a25f8efb8afacde9b737e6a9d9ce27c8a">pchip_wt</a> (int i, float u)</td></tr>
@@ -499,6 +502,120 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Newly allocated column vector, or one column per term if separate is set. The caller frees it. </dd></dl>
+
+</div>
+</div>
+<a id="a9d77bf8d1060f2b89962556f1b3b8d3e" name="a9d77bf8d1060f2b89962556f1b3b8d3e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9d77bf8d1060f2b89962556f1b3b8d3e">&#9670;&#160;</a></span>mkamp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> * mkamp </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="../../d1/d83/loc_8h.html#da/ddc/structloc__t">loc_t</a> *</td>          <td class="paramname"><span class="paramname"><em>loc</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="../../dc/db7/map_8h.html#d6/da3/structmap__t">map_t</a> *</td>          <td class="paramname"><span class="paramname"><em>aper</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>misregx</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>misregy</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>D</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>Din</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Create WFS amplitude map from coordinate, masked with annular defined by (D,Din).</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Coordinate of the amplitude map. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aper</td><td>Aperture map. If not NULL, it is ray traced to loc instead of using (D,Din). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">misregx</td><td>Misregistration along x (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">misregy</td><td>Misregistration along y (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">D</td><td>Outer diameter (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">Din</td><td>Inner diameter (m). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated amplitude; the caller frees it. </dd></dl>
+
+</div>
+</div>
+<a id="ae0ab18841f7e0806ad6ec56db89b97f0" name="ae0ab18841f7e0806ad6ec56db89b97f0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0ab18841f7e0806ad6ec56db89b97f0">&#9670;&#160;</a></span>parabolic_peak_1d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real parabolic_peak_1d </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>corr</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Fit 3 points around the peak of a 1-d profile.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">corr</td><td>The 1-d profile. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Peak location (in pixels) relative to the center. </dd></dl>
+
+</div>
+</div>
+<a id="a6c35528d5c4a26cef5db89bca4a82c16" name="a6c35528d5c4a26cef5db89bca4a82c16"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c35528d5c4a26cef5db89bca4a82c16">&#9670;&#160;</a></span>parabolic_peak_sum()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void parabolic_peak_sum </td>
+          <td>(</td>
+          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>grad</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>corr</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>nbox</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>First sum along 1 dimension, then fit 3 points around the peak. More robust than the old method.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">grad</td><td>Peak location along x and y (in pixels) relative to the center. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">corr</td><td>The 2-d correlation. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nbox</td><td>Size of the central box to use. Use the full array if not positive or too large. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

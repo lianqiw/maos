@@ -141,7 +141,7 @@ Functions</h2></td></tr>
 <tr class="memitem:ac70064ac7d2425cc75006eaa6bea8a4b" id="r_ac70064ac7d2425cc75006eaa6bea8a4b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d6/da3/structmap__t">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac70064ac7d2425cc75006eaa6bea8a4b">mapref</a> (const <a class="el" href="#d6/da3/structmap__t">map_t</a> *A)</td></tr>
 <tr class="memitem:a80e1822405617f91e90e4ff5f0225a80" id="r_a80e1822405617f91e90e4ff5f0225a80"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d6/da3/structmap__t">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a80e1822405617f91e90e4ff5f0225a80">mapdup</a> (const <a class="el" href="#d6/da3/structmap__t">map_t</a> *A)</td></tr>
 <tr class="memitem:a2f14bff75349a1a03b75f0a7665cefb6" id="r_a2f14bff75349a1a03b75f0a7665cefb6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2f14bff75349a1a03b75f0a7665cefb6">mapcircle</a> (<a class="el" href="#d6/da3/structmap__t">map_t</a> *map, real r, real val)</td></tr>
-<tr class="memitem:a37d70ae639530fbecf1e8393a360114a" id="r_a37d70ae639530fbecf1e8393a360114a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a37d70ae639530fbecf1e8393a360114a">map_d_din</a> (<a class="el" href="#d6/da3/structmap__t">map_t</a> *map, real *d, real *din)</td></tr>
+<tr class="memitem:a46421d42163fce60b437fec874a0393f" id="r_a46421d42163fce60b437fec874a0393f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a46421d42163fce60b437fec874a0393f">map_d_din</a> (real *d, real *din, <a class="el" href="#d6/da3/structmap__t">map_t</a> *map)</td></tr>
 <tr class="memitem:a1863fb416c429ceb5076bbcec266245c" id="r_a1863fb416c429ceb5076bbcec266245c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1863fb416c429ceb5076bbcec266245c">create_metapupil</a> (<a class="el" href="#d6/da3/structmap__t">map_t</a> **map, <a class="el" href="../../d7/d63/classlong.html">long</a> *nx, <a class="el" href="../../d7/d63/classlong.html">long</a> *ny, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *dirs, real D, real ht, real dx, real dy, real offset, real guard, <a class="el" href="../../d7/d63/classlong.html">long</a> ninx, <a class="el" href="../../d7/d63/classlong.html">long</a> niny, int pad, int square)</td></tr>
 <tr class="memitem:af6072757526bdf462d0333b0e483770e" id="r_af6072757526bdf462d0333b0e483770e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af6072757526bdf462d0333b0e483770e">map_make_keywords</a> (<a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *map)</td></tr>
 <tr class="memitem:a1880edb504252cc05cfc3364510633e0" id="r_a1880edb504252cc05cfc3364510633e0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1880edb504252cc05cfc3364510633e0">map_parse_keywords</a> (<a class="el" href="#d6/da3/structmap__t">map_t</a> *in)</td></tr>
@@ -1026,8 +1026,8 @@ make_keywords</td>
 
 </div>
 </div>
-<a id="a37d70ae639530fbecf1e8393a360114a" name="a37d70ae639530fbecf1e8393a360114a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a37d70ae639530fbecf1e8393a360114a">&#9670;&#160;</a></span>map_d_din()</h2>
+<a id="a46421d42163fce60b437fec874a0393f" name="a46421d42163fce60b437fec874a0393f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46421d42163fce60b437fec874a0393f">&#9670;&#160;</a></span>map_d_din()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1035,26 +1035,26 @@ make_keywords</td>
         <tr>
           <td class="memname">void map_d_din </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="#d6/da3/structmap__t">map_t</a> *</td>          <td class="paramname"><span class="paramname"><em>map</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>d</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>din</em></span>&#160;)</td>
+          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>din</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="#d6/da3/structmap__t">map_t</a> *</td>          <td class="paramname"><span class="paramname"><em>map</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Find the inner and outer diameter of an amplitude map contained in <a class="el" href="#d6/da3/structmap__t">map_t</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">map</td><td>Amplitude map. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">d</td><td>Outer diameter (m). </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">din</td><td>Inner diameter (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">map</td><td>Amplitude map. </td></tr>
   </table>
   </dd>
 </dl>

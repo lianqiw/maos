@@ -1,15 +1,17 @@
 var searchData=
 [
-  ['rayleigh_2eh_0',['rayleigh.h',['../d5/d7f/rayleigh_8h.html',1,'']]],
-  ['readcfg_2eh_1',['readcfg.h',['../da/d6e/readcfg_8h.html',1,'']]],
-  ['readstr_2eh_2',['readstr.h',['../d3/da7/readstr_8h.html',1,'']]],
-  ['recon_2eh_3',['recon.h',['../d3/deb/maos_2recon_8h.html',1,'']]],
-  ['recon_5ffit_2ec_4',['recon_fit.c',['../d0/dfd/recon__fit_8c.html',1,'']]],
-  ['recon_5fgeom_2ec_5',['recon_geom.c',['../d1/d52/recon__geom_8c.html',1,'']]],
-  ['recon_5flsr_2ec_6',['recon_lsr.c',['../d5/d1f/recon__lsr_8c.html',1,'']]],
-  ['recon_5fmvm_2ec_7',['recon_mvm.c',['../d8/d7f/recon__mvm_8c.html',1,'']]],
-  ['recon_5fmvst_2ec_8',['recon_mvst.c',['../da/d9e/recon__mvst_8c.html',1,'']]],
-  ['recon_5fsetup_2ec_9',['recon_setup.c',['../d1/dc1/recon__setup_8c.html',1,'']]],
-  ['recon_5ftomo_2ec_10',['recon_tomo.c',['../de/d09/recon__tomo_8c.html',1,'']]],
-  ['recon_5futils_2eh_11',['recon_utils.h',['../de/d53/recon__utils_8h.html',1,'']]]
+  ['parms_2ec_0',['parms.c',['../d2/d9f/parms_8c.html',1,'']]],
+  ['parms_2eh_1',['parms.h',['../d4/d38/parms_8h.html',1,'']]],
+  ['path_2eh_2',['path.h',['../d7/dd4/path_8h.html',1,'']]],
+  ['pcg_2eh_3',['pcg.h',['../d3/daa/lib_2pcg_8h.html',1,'']]],
+  ['perfevl_2ec_4',['perfevl.c',['../da/dd9/perfevl_8c.html',1,'']]],
+  ['petal_5futils_2eh_5',['petal_utils.h',['../dc/da1/petal__utils_8h.html',1,'']]],
+  ['plot_5futils_2eh_6',['plot_utils.h',['../d9/d45/plot__utils_8h.html',1,'']]],
+  ['powfs_2eh_7',['powfs.h',['../d2/d05/powfs_8h.html',1,'']]],
+  ['powfs_5futils_2eh_8',['powfs_utils.h',['../d8/d14/powfs__utils_8h.html',1,'']]],
+  ['process_2ec_9',['process.c',['../d0/d85/process_8c.html',1,'']]],
+  ['process_2eh_10',['process.h',['../da/d42/process_8h.html',1,'']]],
+  ['proj_2eh_11',['proj.h',['../d2/dcf/proj_8h.html',1,'']]],
+  ['psd_2eh_12',['psd.h',['../d2/da0/psd_8h.html',1,'']]],
+  ['pywfs_2eh_13',['pywfs.h',['../d9/d19/pywfs_8h.html',1,'']]]
 ];

@@ -23,7 +23,7 @@ var searchData=
   ['bm_20',['BM',['../df/d07/kalman_8h.html#ae61350fd025a9299577092a971f7ed03',1,'kalman_t']]],
   ['breakdown_21',['Error Budget Breakdown',['../da/dc3/page30_run.html#sect-ebb',1,'']]],
   ['browser_20based_20monitor_22',['Browser based monitor',['../d3/d4c/page20_compile.html#compile-browser',1,'']]],
-  ['bs_23',['bs',['../d6/d94/maos_2types_8h.html#a2cf5f2b6cccc798f5a1f3f144f0544b7',1,'fdpcg_t']]],
+  ['bs_23',['bs',['../da/d2a/lib_2fdpcg_8h.html#a2cf5f2b6cccc798f5a1f3f144f0544b7',1,'fdpcg_t']]],
   ['budget_20breakdown_24',['Error Budget Breakdown',['../da/dc3/page30_run.html#sect-ebb',1,'']]],
   ['build_25',['Build',['../d6/d23/md__c_l_a_u_d_e.html#autotoc_md1',1,'Build'],['../d3/d4c/page20_compile.html#compile-build',1,'Build'],['../db/dda/page95_profiling.html#debug-build',1,'Debug Build']]],
   ['build_26',['C++ build',['../d3/d4c/page20_compile.html#compile-cpp',1,'']]],

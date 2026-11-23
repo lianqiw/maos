@@ -127,7 +127,7 @@ Command line options</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">-o DIR</span>, <span class="tt">--output=DIR</span>  </td><td class="markdownTableBodyNone">Save results to <span class="tt">DIR</span> (created if needed). maos changes into <span class="tt">DIR</span> before running. Without <span class="tt">-o</span>, nothing is saved, and options that require saving (<span class="tt">save.setup</span>, <span class="tt">save.all</span>, <span class="tt">sim.skysim</span>, <span class="tt">evl.psfmean</span>, <span class="tt">evl.psfhist</span>) cause an error.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">-n N</span>, <span class="tt">--nthread=N</span>  </td><td class="markdownTableBodyNone">Use <span class="tt">N</span> threads. The default is the number of online CPU cores, or <span class="tt">OMP_NUM_THREADS</span> if it is smaller.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">-n N</span>, <span class="tt">--nthread=N</span>  </td><td class="markdownTableBodyNone">Use <span class="tt">N</span> threads. The default is the number of physical CPU cores (hyperthreads are not counted), or <span class="tt">OMP_NUM_THREADS</span> if it is set and smaller than the number of online processors. The best value depends on the configuration: more threads than needed add synchronization overhead.  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">-g i</span>, <span class="tt">--gpu=i</span>  </td><td class="markdownTableBodyNone">Use GPU <span class="tt">i</span> (in <span class="tt">nvidia-smi</span> order). Repeat to use several GPUs, e.g. <span class="tt">-g0 -g2</span>. <span class="tt">-g-1</span> disables the GPU. Default: automatic.  </td></tr>
 <tr class="markdownTableRowEven">
@@ -215,7 +215,7 @@ Environment variables</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">MAOS_DRAW_NOREUSE</span>  </td><td class="markdownTableBodyNone">0  </td><td class="markdownTableBodyNone">Set to 1 to start a new <span class="tt">drawdaemon</span> window instead of reusing an existing one.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">OMP_NUM_THREADS</span>  </td><td class="markdownTableBodyNone">(unset)  </td><td class="markdownTableBodyNone">When smaller than the number of CPU cores, limits the default number of threads (see <span class="tt">-n</span>).  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">OMP_NUM_THREADS</span>  </td><td class="markdownTableBodyNone">(unset)  </td><td class="markdownTableBodyNone">When smaller than the number of online processors, sets the default number of threads (see <span class="tt">-n</span>).  </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">CUDA_LAUNCH_BLOCKING</span>  </td><td class="markdownTableBodyNone">(unset)  </td><td class="markdownTableBodyNone">When nonzero, maos uses only the default CUDA stream.  </td></tr>
 <tr class="markdownTableRowEven">

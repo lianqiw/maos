@@ -86,7 +86,7 @@ var annotated_dup =
     [ "etf_t", "d6/d89/mkdtf_8h.html#d4/d5b/structetf__t", "d6/d89/mkdtf_8h_d4/d5b/structetf__t" ],
     [ "event_t", "da/d67/structevent__t.html", "da/d67/structevent__t" ],
     [ "evl_cfg_t", "d4/d38/parms_8h.html#d3/d46/structevl__cfg__t", "d4/d38/parms_8h_d3/d46/structevl__cfg__t" ],
-    [ "fdpcg_t", "d6/d94/maos_2types_8h.html#df/d53/structfdpcg__t", "d6/d94/maos_2types_8h_df/d53/structfdpcg__t" ],
+    [ "fdpcg_t", "da/d2a/lib_2fdpcg_8h.html#df/d53/structfdpcg__t", "da/d2a/lib_2fdpcg_8h_df/d53/structfdpcg__t" ],
     [ "fit_cfg_t", "d4/d38/parms_8h.html#d7/d76/structfit__cfg__t", "d4/d38/parms_8h_d7/d76/structfit__cfg__t" ],
     [ "fit_t", "d6/d94/maos_2types_8h.html#da/d3f/structfit__t", "d6/d94/maos_2types_8h_da/d3f/structfit__t" ],
     [ "fractal_t", "d6/d94/maos_2types_8h.html#d2/d15/structfractal__t", "d6/d94/maos_2types_8h_d2/d15/structfractal__t" ],

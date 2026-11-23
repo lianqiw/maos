@@ -153,8 +153,8 @@ Functions</h2></td></tr>
 <tr class="memitem:ad414bd9281d336c4db72de1373a3f4d3" id="r_ad414bd9281d336c4db72de1373a3f4d3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#da/ddc/structloc__t">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad414bd9281d336c4db72de1373a3f4d3">locnew</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> nloc, real dx, real dy)</td></tr>
 <tr class="memitem:a54eb0584919fe714065cfba437633a90" id="r_a54eb0584919fe714065cfba437633a90"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#da/ddc/structloc__t">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a54eb0584919fe714065cfba437633a90">locref</a> (<a class="el" href="#da/ddc/structloc__t">loc_t</a> *in)</td></tr>
 <tr class="memitem:a84543d5b33950e44c31a90aff35a2609" id="r_a84543d5b33950e44c31a90aff35a2609"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#de/d88/structpts__t">pts_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a84543d5b33950e44c31a90aff35a2609">ptsnew</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> nsa, real dsax, real dsay, <a class="el" href="../../d7/d63/classlong.html">long</a> nxsa, <a class="el" href="../../d7/d63/classlong.html">long</a> nysa, real dx, real dy)</td></tr>
-<tr class="memitem:afc89ab8fece5838d6cd54308079abb69" id="r_afc89ab8fece5838d6cd54308079abb69"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afc89ab8fece5838d6cd54308079abb69">loc_calc_ptt</a> (real *out, real *coeffout, const <a class="el" href="#da/ddc/structloc__t">loc_t</a> *loc, real ipcc, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *imcc, const real *amp, const real *opd)</td></tr>
-<tr class="memitem:a8df253e112de8cf6973422c38810ce67" id="r_a8df253e112de8cf6973422c38810ce67"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8df253e112de8cf6973422c38810ce67">loc_calc_mod</a> (real *out, real *coeffout, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *mod, const real *amp, real *opd)</td></tr>
+<tr class="memitem:a141cb73a7bd2e34898b75851863a6cfd" id="r_a141cb73a7bd2e34898b75851863a6cfd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a141cb73a7bd2e34898b75851863a6cfd">loc_calc_ptt</a> (real rmsout[3], real coeffout[3], const <a class="el" href="#da/ddc/structloc__t">loc_t</a> *loc, real ipcc, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *imcc, const real *amp, const real *opd)</td></tr>
+<tr class="memitem:a21843bae725e66c2c79a9a3964a24b6a" id="r_a21843bae725e66c2c79a9a3964a24b6a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a21843bae725e66c2c79a9a3964a24b6a">loc_calc_mod</a> (real rmsout[], real coeffout[], const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *mod, const real *amp, real *opd)</td></tr>
 <tr class="memitem:a46226e136c567990047af71fb8c45053" id="r_a46226e136c567990047af71fb8c45053"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a46226e136c567990047af71fb8c45053">loc_mcc_ptt</a> (const <a class="el" href="#da/ddc/structloc__t">loc_t</a> *loc, const real *amp)</td></tr>
 <tr class="memitem:a2d5bae49b00ac31462965e05bcede903" id="r_a2d5bae49b00ac31462965e05bcede903"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2d5bae49b00ac31462965e05bcede903">pts_mcc_ptt</a> (const <a class="el" href="#de/d88/structpts__t">pts_t</a> *pts, const real *amp)</td></tr>
 <tr class="memitem:afca89585be40c36f6447358780d16e0a" id="r_afca89585be40c36f6447358780d16e0a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afca89585be40c36f6447358780d16e0a">loc_sub_ptt</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *opd, const real *ptt, const <a class="el" href="#da/ddc/structloc__t">loc_t</a> *loc)</td></tr>
@@ -1662,8 +1662,8 @@ dsax</td>
 
 </div>
 </div>
-<a id="afc89ab8fece5838d6cd54308079abb69" name="afc89ab8fece5838d6cd54308079abb69"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afc89ab8fece5838d6cd54308079abb69">&#9670;&#160;</a></span>loc_calc_ptt()</h2>
+<a id="a141cb73a7bd2e34898b75851863a6cfd" name="a141cb73a7bd2e34898b75851863a6cfd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a141cb73a7bd2e34898b75851863a6cfd">&#9670;&#160;</a></span>loc_calc_ptt()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1671,12 +1671,12 @@ dsax</td>
         <tr>
           <td class="memname">void loc_calc_ptt </td>
           <td>(</td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>rmsout</em></span>, </td>
+          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>rmsout</em></span>[3], </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>coeffout</em></span>, </td>
+          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>coeffout</em></span>[3], </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1721,8 +1721,8 @@ dsax</td>
 
 </div>
 </div>
-<a id="a8df253e112de8cf6973422c38810ce67" name="a8df253e112de8cf6973422c38810ce67"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8df253e112de8cf6973422c38810ce67">&#9670;&#160;</a></span>loc_calc_mod()</h2>
+<a id="a21843bae725e66c2c79a9a3964a24b6a" name="a21843bae725e66c2c79a9a3964a24b6a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a21843bae725e66c2c79a9a3964a24b6a">&#9670;&#160;</a></span>loc_calc_mod()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1730,12 +1730,12 @@ dsax</td>
         <tr>
           <td class="memname">void loc_calc_mod </td>
           <td>(</td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>rmsout</em></span>, </td>
+          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>rmsout</em></span>[], </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>coeffout</em></span>, </td>
+          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>coeffout</em></span>[], </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

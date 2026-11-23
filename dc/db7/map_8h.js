@@ -58,7 +58,7 @@ var map_8h =
     [ "mapref", "dc/db7/map_8h.html#ac70064ac7d2425cc75006eaa6bea8a4b", null ],
     [ "mapdup", "dc/db7/map_8h.html#a80e1822405617f91e90e4ff5f0225a80", null ],
     [ "mapcircle", "dc/db7/map_8h.html#a2f14bff75349a1a03b75f0a7665cefb6", null ],
-    [ "map_d_din", "dc/db7/map_8h.html#a37d70ae639530fbecf1e8393a360114a", null ],
+    [ "map_d_din", "dc/db7/map_8h.html#a46421d42163fce60b437fec874a0393f", null ],
     [ "create_metapupil", "dc/db7/map_8h.html#a1863fb416c429ceb5076bbcec266245c", null ],
     [ "map_make_keywords", "dc/db7/map_8h.html#af6072757526bdf462d0333b0e483770e", null ],
     [ "map_parse_keywords", "dc/db7/map_8h.html#a1880edb504252cc05cfc3364510633e0", null ],

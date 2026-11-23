@@ -106,8 +106,6 @@ $(function(){initNavTree('d4/d41/dither__utils_8h.html','../../',''); });
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a269cd01ddd0340b8293776bd764761cd" id="r_a269cd01ddd0340b8293776bd764761cd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a269cd01ddd0340b8293776bd764761cd">gradoff_acc</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a> *simu, int ipowfs)</td></tr>
-<tr class="memitem:a69cccbd79992ae4b41973a64fa9e5097" id="r_a69cccbd79992ae4b41973a64fa9e5097"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a69cccbd79992ae4b41973a64fa9e5097">dither_position</a> (real *cs, real *ss, int alfsm, int dtrat, int npoint, int isim, real deltam)</td></tr>
-<tr class="memitem:a44a0642839b7a528d19a011f941d45eb" id="r_a44a0642839b7a528d19a011f941d45eb"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a44a0642839b7a528d19a011f941d45eb">dither_amp_calc</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **res, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *signal, <a class="el" href="../../d7/d63/classlong.html">long</a> dtrat, <a class="el" href="../../d7/d63/classlong.html">long</a> npoint, int detrend, int combine)</td></tr>
 <tr class="memitem:a24447c980ac97dee0740f5ba8aac7de8" id="r_a24447c980ac97dee0740f5ba8aac7de8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a24447c980ac97dee0740f5ba8aac7de8">dither_acc_i0</a> (const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, <a class="el" href="../../d6/d94/maos_2types_8h.html#d3/def/structdither__t">dither_t</a> *pd, <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *ints, int iwfs, int isim)</td></tr>
 <tr class="memitem:adee81d00578d4b7ef952f670c64d309a" id="r_adee81d00578d4b7ef952f670c64d309a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adee81d00578d4b7ef952f670c64d309a">dither_acc</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a> *simu, int iwfs)</td></tr>
 <tr class="memitem:a28436b5fe96a6abbc23f4072eae6b87d" id="r_a28436b5fe96a6abbc23f4072eae6b87d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a28436b5fe96a6abbc23f4072eae6b87d">dither_post</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a> *simu)</td></tr>
@@ -143,119 +141,6 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-
-</div>
-</div>
-<a id="a69cccbd79992ae4b41973a64fa9e5097" name="a69cccbd79992ae4b41973a64fa9e5097"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a69cccbd79992ae4b41973a64fa9e5097">&#9670;&#160;</a></span>dither_position()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void dither_position </td>
-          <td>(</td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>cs</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>ss</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>alfsm</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>dtrat</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>npoint</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>isim</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>deltam</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Calculate expected averaged position of dithering signal during WFS integration. Called when (isim+1)dtrat=0</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">cs</td><td>The cosine of the dither angle, scaled to account for averaging. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">ss</td><td>The sine of the dither angle, scaled to account for averaging. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alfsm</td><td>The additional latency due to uplink (in simulation steps). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dtrat</td><td>The WFS sampling period in simulation steps. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">npoint</td><td>The number of WFS frames per dithering cycle. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">isim</td><td>The simulation step index. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">deltam</td><td>The dither phase offset (radian). </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a44a0642839b7a528d19a011f941d45eb" name="a44a0642839b7a528d19a011f941d45eb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a44a0642839b7a528d19a011f941d45eb">&#9670;&#160;</a></span>dither_amp_calc()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">real dither_amp_calc </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **</td>          <td class="paramname"><span class="paramname"><em>res</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>signal</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>dtrat</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>npoint</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>detrend</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>combine</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Demodulate the dithering signal to determine the amplitude. Remove trend (detrending) if detrend is set.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">res</td><td>The amplitude of each mode (nmod*1). Only used if not combine. Required if nmod&gt;1. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>The signal matrix. nmod*nsim, or a column vector for a single mode. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dtrat</td><td>skip columns due to wfs/sim dt ratio </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">npoint</td><td>The number of WFS frames per dithering cycle. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">detrend</td><td>Whether to detrend the signal. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">combine</td><td>Whether to combine the results. for tip/tilt only </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The calculated dither amplitude (of the first mode if not combine). </dd></dl>
 
 </div>
 </div>

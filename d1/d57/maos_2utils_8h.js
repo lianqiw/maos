@@ -4,7 +4,6 @@ var maos_2utils_8h =
     [ "parse_args", "d1/d57/maos_2utils_8h.html#ab378e384b5122058cbcb93fd61c9a96c", null ],
     [ "free_arg", "d1/d57/maos_2utils_8h.html#af165695540a14022995fcd8dc6dc7f3c", null ],
     [ "evl_keywords", "d1/d57/maos_2utils_8h.html#aaa75b5b04fbbb1aa2917bf328634b532", null ],
-    [ "mkamp", "d1/d57/maos_2utils_8h.html#a9d77bf8d1060f2b89962556f1b3b8d3e", null ],
     [ "maxapriori", "d1/d57/maos_2utils_8h.html#a9b4cba78946d50c1b40157a13938c08b", null ],
     [ "wfslinearity", "d1/d57/maos_2utils_8h.html#a4307931050dd0259e2369bf4591d65a5", null ],
     [ "lgs_wfs_sph_psd", "d1/d57/maos_2utils_8h.html#ae0e3a33ac532506bd59ca25fd9051d10", null ],
@@ -13,6 +12,8 @@ var maos_2utils_8h =
     [ "readwfs", "d1/d57/maos_2utils_8h.html#a25d060ed7078a00c4a9c60928121b055", null ],
     [ "average_powfs", "d1/d57/maos_2utils_8h.html#a8f8497509bbb601ac374325aa53a0883", null ],
     [ "wfsgrad_llt_tt", "d1/d57/maos_2utils_8h.html#a06bf1e5a0ffb47990da4ee94056b0ddd", null ],
+    [ "wfsgrad_lltopd", "d1/d57/maos_2utils_8h.html#a721f1227286988cb3a635848e42e6b4f", null ],
+    [ "wfsgrad_lltopd_tt", "d1/d57/maos_2utils_8h.html#aa6a08907b16d8259c669b45a8d2f6eea", null ],
     [ "wait_dmreal", "d1/d57/maos_2utils_8h.html#a3e28fa95260cac0d679efd17ea13b22e", null ],
     [ "post_dmreal", "d1/d57/maos_2utils_8h.html#ac29208e8ac8c3195fa49efea9b4e7ae2", null ],
     [ "addlow2dm", "d1/d57/maos_2utils_8h.html#a32d3d6f0eee614280b8bd70d90f2743e", null ]

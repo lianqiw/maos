@@ -105,12 +105,11 @@ $(function(){initNavTree('d6/dd2/maos_2fdpcg_8h.html','../../',''); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a932945d926b657953a324e525c54aee2" id="r_a932945d926b657953a324e525c54aee2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d6/d94/maos_2types_8h.html#df/d53/structfdpcg__t">fdpcg_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a932945d926b657953a324e525c54aee2">fdpcg_prepare</a> (const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, const <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a> *recon, const <a class="el" href="../../d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t">powfs_t</a> *powfs, <a class="el" href="../../df/def/type_8h.html#d2/d8c/structmapcell">mapcell</a> *atm)</td></tr>
+<tr class="memitem:a932945d926b657953a324e525c54aee2" id="r_a932945d926b657953a324e525c54aee2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../da/d2a/lib_2fdpcg_8h.html#df/d53/structfdpcg__t">fdpcg_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a932945d926b657953a324e525c54aee2">fdpcg_prepare</a> (const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, const <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a> *recon, const <a class="el" href="../../d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t">powfs_t</a> *powfs, <a class="el" href="../../df/def/type_8h.html#d2/d8c/structmapcell">mapcell</a> *atm)</td></tr>
 <tr class="memitem:a2fe70a98a8797a50a58639f9c032a996" id="r_a2fe70a98a8797a50a58639f9c032a996"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2fe70a98a8797a50a58639f9c032a996">fdpcg_precond</a> (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **xout, const void *A, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *xin)</td></tr>
-<tr class="memitem:ab037cc50638faca9ab7c4553805163af" id="r_ab037cc50638faca9ab7c4553805163af"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab037cc50638faca9ab7c4553805163af">fdpcg_free</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#df/d53/structfdpcg__t">fdpcg_t</a> *fdpcg)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Fourier Domain Preconditioner for Tomography step. </p>
+<div class="textblock"><p>Fourier Domain Preconditioner for Tomography step. The implementation is in lib/fdpcg.c. </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
 <a id="a932945d926b657953a324e525c54aee2" name="a932945d926b657953a324e525c54aee2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a932945d926b657953a324e525c54aee2">&#9670;&#160;</a></span>fdpcg_prepare()</h2>
@@ -119,7 +118,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="../../d6/d94/maos_2types_8h.html#df/d53/structfdpcg__t">fdpcg_t</a> * fdpcg_prepare </td>
+          <td class="memname"><a class="el" href="../../da/d2a/lib_2fdpcg_8h.html#df/d53/structfdpcg__t">fdpcg_t</a> * fdpcg_prepare </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *</td>          <td class="paramname"><span class="paramname"><em>parms</em></span>, </td>
         </tr>
@@ -177,36 +176,12 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply the Fourier domain preconditioner. Preconditioner solves xout=M^-1*xin where M is the preconditioner matrix. Here M^-1 is applied in Fourier Domain via xout=IFFT(M*FFT(xin));</p>
+<p>Apply the Fourier domain preconditioner with fdpcg_apply(). Used as the preconditioner of the tomography CG.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">xout</td><td>Output. Allocated if NULL. The content is replaced. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The reconstructor (<a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a>). </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>Input. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="ab037cc50638faca9ab7c4553805163af" name="ab037cc50638faca9ab7c4553805163af"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab037cc50638faca9ab7c4553805163af">&#9670;&#160;</a></span>fdpcg_free()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void fdpcg_free </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="../../d6/d94/maos_2types_8h.html#df/d53/structfdpcg__t">fdpcg_t</a> *</td>          <td class="paramname"><span class="paramname"><em>fdpcg</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Free fdpcg related data structs.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fdpcg</td><td>The struct to free. May be NULL. </td></tr>
   </table>
   </dd>
 </dl>

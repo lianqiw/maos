@@ -4,7 +4,7 @@ var searchData=
   ['xhat_1',['xhat',['../df/d07/kalman_8h.html#a236ebe21ce0ecc885f68e471a1356213',1,'kalman_t']]],
   ['xhat2_2',['xhat2',['../df/d07/kalman_8h.html#a128be6fcfbaa36efc335a7b78f248387',1,'kalman_t']]],
   ['xhat3_3',['xhat3',['../df/d07/kalman_8h.html#a1e3fe34d2ccb50272af3d103b0326b0f',1,'kalman_t']]],
-  ['xloc_4',['xloc',['../d4/d38/parms_8h.html#a22bcac59d40e4629752441fac8d4ae39',1,'load_cfg_t::xloc'],['../d6/d94/maos_2types_8h.html#af6629d9c2985028c2e6fefd24c52aeee',1,'fdpcg_t::xloc'],['../d6/d94/maos_2types_8h.html#a946588d3ae6b091bf560777a40013eb4',1,'invpsd_t::xloc'],['../d6/d94/maos_2types_8h.html#ada624c088c69a4d323842a16cdd2328e',1,'fractal_t::xloc'],['../d6/d94/maos_2types_8h.html#a0c70a1a2ae963eb24708675e6a95bfa5',1,'fit_t::xloc'],['../d6/d94/maos_2types_8h.html#ae4bf5a369b5b1126f91efef909dd6115',1,'recon_t::xloc']]],
+  ['xloc_4',['xloc',['../da/d2a/lib_2fdpcg_8h.html#af6629d9c2985028c2e6fefd24c52aeee',1,'fdpcg_t::xloc'],['../d4/d38/parms_8h.html#a22bcac59d40e4629752441fac8d4ae39',1,'load_cfg_t::xloc'],['../d6/d94/maos_2types_8h.html#a946588d3ae6b091bf560777a40013eb4',1,'invpsd_t::xloc'],['../d6/d94/maos_2types_8h.html#ada624c088c69a4d323842a16cdd2328e',1,'fractal_t::xloc'],['../d6/d94/maos_2types_8h.html#a0c70a1a2ae963eb24708675e6a95bfa5',1,'fit_t::xloc'],['../d6/d94/maos_2types_8h.html#ae4bf5a369b5b1126f91efef909dd6115',1,'recon_t::xloc']]],
   ['xmap_5',['xmap',['../d6/d94/maos_2types_8h.html#a705c052c959e6014780e68162b52f24b',1,'recon_t']]],
   ['xmcc_6',['xmcc',['../d6/d94/maos_2types_8h.html#a2907677ada58bdbdc9b43ceefad836c0',1,'recon_t']]],
   ['xmin_7',['xmin',['../d1/d83/loc_8h.html#a8c8c5cee19517d643f00a8535d6c61b2',1,'locstat_t']]],

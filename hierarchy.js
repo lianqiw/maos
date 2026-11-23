@@ -107,7 +107,7 @@ var hierarchy =
     [ "etf_t", "d6/d89/mkdtf_8h.html#d4/d5b/structetf__t", null ],
     [ "event_t", "da/d67/structevent__t.html", null ],
     [ "evl_cfg_t", "d4/d38/parms_8h.html#d3/d46/structevl__cfg__t", null ],
-    [ "fdpcg_t", "d6/d94/maos_2types_8h.html#df/d53/structfdpcg__t", null ],
+    [ "fdpcg_t", "da/d2a/lib_2fdpcg_8h.html#df/d53/structfdpcg__t", null ],
     [ "fit_cfg_t", "d4/d38/parms_8h.html#d7/d76/structfit__cfg__t", null ],
     [ "fit_t", "d6/d94/maos_2types_8h.html#da/d3f/structfit__t", null ],
     [ "fractal_t", "d6/d94/maos_2types_8h.html#d2/d15/structfractal__t", null ],

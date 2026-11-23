@@ -107,19 +107,6 @@ var maos_2types_8h =
       [ "indps", "d6/d94/maos_2types_8h.html#a7b926af03323b94d1518f8fc7088c2cc", null ],
       [ "indastig", "d6/d94/maos_2types_8h.html#a787aa71173c537a493a61562fcd70884", null ]
     ] ],
-    [ "fdpcg_t", "d6/d94/maos_2types_8h.html#df/d53/structfdpcg__t", [
-      [ "xloc", "d6/d94/maos_2types_8h.html#af6629d9c2985028c2e6fefd24c52aeee", null ],
-      [ "Minv", "d6/d94/maos_2types_8h.html#ab0cd30a5c6163767952ac6dcf3f58d7d", null ],
-      [ "Mbinv", "d6/d94/maos_2types_8h.html#ad0e43cd4a0ccf988001caf1fb04b8cbb", null ],
-      [ "perm", "d6/d94/maos_2types_8h.html#ae619aa0067b469b498ed74e50a748c35", null ],
-      [ "permhf", "d6/d94/maos_2types_8h.html#a05d5f70b4d0b8d2b5cc2aa2266f35270", null ],
-      [ "nxtot", "d6/d94/maos_2types_8h.html#a7d8484098bb7510424b73a33502b9057", null ],
-      [ "square", "d6/d94/maos_2types_8h.html#a83f9ea26cc6a08cdefd6c38bd758a1e8", null ],
-      [ "scale", "d6/d94/maos_2types_8h.html#ac45bb243c907f8e1abaff9a951613e39", null ],
-      [ "nbx", "d6/d94/maos_2types_8h.html#a2a555a85293e08d3c1eecfc57b73c3f7", null ],
-      [ "nby", "d6/d94/maos_2types_8h.html#ab46d16e1434167a959b1434111530e39", null ],
-      [ "bs", "d6/d94/maos_2types_8h.html#a2cf5f2b6cccc798f5a1f3f144f0544b7", null ]
-    ] ],
     [ "moao_t", "d6/d94/maos_2types_8h.html#d5/d68/structmoao__t", [
       [ "used", "d6/d94/maos_2types_8h.html#a57579226ab2934985993550e03c153c2", null ],
       [ "aloc", "d6/d94/maos_2types_8h.html#ad45c3b4e7d5a9e960c2797a9a6a22bdb", null ],
