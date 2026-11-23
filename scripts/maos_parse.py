@@ -113,8 +113,6 @@ def parse_func(srcdir, files):
             else:
                 msg='ill function definition('+ln[end:openp]+')'
                 funname=''
-            if funname=='readbin':
-                print(args)
             funarg=list()
             for arg in args:
                 argpair=arg.lstrip().rstrip().split(' ')
@@ -134,8 +132,6 @@ def parse_func(srcdir, files):
                     msg='ill argument:('+arg+')'
                     raise(Exception(msg))
                     funname=''
-            if funname=='readbin':
-                print(args)
             if len(funname)>0:
                 funcs[funname]=[funtype, funarg, funname2]
             #else:

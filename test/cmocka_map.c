@@ -95,13 +95,13 @@ static void map_circle(void **state){
 	//annulus
 	mapcircle(A, 0.5, -2);
 	real d=0, din=0;
-	map_d_din(A, &d, &din);
+	map_d_din(&d, &din, A);
 	assert_float_equal(d, 2*R, 4*dx);
 	assert_float_equal(din, 1, 4*dx);
 	//invalid input is ignored
 	d=din=-1;
-	map_d_din(NULL, &d, &din);
-	map_d_din(A, NULL, &din);
+	map_d_din(&d, &din, NULL);
+	map_d_din(NULL, &din, A);
 	assert_float_equal(d, -1, 0);
 	assert_float_equal(din, -1, 0);
 	mapcircle(NULL, 1, 1);

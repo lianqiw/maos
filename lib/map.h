@@ -90,7 +90,7 @@ map_t *mapnew2(map_t *A);
 map_t *mapref(const map_t *A);
 map_t *mapdup(const map_t *A);
 void mapcircle(map_t *map, real r, real val);
-void map_d_din(map_t *map, real *d, real *din);
+void map_d_din(real *d, real *din, map_t *map);
 void create_metapupil(map_t **map, long* nx, long* ny, dmat *dirs, real D, 
 		      real ht, real dx, real dy, real offset,real guard, 
 		      long ninx, long niny, int pad,int square);

@@ -1,4 +1,4 @@
-#!/Usr/bin/env python
+#!/usr/bin/env python3
 
 #Use ctypes to interface with C libraries
 #cell is subclass of Structure. The _fields_ matches C object layout
@@ -88,7 +88,7 @@ def simplify(arr, do_stack=1, do_squeeze=0):
                 arr=np.stack(arr[flags])
                 arr.shape=shape
                 if do_squeeze:
-                    arr=np.queeze(arr)
+                    arr=np.squeeze(arr)
             except Exception as err:
                 #print('stack failed', err)
                 pass
@@ -109,6 +109,10 @@ id2ctype={
     0x6409: (c_float_complex, 0, 0) if has_complex else (c_float, 1,0), #'M_ZMP'
     0x640A: (c_char,  0,0), #'M_INT8',),
     0x640B: (c_short, 0,0), # 'M_INT16',),
+    0x6430: (c_float, 0,2), #M_SSP64
+    0x6431: (c_float, 0,3), #M_SSP32
+    0x6432: (c_float_complex, 0,2) if has_complex else (c_float,1,2), #M_ZSP64
+    0x6433: (c_float_complex, 0,3) if has_complex else (c_float,1,3), #M_ZSP32
     0x6421: (c_void_p,0,10),#MC_ANY
     0x36402: (c_double,0,2),#M_LOC64
 }
@@ -137,12 +141,13 @@ dtype2id={#Conversion from numpy dtype to maos id
     np.int16:   0x640B,
     np.object_: 0x6421
 }
-spdtype2id={#Conversion from sparse type to maos id
-    np.float32:   0x6407,
-    np.float64:   0x6401,
-    np.complex64: 0x6406,
-    np.complex128:0x6400,
+spdtype2id={#Conversion from sparse type to maos id. maos uses 64 bit index (DLONG) by default.
+    np.float32:   0x6430, #M_SSP64
+    np.float64:   0x6401, #M_DSP64
+    np.complex64: 0x6432, #M_ZSP64
+    np.complex128:0x6400, #M_CSP64
 }
+np_long=np.dtype('i{}'.format(sizeof(c_long))) #numpy type of C long
 def py2cell(arr, tid=0):
     '''convert numpy.array to C array adaptively (based on its type)'''
     if arr is None:
@@ -201,9 +206,10 @@ class cell_ndarray(np.ndarray):
         else:
             try:
                 (tt, iscomplex, kind)=id2ctype.get(ctypes_array.id&0xFFFF)
-            except:
+            except TypeError:
                 print("id2ctype: unknown type", ctypes_array.id)
                 res=np.array([])
+                kind=-1
         if kind==0 or kind==1: #dense matrix
             parr=cast(ctypes_array.p, POINTER(tt))
             if iscomplex:
@@ -217,7 +223,7 @@ class cell_ndarray(np.ndarray):
             else:
                 res=np.ctypeslib.as_array(parr, shape=ctypes_array.shape()).copy()
         elif kind==2 or kind==3: #sparse matrix does not support subclassing like numpy
-            return cell_csr_array(ctypes_pointer, pointer)
+            return cell_csr_array(ctypes_pointer)
         elif kind==10: #cell array
             res=np.empty(ctypes_array.shape(1), dtype=object)
             parr=cast(ctypes_array.p, POINTER(c_void_p))
@@ -260,14 +266,18 @@ class cell_csr_array(sp.csr_array):
         ctypes_array=cast(ctypes_pointer, POINTER(csr)).contents
         try:
             (tt, iscomplex, kind)=id2ctype.get(ctypes_array.id&0xFFFF)
-        except:
-            print("id2ctype: unknown type", id);
+        except TypeError:
+            print("id2ctype: unknown type", ctypes_array.id)
             return None
         if kind==0 or kind==1:
             return cell_ndarray(ctypes_array)
         elif kind==2 or kind==3:
             if ctypes_array.nzmax>0:
-                xp=np.ctypeslib.as_array(cast(ctypes_array.x, POINTER(tt)), shape=(ctypes_array.nzmax,))
+                if iscomplex: #complex numbers stored as pairs of real numbers
+                    xp=np.ctypeslib.as_array(cast(ctypes_array.x, POINTER(tt)), shape=(ctypes_array.nzmax,2))
+                    xp=np.squeeze(xp.view(np.complex128 if tt is c_double else np.complex64), axis=-1)
+                else:
+                    xp=np.ctypeslib.as_array(cast(ctypes_array.x, POINTER(tt)), shape=(ctypes_array.nzmax,))
                 if kind==2:
                     ip=np.ctypeslib.as_array(cast(ctypes_array.i, POINTER(c_long)), shape=(ctypes_array.nzmax,))
                     pp=np.ctypeslib.as_array(cast(ctypes_array.p, POINTER(c_long)), shape=(ctypes_array.ny+1,))
@@ -276,7 +286,7 @@ class cell_csr_array(sp.csr_array):
                     pp=np.ctypeslib.as_array(cast(ctypes_array.p, POINTER(c_int)), shape=(ctypes_array.ny+1,))
                 return sp.csr_array((xp, ip, pp), shape=(ctypes_array.ny, ctypes_array.nx), copy=True)
             else:
-                return sp.csr_array((ctypes_array.nx,ctypes_array.ny))
+                return sp.csr_array((ctypes_array.ny,ctypes_array.nx))
         else:
             raise(TypeError(f"Unsupported CSR data kind: {kind}"))
     def __array_finalize__(self, obj):
@@ -296,10 +306,12 @@ def ct2py(var):
     if hasattr(var, 'id'): #a maos struct for array; conver to ndarray
         try:
             (tt, iscomplex, kind)=id2ctype.get(var.id&0xFFFF)
-        except:
+        except TypeError:
             print("id2ctype: unknown type", var.id)
+            kind=-1
+        if kind==-1:
             res=np.array([])
-        if kind==2 or kind==3:#sparse
+        elif kind==2 or kind==3:#sparse
             res=cell_csr_array(pointer)
         else:
             res=cell_ndarray(pointer)
@@ -351,7 +363,7 @@ class cell(Structure):
         if isinstance(arr, list):
             arr=np.asarray(arr)
         
-        if arr.ndim>2:
+        if arr is not None and arr.ndim>2:
             arr=arr2object(arr)
         if arr is not None:
             tmpid=dtype2id.get(arr.dtype.type)
@@ -512,8 +524,8 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
                 self.nx, self.ny=arr.shape 
             #save subarrays to avoid being GC'ed.
             self.xp=arr.data
-            self.ip=arr.indices.astype(np.long)
-            self.pp=arr.indptr.astype(np.long) #p
+            self.ip=arr.indices.astype(np_long) #np.long was removed from numpy
+            self.pp=arr.indptr.astype(np_long) #p
             self.x=self.xp.ctypes.data_as(c_void_p) #data
             self.i=self.ip.ctypes.data_as(c_void_p) #row index
             self.p=self.pp.ctypes.data_as(c_void_p)
@@ -590,14 +602,30 @@ def dict_to_struct(data, struct=None, name='struct'):
         struct=dict_to_struct_type(data, name=name)
 
     values = {}
+    refs = [] #keep the converted objects alive as long as the struct
     for k, vtype in struct._fields_: 
         v=data.get(k, None)
+        if v is None:
+            if vtype is c_void_p or issubclass(vtype, ctypes._Pointer):
+                values[k]=None #NULL pointer
+            continue #default value for other fields
         if issubclass(vtype, POINTER(loc)):
-            print(f'{vtype} is loc')
-            values[k]=cast(pointer(loc(v)), vtype)
-        if vtype is c_void_p or issubclass(vtype, ctypes._Pointer):
-            values[k]=cast(pointer(py2cell(v)), vtype)
+            obj=loc(v)
+            refs.append(obj)
+            values[k]=cast(pointer(obj), vtype)
+        elif vtype is c_void_p and isinstance(v, np.ndarray) and v.dtype!=object:
+            #pointer to numbers such as real*: pass the data
+            if v.dtype!=np.double or not v.flags['C']:
+                v=np.ascontiguousarray(v, dtype=np.double)
+            refs.append(v)
+            values[k]=v.ctypes.data_as(c_void_p)
+        elif vtype is c_void_p or issubclass(vtype, ctypes._Pointer):
+            obj=py2cell(v)
+            refs.append(obj)
+            values[k]=cast(pointer(obj), vtype)
         else:
             values[k]=v.encode() if isinstance(v, str) else v
 
-    return struct(**values)
+    res=struct(**values)
+    res._refs=refs
+    return res

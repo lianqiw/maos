@@ -92,10 +92,10 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1, quiet=1):
             else:
                 print('Invalid result')
                 continue
-            #determine valid simulation duration in steps
+            #determine valid simulation duration in steps: up to the last step with a result
             n_valid=np.nonzero(res[:,0]>0)[0]
             if n_valid.size>0:
-                n_valid=n_valid[-1]             
+                n_valid=n_valid[-1]+1
             else:
                 continue
             if iframe1<1:

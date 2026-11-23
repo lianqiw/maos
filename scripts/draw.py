@@ -32,7 +32,7 @@ def coord2grid(x, **kargs):
         nx = np.round((xmax-xmin)*dxi+1.).astype(int)
         ix = np.floor(x2*dxi+1e-5).astype(int)
     else:
-        ix = np.zeros(x.shape)
+        ix = np.zeros(x.shape, dtype=int)
         nx = 1
         dx = 1
     #xi = [round(xmin/dx)*dx, round(xmax/dx)*dx]
@@ -40,8 +40,30 @@ def coord2grid(x, **kargs):
     return (ix, nx, dx, xi)
 
 
+def unwrap(arg):
+    """Squeeze singleton dimensions and unwrap single element cells."""
+    while isinstance(arg, np.ndarray):
+        arg=np.squeeze(arg)
+        if iscell(arg) and arg.size==1:
+            arg=arg.flat[0]
+        else:
+            break
+    return arg
+
 def isvec(arg):
-    return arg.ndim == 1 or (arg.ndim == 2 and (arg.shape(0) == 1 or arg.shape(1) == 1))
+    return arg.ndim == 1 or (arg.ndim == 2 and (arg.shape[0] == 1 or arg.shape[1] == 1))
+
+def center(img, n):
+    """Crop (or zero pad) img to n*n (or n[0]*n[1]) pixels around its center."""
+    if np.isscalar(n):
+        n=(n, n)
+    out=np.zeros(n, dtype=img.dtype)
+    ny, nx=img.shape
+    oy, ox=(ny-n[0])//2, (nx-n[1])//2 #offset of out in img
+    y0, x0=max(oy, 0), max(ox, 0)
+    y1, x1=min(oy+n[0], ny), min(ox+n[1], nx)
+    out[y0-oy:y1-oy, x0-ox:x1-ox]=img[y0:y1, x0:x1]
+    return out
 
 
 def isloc(arg):
@@ -70,7 +92,7 @@ def locembed(loc, opd, return_ext=0, **kargs):
     # draw(loc, opd): embed opd onto loc
     if loc.shape[0]>2 and loc.shape[1]==2: #need a transpose
         loc=loc.T
-    if isinstance(opd, scipy.sparse._csr.csr_matrix):
+    if scipy.sparse.issparse(opd):
         opd=opd.toarray()
     elif isinstance(opd, list):
         opd=np.array(opd)
@@ -117,7 +139,7 @@ def locembed(loc, opd, return_ext=0, **kargs):
     else:
         return ims
 def isimg(arg0):
-    if isinstance(arg0, scipy.sparse._csr.csr_matrix):
+    if scipy.sparse.issparse(arg0):
         return True
     elif isinstance(arg0, np.ndarray):
         while (iscell(arg0) or arg0.ndim>2) and arg0.shape[0]==1:
@@ -128,9 +150,7 @@ def draw(*args, **kargs):
         return
     #if not 'keep' in kargs or kargs['keep'] == 0:
     #    plt.clf()
-    arg0=args[0]
-    if isinstance(arg0, np.ndarray):
-        arg0=np.squeeze(arg0)
+    arg0=unwrap(args[0])
     if isloc(arg0):  # first argument is loc
         loc=arg0
         if loc.shape[0]>2 and loc.shape[1]==2: #need a transpose
@@ -164,11 +184,8 @@ def draw(*args, **kargs):
         if isinstance(arg0, list):
             if len(arg0)==1:
                 arg0=arg0[0]
-        if isinstance(arg0, np.ndarray):
-            arg0=np.squeeze(arg0)
-            while arg0.shape[0]==1 and (iscell(arg0) or arg0.ndim>2):
-                arg0=np.squeeze(arg0[0])
-        if isinstance(arg0, scipy.sparse._csr.csr_matrix):
+        arg0=unwrap(arg0)
+        if scipy.sparse.issparse(arg0):
             arg0=arg0.toarray()
         ct+=1
         if ct>1:
@@ -183,8 +200,9 @@ def draw(*args, **kargs):
                 nrow = int(img.shape[0] / ncol)
                 if ncol*nrow==img.shape[0]:
                     img=img.reshape(ncol, nrow)
-                else:
-                    raise(Exception('Unable to reshape 1d array'))
+                else: #not a square image, plot as a curve
+                    plt.plot(np.real(img))
+                    return img
             try:
                 plt.gca().images[-1].colorbar.remove()
             except:
@@ -192,7 +210,7 @@ def draw(*args, **kargs):
             #if img.dtype.name.find('complex')>-1:
             if np.iscomplexobj(img):
                 img=np.real(img)
-            if isinstance(img, scipy.sparse._csr.csr_matrix):
+            if scipy.sparse.issparse(img):
                 img=img.toarray()
             if 'center' in kargs:
                 img=center(img, kargs['center'])
@@ -265,10 +283,10 @@ def draw(*args, **kargs):
             return arg0
 # Use as standalone script
 if __name__ == "__main__":
-    from readbin import read
+    from readbin import readbin
     args = list()
     for fn in sys.argv[1:]:
-        args.append(read(fn))
+        args.append(readbin(fn))
 
     plt.figure()
     plt.clf()

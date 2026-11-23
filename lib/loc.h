@@ -182,10 +182,10 @@ int loccenter(const loc_t* loc);
 loc_t* locnew(long nloc, real dx, real dy);
 loc_t* locref(loc_t* in);
 pts_t* ptsnew(long nsa, real dsax, real dsay, long nxsa, long nysa, real dx, real dy);
-void loc_calc_ptt(real* out, real* coeffout,
+void loc_calc_ptt(real rmsout[3], real coeffout[3],
 	const loc_t* loc, real ipcc,
 	const dmat* imcc, const real* amp, const real* opd);
-void loc_calc_mod(real* out, real* coeffout,
+void loc_calc_mod(real rmsout[], real coeffout[],
 	const dmat* mod, const real* amp, real* opd);
 dmat* loc_mcc_ptt(const loc_t* loc, const real* amp);
 dcell* pts_mcc_ptt(const pts_t* pts, const real* amp);

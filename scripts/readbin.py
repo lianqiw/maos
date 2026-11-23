@@ -77,7 +77,7 @@ bitpix2magic={
     64:0x6403, 
     32:0x6405,
     16:0x640B,
-    8:0x640,
+    8:0x640A,
     0:0
 }
 bitpix2magic_complex={ #for complex values
@@ -118,7 +118,6 @@ def readbin(file):
     isfile=False
     issock=False
     out=np.array(())
-    header=''
     err=0
     if isinstance(file, socket.socket):
         file=file.fileno()
@@ -140,28 +139,21 @@ def readbin(file):
                 file=file+'.fits.gz'
                 isfits=True
             else:
-                print('File does not exist:', file)
+                warn(f'readbin: file does not exist: {file}')
         if os.path.isfile(file):
             isfile=True
             if (file[-5:]=='.fits' or file[-8:] == '.fits.gz'):
                 isfits=True
     if isfile or issock:
         try:
-            with open(file, 'rb', closefd=isfile) as fp:
-                if isfile:
-                    magic=readuint16(fp)
-                    if magic==0x8b1f:
-                        fp.close()
-                        fp=gzip.open(file,'rb')
-                    else:
-                        fp.seek(0, 0)
+            gzipped=False
+            if isfile:
+                with open(file, 'rb') as fp:
+                    gzipped=fp.read(2)==b'\x1f\x8b'
+            with (gzip.open(file, 'rb') if gzipped else open(file, 'rb', closefd=isfile)) as fp:
                 (out, err)=readbin_auto(fp, isfits)
-
         except Exception as error:#file may not be ready
             warn(f"readbin failed: {file}, {error}")
-        #finally:
-        #    fp.close()
-    #return convert_output(out, header)
     if err<0:
         print('readbin: error happened', err)
     return out
@@ -233,6 +225,8 @@ def readbin_do(fp, isfits):
     elif dname[0:2]=='M_' and nx>0 and ny>0: #dense matrix
         datatype=np.dtype(dname2type[dname])
         if isfits:
+            if dname=='M_INT8':#BITPIX=8 is unsigned in fits
+                datatype=np.dtype(np.uint8)
             datatype=datatype.newbyteorder('>')
         out=readvec(fp, datatype, nx*ny)
         if len(out) != nx*ny:
@@ -245,10 +239,17 @@ def readbin_do(fp, isfits):
             byteleft=byteread%2880
             if byteleft:
                 fp.read(2880-byteleft) #avoid seek, which doesn't work with gzip
+            bscale=float(header.get('BSCALE', '1').split('/')[0])
+            bzero=float(header.get('BZERO', '0').split('/')[0])
+            if bscale!=1 or bzero!=0: #physical value
+                out=out*bscale+bzero
+                if datatype.kind in 'iu' and bscale==1 and bzero==int(bzero): #keep integer type, e.g., signed 8 bit
+                    out=out.astype(np.int64 if bzero<0 or datatype.itemsize>4 else np.uint64)
     else:
         out=np.array(())
-    out=out.view(cell_ndarray)
-    out.header=header
+    if isinstance(out, np.ndarray):
+        out=out.view(cell_ndarray)
+    out.header=header #scipy sparse matrices also accept attributes
     return (out, err)
 
 
@@ -324,6 +325,8 @@ def readbin_magic(fp):
         if magic==M_SKIP: #padding
             magic=readuint32(fp)
         return magic
+    except struct.error: #end of file
+        return M_EOD
     except Exception as error:
         print(error)
         return M_EOD 
@@ -332,7 +335,7 @@ def readbin_header(fp):
     magic=readbin_magic(fp)
     while magic&0xFFFF==M_COMMENT:
         nlen=readuint64(fp)
-        header=header+fp.read(nlen).decode('ascii').strip('\x00')
+        header=header+fp.read(nlen).decode('utf-8', errors='replace').strip('\x00')
         #header+=fp.read(nlen).strip() #.decode('utf-8')
         nlen2=readuint64(fp)
         magic2=readbin_magic(fp)

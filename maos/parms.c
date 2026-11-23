@@ -1388,7 +1388,7 @@ static void readcfg_aper(parms_t *parms){
 		info2("Reading aperture amplitude map from %s\n", fnamp);
 		parms->aper.amp=mapread("%s", fnamp);
 		real amp_d, amp_din;
-		map_d_din(parms->aper.amp, &amp_d, &amp_din);
+		map_d_din(&amp_d, &amp_din, parms->aper.amp);
 		if(parms->aper.d<=0){//use amp information
 			parms->aper.d=amp_d;
 			parms->aper.din=amp_din;

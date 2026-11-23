@@ -56,7 +56,12 @@ aotype2py={
     'void':('',0),
 }
 #process variable type
-def handle_type(argtype, argname):
+def handle_type(argtype, argname, leading):
+    if argname.count('[')>0 and argname[-1]==']' and (argtype=='real' or argtype=='double'):
+        nel=argname[argname.find('[')+1:-1]
+        if nel.isdigit(): #fixed size array is output
+            argname=argname[:argname.find('[')]
+            return (argname, None, '', f'    {argname}=(c_double*{nel})()\n', f'np.array({argname})')
     if argtype=='anyarray':
         argtype='cell*'
     elif argtype=='panyarray':
@@ -68,7 +73,7 @@ def handle_type(argtype, argname):
         isout=1
         isref=1
         argtype=argtype[:-2]
-    elif argtype=='real*' or  argtype=='double*':
+    elif (argtype=='real*' or  argtype=='double*') and leading: #leading scalar pointers are output
         isout=2
         isref=1
         argtype=argtype[:-1]
@@ -105,14 +110,16 @@ def handle_type(argtype, argname):
         if isref:
             py2c='py2cellref({},{})'.format(argname, tid)
         else:
-            py2c='py2cell({},{})'.format(argname)
+            py2c='py2cell({},{})'.format(argname, tid)
     else:
         py2c=pytype+'('+argname+')'
         if isref: #pointer input
             if pytype=='loc':
                 py2c='byref('+py2c+')'
-            elif pytype=='c_double' or pytype=='c_float':
+            elif (pytype=='c_double' or pytype=='c_float') and isout:
                 py2c='byref('+argname+')'
+            elif pytype=='c_double' or pytype=='c_float': #array input
+                py2c='np.ascontiguousarray({},dtype={}).ctypes.data_as(c_void_p)'.format(argname, pytype)
             elif pytype=='c_char':
                 py2c='c_char_p('+argname+'.encode("utf-8"))'
             else:
@@ -186,16 +193,21 @@ for funname in funcs: #loop over functions
     else:
         argout=''
 
+    leading=1 #only output arguments so far
     for arg in funargs: #loop over the arguments
         argtype=arg[0]
         argname=arg[1]
 
-        if argname in ['loc','input','in','out','str','string','len','format','type','min','max']:
-            argname += '_'
+        basename=argname.split('[')[0]
+        if basename in ['loc','input','in','out','str','string','len','format','type','min','max']:
+            argname=basename+'_'+argname[len(basename):]
         if argtype=='number': #literal numbers
             argin+=argname+','
+            leading=0
         else: #variables
-            py2c, prep_type, prep_in, prep_out, pyarg_out=handle_type(argtype, argname)
+            py2c, prep_type, prep_in, prep_out, pyarg_out=handle_type(argtype, argname, leading)
+            if not prep_out:
+                leading=0
             argin+=py2c+',' #input argument to C function
             if prep_type and structs.get(prep_type, None):
                 strdef[prep_type]=structs.get(prep_type, None)

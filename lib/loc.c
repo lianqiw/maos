@@ -799,7 +799,7 @@ dcell* pts_mcc_ptt(const pts_t* pts, const real* amp){
    @param[in] opd OPD on loc.
    @param[in] stride Stride between consecutive OPD elements.
 */
-void loc_calc_ptt_stride(real* rmsout, real* coeffout, const loc_t* loc, real ipcc, const dmat* imcc, const real* amp,
+void loc_calc_ptt_stride(real rmsout[3], real coeffout[3], const loc_t* loc, real ipcc, const dmat* imcc, const real* amp,
 	const real* opd, long stride){
 	if(!loc||!opd) return;
 	dmat *imcc_internal=NULL;
@@ -863,7 +863,7 @@ void loc_calc_ptt_stride(real* rmsout, real* coeffout, const loc_t* loc, real ip
    @param[in] amp Amplitude weighting. NULL for uniform.
    @param[in] opd OPD on loc.
 */
-void loc_calc_ptt(real *rmsout, real *coeffout,
+void loc_calc_ptt(real rmsout[3], real coeffout[3],
 	const loc_t *loc, const real ipcc,
 	const dmat *imcc, const real *amp, const real *opd){
 	loc_calc_ptt_stride(rmsout, coeffout, loc, ipcc, imcc, amp, opd, 1);
@@ -885,7 +885,7 @@ void loc_calc_ptt(real *rmsout, real *coeffout,
    @param[in] amp Amplitude weighting. Must not be NULL.
    @param[in] opd OPD on loc.
 */
-void loc_calc_mod(real* rmsout, real* coeffout, const dmat* mod, const real* amp, real* opd){
+void loc_calc_mod(real rmsout[], real coeffout[], const dmat* mod, const real* amp, real* opd){
 	if(!mod||!opd||!amp) return;
 	const long nmod=mod->ny;
 	const long nloc=mod->nx;

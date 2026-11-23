@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/env python3
 import os
 import sys
 import glob
@@ -25,33 +25,35 @@ def maos_psfmean(fn1, fn2):
             isol=1
         try:
             hds=fits.open(fn)
-        except:
+        except OSError:
             print('unable to open ' + fn)
             continue
-        nwvl=len(hds)
-        try:
-            counts[(thetax, thetay)]+=1;
-            for iwvl in range(0, nwvl):
-                psfs[(thetax, thetay)][iwvl]+=hds[iwvl].data
-        except:
-            counts[(thetax, thetay)]=1;
-            psfs[(thetax, thetay)]=dict();
-            header[(thetax, thetay)]=dict();
-            for iwvl in range(0, nwvl):
-                psfs[(thetax, thetay)][iwvl]=hds[iwvl].data
-                header[(thetax, thetay)][iwvl]=hds[iwvl].header
+        with hds:
+            nwvl=len(hds)
+            key=(thetax, thetay)
+            if key in counts:
+                counts[key]+=1
+                for iwvl in range(0, nwvl):
+                    psfs[key][iwvl]+=hds[iwvl].data
+            else:
+                counts[key]=1
+                psfs[key]=dict()
+                header[key]=dict()
+                for iwvl in range(0, nwvl):
+                    psfs[key][iwvl]=hds[iwvl].data.astype(float) #copy, as the file is closed
+                    header[key][iwvl]=hds[iwvl].header.copy()
     for key in psfs.keys():
         print(key, counts[key], ' seeds')
+        hds=fits.HDUList()
         for iwvl in range(0, len(psfs[key])):
             psfs[key][iwvl]*=1./counts[key]
             #print("psfs sum to ", psfs[key][iwvl].sum())
-            hds[iwvl].data=psfs[key][iwvl]
-            hds[iwvl].header=header[key][iwvl]
+            hdr=header[key][iwvl]
             if iwvl==0:
-                hds[iwvl].header['EXTEND']=True
+                hdr['EXTEND']=True
+                hds.append(fits.PrimaryHDU(psfs[key][iwvl], hdr))
             else:
-                hds[iwvl].header['PCOUNT']=0
-                hds[iwvl].header['GCOUNT']=1
+                hds.append(fits.ImageHDU(psfs[key][iwvl], hdr))
         if isol:
             fnout='evlpsfol_mean.fits'
         else:
@@ -67,6 +69,6 @@ if __name__ == "__main__":
         os.chdir(pwd)
         os.chdir(arg)
         print(arg)
-        maos_psfmean("evlpsfcl_[0-9]*x*y*.fits", 'evlpsfcl_([0-9]+)_x([0-9.+-e]+)_y([0-9.+-e]+).fits')
-        maos_psfmean("evlpsfol_[0-9]*.fits", 'evlpsfol_([0-9]+).fits')
+        maos_psfmean("evlpsfcl_[0-9]*x*y*.fits", r'evlpsfcl_([0-9]+)_x([0-9.+-e]+)_y([0-9.+-e]+)\.fits')
+        maos_psfmean("evlpsfol_[0-9]*.fits", r'evlpsfol_([0-9]+)\.fits')
         

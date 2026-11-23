@@ -6,14 +6,12 @@ import glob
 
 #from readbin import readbin as read
 from libaos import read #this uses maos libaos.so
-from astropy.modeling.models import Moffat2D, Const2D
-from astropy.modeling.fitting import LevMarLSQFitter #handles bounded optim poorly
-from astropy.modeling.fitting import TRFLSQFitter #handles bounded optim better
+from astropy.modeling.models import Moffat2D
+from astropy.modeling.fitting import TRFLSQFitter #handles bounded optim better than LevMarLSQFitter
 from astropy.modeling import Fittable2DModel, Parameter
-from scipy.special import betaincinv, gamma as gammafun, betainc
-from scipy.integrate import dblquad, quad
+from scipy.special import betainc, erf
+from scipy.integrate import dblquad
 from scipy.optimize import brentq
-from cycler import cycler
 from warnings import warn
 import libaos as aos
 try:
@@ -185,10 +183,11 @@ class EllipticalGaussianMoffat(Fittable2DModel):
     @staticmethod
     def evaluate(
         x, y,
+        x_0, y_0,
         amplitude_g, sigma,
         amplitude_m, gamma, alpha,
-        q, x_0, y_0, theta, background
-    ):
+        q, theta, background
+    ):#the parameters are passed in the order they are declared above
         dx = x - x_0
         dy = y - y_0
 
@@ -535,6 +534,57 @@ def moffat_slit_width(model, fraction=0.8):
     )
 
     return np.exp(log_w)
+def model_flux(model):
+    """
+    Total flux of a fitted PSF model (circular or elliptical Moffat, or
+    elliptical Gaussian + Moffat). The background is not included.
+    """
+    names = model.param_names
+    q = model.q.value if "q" in names else 1.0
+    alpha = model.alpha.value
+    if alpha <= 1:
+        raise ValueError(f"alpha={alpha} <= 1. Moffat total flux is infinite.")
+    if "amplitude_g" in names:
+        return (2.0 * np.pi * model.amplitude_g.value * model.sigma.value**2 * q
+            + np.pi * model.amplitude_m.value * model.gamma.value**2 * q / (alpha - 1.0))
+    else:
+        return np.pi * model.amplitude.value * model.gamma.value**2 * q / (alpha - 1.0)
+def model_ensquare_width(model, fraction=0.8):
+    """
+    Return the width of the square, aligned with the image axes and centered
+    on the PSF, that encloses `fraction` of the total PSF energy.
+
+    Supported models are the same as for model_flux().
+    """
+    if not 0 < fraction < 1:
+        raise ValueError("fraction must be between 0 and 1")
+    names = model.param_names
+    params = [getattr(model, name).value for name in names]
+    if "background" in names:
+        params[names.index("background")] = 0
+    x_0 = model.x_0.value
+    y_0 = model.y_0.value
+    total = model_flux(model)
+    scale = model.gamma.value
+    if "sigma" in names:
+        scale = max(scale, model.sigma.value)
+
+    def ee(width):
+        half = width / 2
+        num, _ = dblquad(
+            lambda y, x: model.evaluate(x + x_0, y + y_0, *params),
+            -half, half, -half, half,
+        )
+        return num / total
+
+    w_hi = 2 * scale
+    for _ in range(100):
+        if ee(w_hi) >= fraction:
+            break
+        w_hi *= 2
+    else:
+        raise RuntimeError(f"Could not bracket fraction={fraction}.")
+    return brentq(lambda w: ee(w) - fraction, 0, w_hi, xtol=1e-4 * scale)
 def fit_moffat_roi(img, alpha=3, name=None, shape=1):
     if True: #speed up
         sub, (xoff, yoff) = auto_crop_roi(img)
@@ -639,7 +689,7 @@ def average_psf(fn):
             datas/=count
 
     return datas, headers
-def proc_psf_fit(fn, fn_cache=None, **kargs):
+def proc_psf_fit(fn, fn_cache=None, EEs=(0.5, 0.8), **kargs):
     """
         Read PSF from a file and compute FWHM using Moffat fitting
     """
@@ -680,21 +730,17 @@ def proc_psf_fit(fn, fn_cache=None, **kargs):
             np.savez(fn_cache, dps=dps, sums=sums, wvls=wvls, model=model)
     #no longer caching ress
     nwvl=wvls.size
-    if 'EEs' in kargs:
-        EEs=kargs['EEs']
-    else:
-        EEs=[0.5, 0.8]
     ress=np.zeros((nwvl,1+len(EEs)*2))
     for iwvl in range(nwvl):
         ress[iwvl, 0]=global_fwhm(model[iwvl])*dps[iwvl] #FWHM
         #ress[iwvl, 1]=moffat_encircle_width(gamma[iwvl], alpha[iwvl], 0.5)*dps[iwvl] #EE-50 diameter
         #ress[iwvl, 2]=moffat_encircle_width(gamma[iwvl], alpha[iwvl], 0.8)*dps[iwvl] #EE-80 en-circled diameter
         for iEE in range(len(EEs)):
-            ress[iwvl, 1+iEE*2]=moffat_ensquare_width(gamma[iwvl], alpha[iwvl], EEs[iEE])*dps[iwvl] #EE- en-squared diameter
+            ress[iwvl, 1+iEE*2]=model_ensquare_width(model[iwvl], EEs[iEE])*dps[iwvl] #EE- en-squared width
             ress[iwvl, 2+iEE*2]=moffat_slit_width(model[iwvl], EEs[iEE])*dps[iwvl] #EE- slit width
         
     return ress,dps,sums,wvls,model
-def proc_psf(fn, fn_cache=None, **kargs):
+def proc_psf(fn, fn_cache=None, EEs=(0.5, 0.8), **kargs):
     """
         Read PSF from a file and compute FWHM and ENC using FFT
     """
@@ -747,10 +793,6 @@ def proc_psf(fn, fn_cache=None, **kargs):
             return None
     #no longer caching ress
     nwvl=wvls.size
-    if 'EEs' in kargs:
-        EEs=kargs['EEs']
-    else:
-        EEs=[0.5, 0.8]
     ress=np.zeros((nwvl,1+len(EEs)*2))
     for iwvl in range(nwvl):
         azavg=enc[iwvl]['azavg']

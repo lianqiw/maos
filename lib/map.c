@@ -141,11 +141,11 @@ void mapcircle(map_t* map, real r, real val){
 /**
    Find the inner and outer diameter of an amplitude map contained in map_t.
 
-   @param[in] map Amplitude map.
    @param[out] d Outer diameter (m).
    @param[out] din Inner diameter (m).
+   @param[in] map Amplitude map.
 */
-void map_d_din(map_t* map, real* d, real* din){
+void map_d_din(real* d, real* din, map_t* map){
 	if(isempty(map)||!d||!din) return;
 	real r2min=INFINITY, r2max=0;
 	for(long iy=0; iy<map->ny; iy++){
