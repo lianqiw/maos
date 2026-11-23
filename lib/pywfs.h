@@ -80,7 +80,7 @@ typedef struct pywfs_t{
   dmat *opdadd;      /**<Aberrations along the WFS path (on locfft grid)*/
   real gain;         /**<Optical gain of PYWFS*/
 }pywfs_t;
-pywfs_t* pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp);
+pywfs_t* pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp, const dmat *opdbias);
 #define pywfs_ng(pycfg) ((pycfg && (pycfg->raw||pycfg->nside<3))?pycfg->nside:2)
 void pywfs_free(pywfs_t *pywfs);
 void pycfg_free(pywfs_cfg_t *pycfg);

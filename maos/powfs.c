@@ -1606,7 +1606,7 @@ void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 	if(parms->powfs[ipowfs].nwfs>1){
 		error("Please update usage of amp if there are multiple Pyramid WFS in this powfs.\n");
 	}
-	pywfs_t *pywfs=powfs[ipowfs].pywfs=pywfs_new((pywfs_cfg_t*)pycfg, powfs[ipowfs].loc, P(powfs[ipowfs].amp,0));
+	pywfs_t *pywfs=powfs[ipowfs].pywfs=pywfs_new((pywfs_cfg_t*)pycfg, powfs[ipowfs].loc, P(powfs[ipowfs].amp,0), NULL);
 	pywfs->iwfs0=(int)P(parms->powfs[ipowfs].wfs, 0);
 	powfs[ipowfs].saloc=locref(pywfs->saloc);
 	powfs[ipowfs].saa=dcellnew(1,1);

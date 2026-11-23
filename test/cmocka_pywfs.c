@@ -69,7 +69,7 @@ static void pywfs_setup(void **state){
 	(void)state;
 	pywfs_cfg_t *cfg=mkcfg(0);
 	cfg->modulpos=0;
-	pywfs_t *py=pywfs_new(cfg, NULL, NULL);
+	pywfs_t *py=pywfs_new(cfg, NULL, NULL, NULL);
 	assert_non_null(py);
 	/*defaults*/
 	assert_int_equal(cfg->nside, 4);
@@ -127,6 +127,50 @@ static void pywfs_setup(void **state){
 	pycfg_free(NULL);
 }
 /**
+   pywfs_new() with dim subapertures removed (saat>0) derives the intensity of
+   the remaining subapertures from that of all subapertures: the gradient of a
+   flat wavefront is still zero. With opdbias, gradoff is the gradient of
+   opdbias, while the optical gain and subaperture areas are unchanged.
+*/
+static void pywfs_gradoff(void **state){
+	(void)state;
+	loc_t *loc=mkannloc(D, 0, D/(ORDER*4), 0);
+	pywfs_cfg_t *cfg=mkcfg(4);
+	cfg->saat=0.5;
+	pywfs_t *py=pywfs_new(cfg, loc, NULL, NULL);
+	const long nsa=py->saloc->nloc;
+	assert_true(nsa<ORDER*ORDER);/*some subapertures are removed*/
+	dmat *opd0=dnew(loc->nloc, 1);
+	dmat *grad=pygrad(py, opd0);
+	assert_float_equal(dmaxabs(grad), 0, 1e-12*dmaxabs(py->gradoff));
+	dfree(grad);
+	/*opdbias: astigmatism of 20 nm*/
+	dmat *opd=dnew(loc->nloc, 1);
+	for(long i=0; i<loc->nloc; i++){
+		P(opd, i)=20e-9*(loc->locx[i]*loc->locx[i]-loc->locy[i]*loc->locy[i])/(D*D*0.25);
+	}
+	pywfs_cfg_t *cfg2=mkcfg(4);
+	cfg2->saat=0.5;
+	pywfs_t *py2=pywfs_new(cfg2, loc, NULL, opd);
+	assert_int_equal(py2->saloc->nloc, nsa);
+	assert_float_equal(py2->gain, py->gain, 0);
+	assert_dmat_near(py2->saa, py->saa, 0);
+	assert_dmat_near(py2->GTT, py->GTT, 0);
+	/*the gradient of opdbias is zero after the reference subtraction*/
+	grad=pygrad(py2, opd);
+	assert_float_equal(dmaxabs(grad), 0, 1e-12*dmaxabs(py2->gradoff));
+	/*and equals the difference of the offsets with the flat reference*/
+	dmat *grad1=pygrad(py, opd);
+	dmat *diff=ddup(py2->gradoff);
+	dadd(&diff, 1, py->gradoff, -1);
+	assert_true(dmaxabs(diff)>0);
+	assert_dmat_near(grad1, diff, 1e-10*dmaxabs(diff));
+	dfree(grad); dfree(grad1); dfree(diff); dfree(opd); dfree(opd0);
+	pywfs_free(py); pywfs_free(py2);
+	pycfg_free(cfg); pycfg_free(cfg2);
+	locfree(loc);
+}
+/**
    Gradients respond linearly to a small tilt with unit gain in the tilt
    direction and no cross talk; reversing the tilt reverses the gradient.
    A modal interaction matrix built by poking Zernike modes has the expected
@@ -135,7 +179,7 @@ static void pywfs_setup(void **state){
 static void pywfs_linear(void **state){
 	(void)state;
 	pywfs_cfg_t *cfg=mkcfg(4);
-	pywfs_t *py=pywfs_new(cfg, NULL, NULL);
+	pywfs_t *py=pywfs_new(cfg, NULL, NULL, NULL);
 	const loc_t *loc=py->locfft->loc;
 	const long nsa=py->saloc->nloc;
 	const real a=0.002*AS2RAD;
@@ -222,7 +266,7 @@ static void pywfs_variants(void **state){
 		case 7: cfg->modulring=2; cfg->modulpos_i=0; break;
 		case 8: cfg->pupelong=0.1; break;
 		}
-		pywfs_t *py=pywfs_new(cfg, NULL, NULL);
+		pywfs_t *py=pywfs_new(cfg, NULL, NULL, NULL);
 		const loc_t *loc=py->locfft->loc;
 		const long nsa=py->saloc->nloc;
 		const int ng=pywfs_ng(cfg);
@@ -290,7 +334,7 @@ static void pywfs_simu_gain(void **state){
 	/*reference*/
 	pywfs_cfg_t *cfg=mkcfg(4);
 	cfg->D=0; cfg->dx=0;/*taken from loc*/
-	pywfs_t *py=pywfs_new(cfg, loc, amp);
+	pywfs_t *py=pywfs_new(cfg, loc, amp, NULL);
 	assert_float_equal(cfg->dx, loc->dx, 0);
 	assert_float_equal(cfg->D, loc_diam(loc), 0);
 	assert_ptr_equal(py->loc->locx, loc->locx);
@@ -333,6 +377,7 @@ static void pywfs_simu_gain(void **state){
 }
 UNITTEST_MAIN(
 	cmocka_unit_test(pywfs_setup),
+	cmocka_unit_test(pywfs_gradoff),
 	cmocka_unit_test(pywfs_linear),
 	cmocka_unit_test(pywfs_variants),
 	cmocka_unit_test(pywfs_simu_gain)

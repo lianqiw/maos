@@ -117,6 +117,105 @@ static void pywfs_mksi(pywfs_t *pywfs, loc_t *loc_fft, loc_t *saloc0, real pupel
 	}
 }
 /**
+   Hash the inputs of pywfs_ints() during pywfs_new() for caching. The pupil
+   image grid is determined by locfft and nominal, and si by saloc, pupelong,
+   and pupilshift.
+
+   @param[in] pywfs PYWFS parameters.
+   @param[in] pupelong Pupil elongation used by pywfs_mksi().
+   @return The hash key.
+*/
+static uint32_t pywfs_ints_hash(const pywfs_t *pywfs, real pupelong){
+	const pywfs_cfg_t *pycfg=pywfs->cfg;
+	uint32_t key=0;
+	key=lochash(pywfs->loc, key);
+	key=dhash(pywfs->amp, key);
+	key=dhash(pycfg->wvl, key);
+	key=dhash(pycfg->wvlwts, key);
+	key=cellhash(pywfs->pyramid, key);
+	key=chash(pywfs->nominal, key);
+	key=lochash(pywfs->saloc, key);
+	if(pywfs->pupilshift){
+		key=dhash(pywfs->pupilshift, key);
+	}
+	const real rparam[]={pupelong, pycfg->modulate, pycfg->siglev};
+	const int iparam[]={pycfg->nside, pycfg->modulpos, pycfg->modulring, pycfg->modulpos_i};
+	key=hashlittle(rparam, sizeof(rparam), key);
+	key=hashlittle(iparam, sizeof(iparam), key);
+	return key;
+}
+/**
+   Whether to cache the results of pywfs_new(). Small cases are fast to compute
+   and are not cached, like KL_vonkarman_full() and dsvd_cache().
+
+   @param[in] pywfs PYWFS parameters.
+   @return 1 to cache, 0 otherwise.
+*/
+static int pywfs_use_cache(const pywfs_t *pywfs){
+	return P(pywfs->locfft->nembed, 0)>128;
+}
+/**
+   Compute the subaperture intensity of an OPD at pycfg->siglev.
+
+   @param[in] pywfs PYWFS parameters.
+   @param[in] opd OPD on pywfs->loc (m). A flat wavefront is used if NULL.
+   @return Newly allocated intensity (nsa*nside); the caller frees it.
+*/
+static dmat *pywfs_ints_do(const pywfs_t *pywfs, const dmat *opd){
+	dmat *opd0=opd?NULL:dnew(pywfs->locfft->loc->nloc, 1);
+	dmat *ints=0;
+	pywfs_ints(&ints, pywfs, opd?opd:opd0, pywfs->cfg->siglev);
+	dfree(opd0);
+	return ints;
+}
+/**
+   pywfs_ints_do() with caching.
+
+   @param[in] pywfs PYWFS parameters.
+   @param[in] opd OPD on pywfs->loc (m). A flat wavefront is used if NULL.
+   @param[in] pupelong Pupil elongation used by pywfs_mksi().
+   @return Newly allocated intensity (nsa*nside); the caller frees it.
+*/
+static dmat *pywfs_ints_cache(const pywfs_t *pywfs, const dmat *opd, real pupelong){
+	char fn[PATH_MAX]={0};
+	if(pywfs_use_cache(pywfs)){
+		uint32_t key=pywfs_ints_hash(pywfs, pupelong);
+		if(opd) key=dhash(opd, key);
+		snprintf(fn, sizeof(fn), "PYWFS/ints_%ld_%ld_%s%u",
+			P(pywfs->locfft->nembed, 0), pywfs->saloc->nloc, opd?"opd_":"", key);
+	}
+	dmat *ints=0;
+	CACHE_FILE(ints, fn, dread, ({ints=pywfs_ints_do(pywfs, opd);}), writebin);
+	return ints;
+}
+/**
+   pywfs_tt() with caching. The key also includes the inputs of pywfs_grad().
+   Not cached when PYWFS_DEBUG is set so that the intermediate results are saved,
+   or for small cases.
+
+   @param[in] pywfs PYWFS parameters.
+   @param[in] pupelong Pupil elongation used by pywfs_mksi().
+   @return Newly allocated (nsa*ng)*2 matrix; the caller frees it.
+*/
+static dmat *pywfs_tt_cache(const pywfs_t *pywfs, real pupelong){
+	const pywfs_cfg_t *pycfg=pywfs->cfg;
+	char fn[PATH_MAX]={0};
+	if(!PYWFS_DEBUG && pywfs_use_cache(pywfs)){
+		uint32_t key=pywfs_ints_hash(pywfs, pupelong);
+		key=dhash(pywfs->saa, key);
+		key=dhash(pywfs->gradoff, key);
+		const real rparam[]={pywfs->gain};
+		const int iparam[]={pycfg->sigmatch, pycfg->raw, PYWFS_TT_DUAL};
+		key=hashlittle(rparam, sizeof(rparam), key);
+		key=hashlittle(iparam, sizeof(iparam), key);
+		snprintf(fn, sizeof(fn), "PYWFS/tt_%ld_%ld_%u",
+			P(pywfs->locfft->nembed, 0), pywfs->saloc->nloc, key);
+	}
+	dmat *tt=0;
+	CACHE_FILE(tt, fn, dread, ({tt=pywfs_tt(pywfs);}), writebin);
+	return tt;
+}
+/**
    Create and initialize a pyramid WFS from configuration pycfg. Optional parameters in
    pycfg are filled with defaults. loc is the pupil OPD grid (created from pycfg->D and
    dx if NULL); amp is the amplitude on loc (uniform if NULL). Computes subaperture
@@ -126,9 +225,11 @@ static void pywfs_mksi(pywfs_t *pywfs, loc_t *loc_fft, loc_t *saloc0, real pupel
    @param[in,out] pycfg The configuration. Unset optional parameters are filled with defaults.
    @param[in] loc The pupil OPD grid (referenced). If NULL, an annular grid is created from pycfg->D and pycfg->dx.
    @param[in] amp The amplitude on loc (referenced). Uniform if NULL.
+   @param[in] opdbias OPD on loc (m) at which the gradient offset (gradoff) is computed. A flat wavefront is used if NULL.
+   The optical gain is always computed around a flat wavefront.
    @return Newly allocated PYWFS struct; free with pywfs_free().
 */
-pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
+pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp, const dmat *opdbias){
 	READ_ENV_INT(PYWFS_DEBUG, -10, 10);
 	READ_ENV_INT(PYWFS_TT_DUAL, 0, 1);
 	READ_ENV_DBL(PYWFS_PSIZE, 1, 10);
@@ -177,7 +278,6 @@ pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 	const int pyside=pycfg->nside;
 	const int ng=pywfs_ng(pycfg);
 
-	const real siglev=pycfg->siglev;//signal level for noise free calculation
 	const real dx=pycfg->dx;
 	//For convenience.
 	int loc_new=0;
@@ -333,60 +433,59 @@ pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 
 	pywfs_mksi(pywfs, loc_fft, pywfs->saloc, pupelong);//for each quadrant.
 
-	{
+	if(opdbias && PN(opdbias)!=pywfs->loc->nloc){
+		error("opdbias has wrong dimension: %ld, expect %ld\n", PN(opdbias), pywfs->loc->nloc);
+	}
+	//Subaperture intensity of a flat wavefront
+	dmat *ints=pywfs_ints_cache(pywfs, NULL, pupelong);
 	//Determine subapertures area
-		dmat *opd=dnew(pywfs->locfft->loc->nloc, 1);
-		dmat *ints=0;
-		pywfs_ints(&ints, pywfs, opd, siglev);
-		//if(parms->save.setup){
-		//writebin(ints, "pywfs_ints0");
-		//}
-		long nints=NX(ints);
-		pywfs->saa=dnew(nints, 1);
-		for(long i=0; i<NX(ints); i++){
-			for(long j=0; j<NY(ints); j++){
-				P(pywfs->saa, i)+=P(ints, i, j);
-			}
+	pywfs->saa=dnew(NX(ints), 1);
+	for(long i=0; i<NX(ints); i++){
+		for(long j=0; j<NY(ints); j++){
+			P(pywfs->saa, i)+=P(ints, i, j);
 		}
-		cellfree(ints);
-		dfree(opd);
 	}
 	if(pycfg->saat>0){
 	//Get ride of insufficiently illuminated subapertures.
 		dmat *saa=pywfs->saa;
 		//real samax=dmaxabs(saa);
 		real samean=dsum(saa)/PN(saa);
-		loc_reduce(pywfs->saloc, saa, pycfg->saat*samean, 1, 0);
-		dscale(saa, NX(saa)/dsum(saa));//saa average to one.
+		const long nsa0=NX(ints);
+		int *skip=NULL;
+		loc_reduce(pywfs->saloc, saa, pycfg->saat*samean, 1, &skip);
 		pywfs_mksi(pywfs, loc_fft, pywfs->saloc, pupelong);
+		/*Each row of si only depends on its own subaperture, and pywfs_ints()
+		  normalizes by the number of subapertures, so the intensity of the
+		  remaining subapertures is the kept rows scaled by the new count.*/
+		const long nsa1=pywfs->saloc->nloc;
+		if(nsa1<nsa0){
+			dmat *ints1=dnew(nsa1, NY(ints));
+			const real scale=(real)nsa1/nsa0;
+			for(long j=0; j<NY(ints); j++){
+				for(long i=0, i1=0; i<nsa0; i++){
+					if(!skip[i]){
+						P(ints1, i1++, j)=P(ints, i, j)*scale;
+					}
+				}
+			}
+			dfree(ints);
+			ints=ints1;
+		}
+		free(skip);
 	}
 	const long nsa=pywfs->saloc->nloc;
 	dscale(pywfs->saa, NX(pywfs->saa)/dsum(pywfs->saa));//saa average to one.
 	locfree(loc_fft);
 	//Determine the gain and offset of PyWFS
-	{
-		//offset: grad of a flat wavefront
-		dmat *opd=dnew(pywfs->locfft->loc->nloc, 1);
-		dmat *ints=0;
-		dmat *goff=0;
-		TIC;tic;dbg("Computing pywfs ints ...");
-		pywfs_ints(&ints, pywfs, opd, siglev);
-		toc2("done");
-		pywfs_grad(&goff, pywfs, ints);
-		/*if(parms->save.setup){
-			writebin(ints, "powfs%d_piston_ints", ipowfs);
-			writebin(goff, "powfs%d_piston_grad", ipowfs);
-		}*/
-		dadd(&pywfs->gradoff, 1, goff, 1);
-
-		dfree(goff);
-		dfree(opd);
-		dfree(ints);
-	}
+	//offset: grad of a flat wavefront. pywfs_grad() subtracts gradoff, so it is computed first.
+	dmat *goff=0;
+	pywfs_grad(&goff, pywfs, ints);
+	pywfs->gradoff=goff; goff=NULL;
+	dfree(ints);
 	{
 		//Determine optical gain.
 		TIC;tic;dbg("Computing pywfs_tt ...");
-		dmat *TT=pywfs_tt(pywfs);
+		dmat *TT=pywfs_tt_cache(pywfs, pupelong);
 		toc2("done");
 		real gsum=dsum(TT);
 		real gainscl=ng*nsa/gsum;
@@ -398,6 +497,14 @@ pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 		dscale(TT, gainscl);
 		pywfs->GTT=TT;TT=NULL;
 		info("pywfs_gain=%g\n", pywfs->gain);
+	}
+	if(opdbias){
+		//offset: grad of opdbias. pywfs_grad() uses the updated gain.
+		dmat *ints2=pywfs_ints_cache(pywfs, opdbias, pupelong);
+		dfree(pywfs->gradoff);
+		pywfs_grad(&goff, pywfs, ints2);
+		pywfs->gradoff=goff; goff=NULL;
+		dfree(ints2);
 	}
 	return pywfs;
 }
@@ -854,7 +961,7 @@ void pywfs_simu(dmat **ints, dmat **grad, pywfs_cfg_t *pycfg, int order, dmat *w
 	if(!pycfg->wvl) pycfg->wvl=dref(wvl);
 	if(!pycfg->siglev) pycfg->siglev=siglev;
 	
-	pywfs_t *pywfs=pywfs_new(pycfg, loc, amp);
+	pywfs_t *pywfs=pywfs_new(pycfg, loc, amp, NULL);
 	if(!pywfs){
 		if(free_pycfg) pycfg_free(pycfg);
 		return;
