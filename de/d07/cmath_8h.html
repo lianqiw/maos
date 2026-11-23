@@ -480,15 +480,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated matrix; the caller frees it.</dd></dl>
-<p>Create a new ZX(mat). Initialized to zero.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns. </td></tr>
-  </table>
-  </dd>
-</dl>
 <dl class="section return"><dt>Returns</dt><dd>Newly allocated matrix; the caller frees it. </dd></dl>
 
 </div>
@@ -536,17 +527,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated matrix; the caller frees it. NULL if nx or ny is 0.</dd></dl>
-<p>Calls ZX(new) with a filename to be saved to. The data is written to the file asynchronously, or when it is freed for fits files.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>Keywords to save with the data. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name. A leading - disables saving. </td></tr>
-  </table>
-  </dd>
-</dl>
 <dl class="section return"><dt>Returns</dt><dd>Newly allocated matrix; the caller frees it. NULL if nx or ny is 0. </dd></dl>
 
 </div>
@@ -580,17 +560,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
       </table>
 </div><div class="memdoc">
 <p>Create a new CX(mat) of nx*ny. If p is not NULL, wraps the existing memory p with reference counting by mem (may be NULL) instead of allocating.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>Existing memory to wrap. NULL to allocate. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">mem</td><td>Reference counter of p. May be NULL for a weak reference. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated matrix; the caller frees it.</dd></dl>
-<p>Create a new ZX(mat) of nx*ny. If p is not NULL, wraps the existing memory p with reference counting by mem (may be NULL) instead of allocating.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. </td></tr>
@@ -1788,15 +1757,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A cast to CX(cell) if all non-empty elements are matrices, otherwise NULL. Not a new reference.</dd></dl>
-<p>cast a cell object to actual cell after checking.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The cell object. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>A cast to ZX(cell) if all non-empty elements are matrices, otherwise NULL. Not a new reference. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>A cast to CX(cell) if all non-empty elements are matrices, otherwise NULL. Not a new reference. </dd></dl>
 
 </div>
 </div>
@@ -1959,19 +1920,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
     <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns of the cell. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nnx</td><td>Number of rows of each block. See CX(cellnew3). </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nny</td><td>Number of columns of each block. See CX(cellnew3). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>Keywords to save with the data. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name. A leading - disables saving. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated cell; the caller frees it. NULL if nx or ny is 0.</dd></dl>
-<p>Calls cellnew3 with a filename to be saved to.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows of the cell. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns of the cell. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nnx</td><td>Number of rows of each block. See ZX(cellnew3). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nny</td><td>Number of columns of each block. See ZX(cellnew3). </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>Keywords to save with the data. May be NULL. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name. A leading - disables saving. </td></tr>
   </table>
@@ -2164,14 +2112,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The deep copy. Newly allocated; the caller frees it.</dd></dl>
-<p>duplicate a ZX(cell) object. Not implemented for lmat or imat as ZX(cellcp) is defined in spmm.c</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>The cell to duplicate. </td></tr>
-  </table>
-  </dd>
-</dl>
 <dl class="section return"><dt>Returns</dt><dd>The deep copy. Newly allocated; the caller frees it. </dd></dl>
 
 </div>
@@ -2339,16 +2279,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The cell of concatenated blocks. Newly allocated; the caller frees it.</dd></dl>
-<p>concatenate coresponding elements of each ZX(cell). They must have the same shape.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The first cell. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">B</td><td>The second cell. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dim</td><td>1: along x, 2: along y. </td></tr>
-  </table>
-  </dd>
-</dl>
 <dl class="section return"><dt>Returns</dt><dd>The cell of concatenated blocks. Newly allocated; the caller frees it. </dd></dl>
 
 </div>
@@ -2495,14 +2425,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
       </table>
 </div><div class="memdoc">
 <p>return sum of each cell in a CX(mat)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The cell. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated matrix of the same shape as A with the sum of each element; the caller frees it. NULL if A is empty.</dd></dl>
-<p>return sum of each cell in a ZX(mat)</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The cell. </td></tr>
@@ -2880,16 +2802,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
     <tr><td class="paramdir">[in,out]</td><td class="paramname">y</td><td>The output vector of length A-&gt;nx, accumulated into. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>The input vector of length A-&gt;ny. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>The scaling factor.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>multiply a ZX(mat) matrix with a vector and accumulate to y: y+=A*x*alpha</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">y</td><td>The output vector of length A-&gt;nx, accumulated into. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>The input vector of length A-&gt;ny. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>The scaling factor. </td></tr>
   </table>
   </dd>
@@ -3002,19 +2914,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
     <tr><td class="paramdir">[in]</td><td class="paramname">B</td><td>Second matrix. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">C</td><td>Third matrix. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">trans</td><td>Operation on A, B and C (first 3 characters), as in CX(mm). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling of the product.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Compute 3 matrix multipliation: out=out*beta+alpha*op(A)*op(B)*op(C)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">pout</td><td>Output matrix; allocated if NULL, otherwise scaled by beta and accumulated into. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">beta</td><td>Scaling of the existing out. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>First matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">B</td><td>Second matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">C</td><td>Third matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">trans</td><td>Operation on A, B and C (first 3 characters), as in ZX(mm). </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling of the product. </td></tr>
   </table>
   </dd>
@@ -3273,17 +3172,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated pseudo inverse; the caller frees it. NULL if A is NULL.</dd></dl>
-<p>compute the pseudo inverse of matrix A with weigthing of full matrix W or sparse matrix weighting Wsp. For full matrix, wt can be either W or diag (W) for diagonal weighting. B=inv(A'*W*A)*A'*W; thres1 and thres2 are the thresholds to truncate eigenvalues, see ZX(svd_pow2).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix to pseudo invert. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">W_</td><td>The weighting, dense vector (diagonal), dense or sparse matrix. NULL for identity. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres1</td><td>Drop eigenvalues smaller than thres1 times the maximum eigenvalue. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres2</td><td>Drop eigenvalues smaller than thres2 times the previous eigenvalue. </td></tr>
-  </table>
-  </dd>
-</dl>
 <dl class="section return"><dt>Returns</dt><dd>Newly allocated pseudo inverse; the caller frees it. NULL if A is NULL. </dd></dl>
 
 </div>
@@ -3337,15 +3225,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
       </table>
 </div><div class="memdoc">
 <p>Compute the relative difference between two matrices as sqrt(sum(abs(A-B).^2)*2/(CX(norm)(A)+CX(norm)(B))). For debugging purpose.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The first matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">B</td><td>The second matrix. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The relative difference, or -1 if A and B do not match or the result is NaN.</dd></dl>
-<p>Compute the relative difference between two matrices as sqrt(sum(abs(A-B).^2)*2/(ZX(norm)(A)+ZX(norm)(B))). For debugging purpose.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The first matrix. </td></tr>
@@ -4391,15 +4270,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The FWHM diameter (pixel), or 0 if A is NULL.</dd></dl>
-<p>Calculate number of pixels having values larger than or equal to half of maximum and convert to diameter.</p>
-<p>For more accurate calculation of Gaussian beams, use the 2*sqrt(2*log(2))*ZX(gauss_sigma).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The image. </td></tr>
-  </table>
-  </dd>
-</dl>
 <dl class="section return"><dt>Returns</dt><dd>The FWHM diameter (pixel), or 0 if A is NULL. </dd></dl>
 
 </div>
@@ -4488,15 +4358,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
       </table>
 </div><div class="memdoc">
 <p>Determine the sigma_r of 2d gauss function using CX(gauss_fit).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The image. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>The threshold relative to peak. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The equivalent sigma (pixel).</dd></dl>
-<p>Determine the sigma_r of 2d gauss function using ZX(gauss_fit).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The image. </td></tr>
@@ -4661,15 +4522,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The sum of CX(norm) of each block.</dd></dl>
-<p>Sum of ZX(norm) of each cell element.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The cell. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The sum of ZX(norm) of each block. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The sum of CX(norm) of each block. </dd></dl>
 
 </div>
 </div>
@@ -4757,16 +4610,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The sum of CX(dot) of each block, or 0 if A or B is NULL.</dd></dl>
-<p>Compute the dot product of two cells.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The first cell, a column. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">B</td><td>The second cell, a column. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The sum of ZX(dot) of each block, or 0 if A or B is NULL. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The sum of CX(dot) of each block, or 0 if A or B is NULL. </dd></dl>
 
 </div>
 </div>
@@ -4912,17 +4756,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated pseudo inverse; the caller frees it. NULL if A is NULL.</dd></dl>
-<p>compute the pseudo inverse of block matrix A. A is n*p cell, wt n*n cell or sparse cell. \(B=inv(A&#39;*W*A)*A&#39;*W\)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix to pseudo invert </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">W_</td><td>The weighting matrix. dense or sparse. Either n*n cell or with the same layout as A for blockwise weighting. NULL for identity. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres1</td><td>SVD inverse threshold relative to the maximum eigen value, see ZX(svd_pow2). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres2</td><td>SVD inverse threshold relative to the previous eigen value, see ZX(svd_pow2). </td></tr>
-  </table>
-  </dd>
-</dl>
 <dl class="section return"><dt>Returns</dt><dd>Newly allocated pseudo inverse; the caller frees it. NULL if A is NULL. </dd></dl>
 
 </div>
@@ -4950,15 +4783,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix to pseudo invert </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">W</td><td>The weighting matrix, see CX(cellpinv2). NULL for identity. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated pseudo inverse; the caller frees it. NULL if A is NULL.</dd></dl>
-<p>Wrap cellpinv2 with default parameters thres1=1e-7 and thres2=1e-3.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix to pseudo invert </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">W</td><td>The weighting matrix, see ZX(cellpinv2). NULL for identity. </td></tr>
   </table>
   </dd>
 </dl>
@@ -5000,17 +4824,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
     <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>The square block matrix; replaced by the result. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">power</td><td>power of eigen values. usually -1 for inverse </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">thres1</td><td>SVD inverse threshold relative to the maximum eigen value, see CX(svd_pow2). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres2</td><td>SVD inverse threshold relative to the previous eigen value, see CX(svd_pow2).</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>compute the power of a block matrix using svd method. First convert it do ZX(mat), do the power, and convert back to block matrix. If A is block diagonal, each diagonal block is processed independently.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>The square block matrix; replaced by the result. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">power</td><td>power of eigen values. usually -1 for inverse </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres1</td><td>SVD inverse threshold relative to the maximum eigen value, see ZX(svd_pow2). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres2</td><td>SVD inverse threshold relative to the previous eigen value, see ZX(svd_pow2). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">thres2</td><td>SVD inverse threshold relative to the previous eigen value, see CX(svd_pow2). </td></tr>
   </table>
   </dd>
 </dl>
@@ -5036,14 +4850,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
       </table>
 </div><div class="memdoc">
 <p>Compute A=A^power using SVD by calling CX(cellsvd_pow2) with default thresholds thres1=1e-7 and thres2=1e-3.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>The square block matrix; replaced by the result. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">power</td><td>power of eigen values. usually -1 for inverse</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Compute A=A^power using SVD by calling ZX(cellsvd_pow2) with default thresholds thres1=1e-7 and thres2=1e-3.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>The square block matrix; replaced by the result. </td></tr>
@@ -5131,15 +4937,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
       </table>
 </div><div class="memdoc">
 <p>Compute the relative difference of two cells as sqrt(CX(cellnorm)(A-B)*2/(CX(cellnorm)(A)+CX(cellnorm)(B))).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The first cell. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">B</td><td>The second cell. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The relative difference, or 0 if it is NaN.</dd></dl>
-<p>Compute the relative difference of two cells as sqrt(ZX(cellnorm)(A-B)*2/(ZX(cellnorm)(A)+ZX(cellnorm)(B))).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The first cell. </td></tr>
@@ -5274,23 +5071,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The nx by ny cell of 4x4 coefficients. The last row and column are empty. Newly allocated; the caller frees it.</dd></dl>
-<p>2D cubic spline interpolation preparation. x is the x coordinate vector of the 2-d grid. y is the y coordinate vector of the 2-d grid. z is defined on the 2-d grid. It is upto the user to make sure that the coordinate is increasingly ordered and evenly spaced .</p>
-<p>The boundaries are handled in the same way is ZX(spline). i.e. replace </p><p class="formulaDsp">
-\[f^\prime(0)=(f(1)-f(-1))/2\]
-</p>
-<p> by </p><p class="formulaDsp">
-\[f^\prime(0)=(f(1)-f(0))\]
-</p>
-<p> Otehr type of boundaries are handled in the same way.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>The x coordinate vector. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">y</td><td>The y coordinate vector. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">z</td><td>The function values of size numel(x) by numel(y). </td></tr>
-  </table>
-  </dd>
-</dl>
 <dl class="section return"><dt>Returns</dt><dd>The nx by ny cell of 4x4 coefficients. The last row and column are empty. Newly allocated; the caller frees it. </dd></dl>
 
 </div>
@@ -5332,18 +5112,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">coeff</td><td>The coefficients from CX(bspline_prep). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>The x coordinate vector of the grid. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">y</td><td>The y coordinate vector of the grid. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xnew</td><td>The x coordinate of the new points. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ynew</td><td>The y coordinate of the new points. Must match xnew in size. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The values with the shape of xnew. Newly allocated; the caller frees it.</dd></dl>
-<p>Evaluate 2D cubic spline at location defined 2-d arrays by xnew, ynew.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">coeff</td><td>The coefficients from ZX(bspline_prep). </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>The x coordinate vector of the grid. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">y</td><td>The y coordinate vector of the grid. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">xnew</td><td>The x coordinate of the new points. </td></tr>
@@ -5409,16 +5177,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
 </div><div class="memdoc">
 <p>Routines for input/output to bin/fits file. Function to write dense matrix data into a file pointer. Generally used by library developer.</p>
 <p>When ncol==-1, initializes asynchronous writing of A. When ncol&gt;0 and async is initialized, writes the first ncol columns (or elements for a row vector) asynchronously. Otherwise writes A normally to fp. Asynchronous writing is not supported for fits files: initialization does nothing and the data is written synchronously when A is freed (see CX(free_content)).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fp</td><td>File to write to. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Matrix to write. Its keywords and async state may be updated. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ncol</td><td>-1 to initialize async writing, &gt;0 to write the first ncol columns asynchronously, 0 for normal write.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Routines for input/output to bin/fits file. Function to write dense matrix data into a file pointer. Generally used by library developer.</p>
-<p>When ncol==-1, initializes asynchronous writing of A. When ncol&gt;0 and async is initialized, writes the first ncol columns (or elements for a row vector) asynchronously. Otherwise writes A normally to fp. Asynchronous writing is not supported for fits files: initialization does nothing and the data is written synchronously when A is freed (see ZX(free_content)).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">fp</td><td>File to write to. </td></tr>
@@ -5494,17 +5252,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
       </table>
 </div><div class="memdoc">
 <p>Create a new CX(mat) matrix object, mmapped from file. The file is truncated if already exists in rw mode. If the file name is empty, starts with '-', or saving is disabled (except for shared memory), anonymous memory is used.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>Keywords to save in the header. Can be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name, followed by its arguments. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The zero initialized matrix, or NULL if nx or ny is 0 or mmap failed. Newly allocated; the caller frees it.</dd></dl>
-<p>Create a new ZX(mat) matrix object, mmapped from file. The file is truncated if already exists in rw mode. If the file name is empty, starts with '-', or saving is disabled (except for shared memory), anonymous memory is used.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. </td></tr>
@@ -6113,14 +5860,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A cast to sparse cell if all its elements are sparse or NULL, otherwise NULL. Not a copy.</dd></dl>
-<p>cast a cell object to ZX(spcell) after checking</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Cell array. </td></tr>
-  </table>
-  </dd>
-</dl>
 <dl class="section return"><dt>Returns</dt><dd>A cast to sparse cell if all its elements are sparse or NULL, otherwise NULL. Not a copy. </dd></dl>
 
 </div>
@@ -6595,17 +6334,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Left operand. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">B</td><td>Right matrix. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">trans</td><td>Operation on A and B respectively: 'n', 't', or 'c'. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>C0=C0+op(A)*op(B)*alpha where A is a cell (often sparse) and B, C0 are matrices. Typed wrapper of ZX(cellmm).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">C0</td><td>Output matrix, allocated if NULL, otherwise accumulated into. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Left operand. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">B</td><td>Right matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">trans</td><td>Operation on A and B respectively: 'n', 't', or 'c'. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
   </table>
   </dd>
@@ -6905,15 +6633,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
       </table>
 </div><div class="memdoc">
 <p>Add alpha times identity to a sparse matrix. If CX(sp) is not symmetric, only add diagonal to first nm*nm block for nm=min(nx,ny)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Sparse matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Value to add to the diagonal. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix, or NULL if A is NULL; the caller frees it.</dd></dl>
-<p>Add alpha times identity to a sparse matrix. If ZX(sp) is not symmetric, only add diagonal to first nm*nm block for nm=min(nx,ny)</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Sparse matrix. </td></tr>
@@ -7528,17 +7247,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated (or referenced) sparse matrix, or NULL if A is NULL; the caller frees it.</dd></dl>
-<p>Permute rows and columns of sparse matrix A; See ZX(sppermcol) for the meaning of reverse.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Sparse matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">reverse</td><td>Direction of permutation. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pcol</td><td>Permutation applied by ZX(sppermcol) to A. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">prow</td><td>Permutation applied by ZX(sppermcol) to the transpose. May be NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
 <dl class="section return"><dt>Returns</dt><dd>Newly allocated (or referenced) sparse matrix, or NULL if A is NULL; the caller frees it. </dd></dl>
 
 </div>
@@ -7873,13 +7581,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
       </table>
 </div><div class="memdoc">
 <p>Free FFTW plans. Same as CX(fft_free_plan) but named with real type prefix.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">fft</td><td>The FFT plans to free. May be NULL.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Free FFTW plans. Same as ZX(fft_free_plan) but named with real type prefix.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">fft</td><td>The FFT plans to free. May be NULL. </td></tr>

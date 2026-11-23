@@ -4346,43 +4346,31 @@ float&#160;</td><td class="memItemRight" valign="bottom"><b>strapz</b> (const <a
       </table>
 </div><div class="memdoc">
 <p>1D Cubic spline interpolation preparation. if x has only 1 column: x is the coordinate. y is the function value. if x has two columns: first column is the coordinate, y is null.</p>
-<p>It is upto the user to make sure that the coordinate is increasingly ordered and evenly spaced.</p>
-<p>If the values of a function \(f(x)\) and its derivative are know at x=0, and x=1 (normalized coordinate), then the function can be interpolated on the interval [0,1] using a third degree polynomial. This is called cubic interpolation. The formula of this polynomial can be easily derived.</p>
-<p>A third degree polynomial and its derivative:   </p><p class="formulaDsp">
-\[f(x)=ax^3+bx^2+cx+d
-\]
-</p>
-   <p class="formulaDsp">
-\[f^\prime(x)=3ax^2+2bx+c
-\]
-</p>
-<p> The coefficients can be derived from the value and derivatives:      </p><p class="formulaDsp">
-\begin{eqnarray*}a&amp;=&amp;2f(0)-2f(1)+f^\prime (0)+f^\prime(1)\\
-b&amp;=&amp;-3f(0)+3f(1)-2f^\prime(0)-f^\prime(1)\\
-c&amp;=&amp;f^\prime(0)\\
-d&amp;=&amp;f(0)\\
-\end{eqnarray*}
-</p>
-<p> the derivatives can be computed as    </p><p class="formulaDsp">
-\begin{eqnarray*}f^\prime(0)&amp;=&amp;\frac{f(1)-f(-1)}{2}\\
-f^\prime(1)&amp;=&amp;\frac{f(2)-f(0)}{2}\\
-\end{eqnarray*}
-</p>
-<p> so we have the formula      </p><p class="formulaDsp">
-\begin{eqnarray*}a&amp;=&amp;-0.5 f(-1) + 1.5 f(0) - 1.5 f(1) + 0.5 f(2)\\
-b&amp;=&amp;     f(-1) - 2.5 f(0) + 2   f(1) - 0.5 f(2)\\
-c&amp;=&amp;-0.5 f(-1)            + 0.5 f(1)           \\
-d&amp;=&amp;                 f(0)                      \\
-\end{eqnarray*}
-</p>
-<p>for the boundary pints, replace </p><p class="formulaDsp">
-\[f^\prime(0)=(f(1)-f(-1))/2\]
-</p>
-<p> by </p><p class="formulaDsp">
-\[f^\prime(0)=(f(1)-f(0))\]
-</p>
-<p> Otehr type of boundaries are handled in the same way.</p>
-<p>see www.paulinternet.nl/?page=bicubicx</p>
+<p>It is up to the user to make sure that the coordinate is increasingly ordered and evenly spaced.</p>
+<p>If the values of a function f(x) and its derivative are known at x=0 and x=1 (normalized coordinate), then the function can be interpolated on the interval [0,1] using a third degree polynomial. This is called cubic interpolation. The formula of this polynomial can be easily derived.</p>
+<pre class="fragment">A third degree polynomial and its derivative:
+   f(x)  = a*x^3 + b*x^2 + c*x + d
+   f'(x) = 3a*x^2 + 2b*x + c
+
+The coefficients can be derived from the value and derivatives:
+   a =  2f(0) - 2f(1) + f'(0) + f'(1)
+   b = -3f(0) + 3f(1) - 2f'(0) - f'(1)
+   c =  f'(0)
+   d =  f(0)
+
+The derivatives can be computed as
+   f'(0) = (f(1) - f(-1))/2
+   f'(1) = (f(2) - f(0))/2
+
+so we have the formula
+   a = -0.5f(-1) + 1.5f(0) - 1.5f(1) + 0.5f(2)
+   b =      f(-1) - 2.5f(0) +   2f(1) - 0.5f(2)
+   c = -0.5f(-1)            + 0.5f(1)
+   d =              f(0)
+
+For the boundary points, replace f'(0) = (f(1) - f(-1))/2 by
+f'(0) = f(1) - f(0). Other types of boundaries are handled in the same way.
+</pre><p>See www.paulinternet.nl/?page=bicubicx</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>The coordinate vector, or two columns of coordinate and function value. </td></tr>

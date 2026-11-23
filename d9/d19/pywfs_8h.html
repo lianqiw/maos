@@ -114,7 +114,7 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a0bda4c56e5e355cf6ac8ef8a53e0a95c" id="r_a0bda4c56e5e355cf6ac8ef8a53e0a95c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d2/d8c/structpywfs__t">pywfs_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0bda4c56e5e355cf6ac8ef8a53e0a95c">pywfs_new</a> (<a class="el" href="#d0/d1d/structpywfs__cfg__t">pywfs_cfg_t</a> *pycfg, <a class="el" href="../../d1/d83/loc_8h.html#da/ddc/structloc__t">loc_t</a> *loc, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *amp)</td></tr>
+<tr class="memitem:ad6fb4d9b6ac354a2a3e6cf56abe9cadb" id="r_ad6fb4d9b6ac354a2a3e6cf56abe9cadb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d2/d8c/structpywfs__t">pywfs_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad6fb4d9b6ac354a2a3e6cf56abe9cadb">pywfs_new</a> (<a class="el" href="#d0/d1d/structpywfs__cfg__t">pywfs_cfg_t</a> *pycfg, <a class="el" href="../../d1/d83/loc_8h.html#da/ddc/structloc__t">loc_t</a> *loc, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *amp, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *opdbias)</td></tr>
 <tr class="memitem:ab9030c894228f7971f87beda176273c5" id="r_ab9030c894228f7971f87beda176273c5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab9030c894228f7971f87beda176273c5">pywfs_free</a> (<a class="el" href="#d2/d8c/structpywfs__t">pywfs_t</a> *pywfs)</td></tr>
 <tr class="memitem:ac01185e7becab21fa86574a490ba6e94" id="r_ac01185e7becab21fa86574a490ba6e94"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac01185e7becab21fa86574a490ba6e94">pycfg_free</a> (<a class="el" href="#d0/d1d/structpywfs__cfg__t">pywfs_cfg_t</a> *pycfg)</td></tr>
 <tr class="memitem:a4cd0d635d05937b89807720bcd4fac99" id="r_a4cd0d635d05937b89807720bcd4fac99"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4cd0d635d05937b89807720bcd4fac99">pywfs_grad</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **pgrad, const <a class="el" href="#d2/d8c/structpywfs__t">pywfs_t</a> *pywfs, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *ints)</td></tr>
@@ -541,8 +541,8 @@ gain</td>
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
-<a id="a0bda4c56e5e355cf6ac8ef8a53e0a95c" name="a0bda4c56e5e355cf6ac8ef8a53e0a95c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0bda4c56e5e355cf6ac8ef8a53e0a95c">&#9670;&#160;</a></span>pywfs_new()</h2>
+<a id="ad6fb4d9b6ac354a2a3e6cf56abe9cadb" name="ad6fb4d9b6ac354a2a3e6cf56abe9cadb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad6fb4d9b6ac354a2a3e6cf56abe9cadb">&#9670;&#160;</a></span>pywfs_new()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -560,7 +560,12 @@ gain</td>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>amp</em></span>&#160;)</td>
+          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>amp</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>opdbias</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -570,6 +575,7 @@ gain</td>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">pycfg</td><td>The configuration. Unset optional parameters are filled with defaults. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The pupil OPD grid (referenced). If NULL, an annular grid is created from pycfg-&gt;D and pycfg-&gt;dx. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>The amplitude on loc (referenced). Uniform if NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">opdbias</td><td>OPD on loc (m) at which the gradient offset (gradoff) is computed. A flat wavefront is used if NULL. The optical gain is always computed around a flat wavefront. </td></tr>
   </table>
   </dd>
 </dl>

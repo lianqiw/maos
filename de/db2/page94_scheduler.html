@@ -181,7 +181,7 @@ Messages to Monitors</h1>
 <li><code>pid&amp;STATUS&amp;pidnew&amp;info&amp;start</code> time&amp;errhi&amp;errlo&amp;iseed&amp;nseed&amp;isim&amp;nsim&amp;rest&amp;total&amp;step time$</li>
 <li><code>pid&amp;DRAW$</code> to open a plot.</li>
 </ul>
-<p>It sends commands as <code>pid</code>  where NAME is <code>REMOVE</code>, <code>KILL</code>, <code>RESTART</code>, <code>DRAW</code>, <code>DRAW_FIGFN</code>, <code>DRAW_PAUSE</code>, <code>DRAW_RESUME</code>, or <code>DRAW_SINGLE</code> (see <code>ws_proxy_command()</code>). Plot data from <code>maos</code> is forwarded to the browser as binary messages through the <code>maos-drawdaemon-protocol</code> connection.</p>
+<p>Each command it sends is <code>pid&amp;NAME</code> followed by <code></code>; (or a newline), where NAME is <code>REMOVE</code>, <code>KILL</code>, <code>RESTART</code>, <code>DRAW</code>, <code>DRAW_FIGFN</code>, <code>DRAW_PAUSE</code>, <code>DRAW_RESUME</code>, or <code>DRAW_SINGLE</code> (see <code>ws_proxy_command()</code>). Plot data from <code>maos</code> is forwarded to the browser as binary messages through the <code>maos-drawdaemon-protocol</code> connection.</p>
 <h1 class="doxsection"><a class="anchor" id="sched-test"></a>
 Testing</h1>
 <p><code>make</code> <code>check-scheduler</code> in the <code>test</code> folder of the build directory starts a scheduler on a temporary home folder and port and runs the Python scripts in <code>test/scheduler</code>, which check the commands above over both sockets, authentication, invalid input, and the websocket interfaces. It is not part of <code>make</code> <code>check</code> because it starts processes and uses the network. </p>
