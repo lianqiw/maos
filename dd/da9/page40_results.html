@@ -103,9 +103,9 @@ $(function(){initNavTree('dd/da9/page40_results.html','../../',''); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>MAOS writes all results to the output folder given by <span class="tt">-o</span>. Numerical results use the <span class="tt">.bin</span> format described in <a class="el" href="../../d5/d98/page91_basics.html#sect-bin">Bin file format</a>; PSFs and science OPDs use FITS. The number after the last underscore in a file name is the seed (for example <span class="tt">Res_1.bin</span> is for seed 1). When reading a file with the tools below, the suffix (<span class="tt">.bin</span>, <span class="tt">.fits</span>, with optional <span class="tt">.gz</span>) may be omitted.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md7"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
 RMS WFE</h1>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md8"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
 Python</h2>
 <p><span class="tt">scripts/maos_result.py</span> contains routines that read <span class="tt">Res_*.bin</span> or <span class="tt">Resp_*.bin</span> from one or more result folders and average the wavefront variance over a range of time steps and over the seeds found in each folder. Add the <span class="tt">scripts</span> folder to <span class="tt">PYTHONPATH</span> so that <span class="tt">readbin.py</span> can be imported. </p><pre class="fragment">from maos_result import *
 res,fds=maos_res(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=1)      #field averaged WFE
@@ -120,10 +120,10 @@ res,fds=maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=1) #each ev
 <li><span class="tt">maos_res</span> returns one row per folder with columns: high order WFE, tip/tilt WFE, and low order total WFE (plus focus when split tomography includes a focus mode). For integrated tomography, the high order column is the piston/tip/tilt removed WFE and the last two columns are both tip/tilt.</li>
 <li><span class="tt">maos_res_each</span> returns an array of dimension <span class="tt">nfolder*ndirection*nmod</span> with the closed loop piston removed, tip/tilt, and piston/tip/tilt removed WFE for each evaluation direction (the last part of <span class="tt">Resp_*.bin</span>).</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md9"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
 MATLAB</h2>
 <p>There is no MATLAB counterpart of <span class="tt">maos_result.py</span>. Read <span class="tt">Res_1.bin</span> with the <span class="tt">read</span> mex routine (see <a class="el" href="#sect-mex">MATLAB</a>) and process the cells as described in <a class="el" href="#sect-res">Wavefront error</a>.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md10"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
 Plotting Results</h1>
 <p>The wavefront error time history can be plotted with the built in tool <span class="tt">drawres</span>, which sends the plots to the GTK based <span class="tt">drawdaemon</span>. </p><pre class="fragment">drawres [-s seed] folder1 folder2 ...
 </pre><ul>
@@ -135,9 +135,9 @@ Plotting Results</h1>
 <li><span class="tt">drawres</span> also plots sky coverage results (<span class="tt">Res*_*.bin</span> written by <span class="tt">skyc</span>), but maos and skyc results cannot be mixed in one call.</li>
 </ul>
 <p><span class="tt">drawres</span> connects to an idle <span class="tt">drawdaemon</span> or asks the scheduler to launch one. A <span class="tt">monitor</span> that is connected to the scheduler can display the plots. Otherwise <span class="tt">drawdaemon</span> is launched locally when <span class="tt">DISPLAY</span> or <span class="tt">WAYLAND_DISPLAY</span> is set.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md11"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
 Reading Results</h1>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md12"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 .bin file format</h2>
 <p>Each array is saved as an optional header, a 4 byte magic number that identifies the data type, two 8 byte unsigned integers for the <span class="tt">nx</span> and <span class="tt">ny</span> dimensions, and the data in column major order (<span class="tt">x</span> changes fastest). A cell array has its own magic number and dimensions, followed by each of its elements written in the same way. The header is a text string with <span class="tt">key=value</span> entries, for example the sampling of a <span class="tt"><a class="el" href="../../d1/d83/loc_8h.html#da/ddc/structloc__t">loc_t</a></span> grid or the <span class="tt">sim.dt</span> and <span class="tt">evl.dx</span> of <span class="tt">Res_1.bin</span>.</p>
 <p>Files are written uncompressed unless the file name ends with <span class="tt">.gz</span> (gzip) or <span class="tt">.zst</span> (zstd). Readers detect the compression from the file content. FITS files are also supported for reading and writing. We use <span class="tt">.bin</span> by default because it is simple, supports cell arrays, and can be memory mapped.</p>
@@ -164,7 +164,7 @@ IDL</h2>
 <h2 class="doxsection"><a class="anchor" id="sect-fits"></a>
 FITS</h2>
 <p>Certain results (PSFs, science OPDs) are saved in <span class="tt">.fits</span> format. Any standard FITS reader (e.g., <span class="tt">fv</span>, <span class="tt">ds9</span>, <span class="tt">astropy</span>) can read them. A cell array is saved as a sequence of FITS images (extensions). The executable <span class="tt">bin2fits</span> converts <span class="tt">.bin</span> files to <span class="tt">.fits</span> files.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md13"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
 Result Files</h1>
 <p>The main results are saved in the output folder. Additional results are saved in the subfolder <span class="tt">extra</span> when <span class="tt">save.extra=1</span> (the default in <span class="tt">dbg.conf</span>). The file names below are for seed 1. Most of the results are saved incrementally during the simulation, so they can be read while the simulation is running; time steps that have not been simulated yet contain NaN or 0.</p>
 <h2 class="doxsection"><a class="anchor" id="sect-res"></a>
@@ -202,7 +202,7 @@ Wavefront error</h2>
 </ul>
 </li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md14"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md7"></a>
 Split tomography results</h2>
 <p>These files are saved in <span class="tt">extra</span> when <span class="tt">evl.split</span> is set. The NGS modes are the low order modes defined in <span class="tt">ahst_Modes</span> (tip/tilt first, then plate scale, focus, etc. depending on the configuration).</p>
 <ul>
@@ -212,14 +212,14 @@ Split tomography results</h2>
 <li><span class="tt">ResoleNGSm_1.bin</span> and <span class="tt">ResoleNGSmp_1.bin</span>: Like above, but for open loop.</li>
 <li><span class="tt">RescorrNGSm_1.bin</span>: The NGS mode correction (integrator output) applied (only when <span class="tt">recon.split=1</span> and <span class="tt">sim.fuseint=0</span>).</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md15"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md8"></a>
 Log files</h2>
 <ul>
 <li><span class="tt">maos_[<a class="el" href="../../d0/d85/process_8c.html#a5bbd92c3ad0df50e0737bfb96b15b4f5">HOST</a>]_[PID].conf</span>: The final effective configuration of the MAOS process with pid PID. The first line includes the default configuration file. Lines beginning with # are default values while the rest have been overridden. It can be used to reproduce the simulation or check the configuration. When the simulation finishes successfully, it is renamed to <span class="tt">maos_done.conf</span> (an older one is renamed to <span class="tt">maos_done.1.conf</span>, etc.). <span class="tt">maos_recent.conf</span> links to the file of the most recent run.</li>
 <li><span class="tt">run_[<a class="el" href="../../d0/d85/process_8c.html#a5bbd92c3ad0df50e0737bfb96b15b4f5">HOST</a>]_[PID].log</span>: The log file. It is renamed to <span class="tt">run_done.log</span> when the simulation finishes successfully, or to <span class="tt">run_[<a class="el" href="../../d0/d85/process_8c.html#a5bbd92c3ad0df50e0737bfb96b15b4f5">HOST</a>]_[PID].err</span> if it fails. <span class="tt">run_recent.log</span> links to the file of the most recent run.</li>
 <li><span class="tt">Res_1.done</span>: Created when seed 1 finishes. MAOS skips seeds that are already done in the output folder unless <span class="tt">-O</span> (override) is given.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md16"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md9"></a>
 PSF</h2>
 <p>PSFs are computed when <span class="tt">evl.psfmean</span> or <span class="tt">evl.psfhist</span> is set, starting from time step <span class="tt">evl.psfisim</span>, for directions with <span class="tt">evl.psf</span> set. Each PSF has FITS keywords that describe the field location, zenith angle, \(r_0\), \(L_0\), wavelength, OPD sampling, FFT grid size, PSF sampling (<span class="tt">dp</span> in arcsec), total intensity, and exposure time. The PSF sampling is <span class="tt">evl.wvl/(nfft*evl.dx)</span>, where the FFT size <span class="tt">nfft</span> is set by <span class="tt">evl.psfgridsize</span> or, by default, is about twice the aperture diameter, giving a sampling of about <span class="tt">evl.wvl/(2*aper.d)</span>. The PSF size is <span class="tt">nfft</span> pixels unless trimmed to <span class="tt">evl.psfsize</span> pixels. The suffix <span class="tt">x0_y0</span> is the field location in arcsec (followed by the source height for sources not at infinity).</p>
 <ul>
@@ -230,7 +230,7 @@ PSF</h2>
 <li><span class="tt">evlpsfhist_1_x0_y0.fits</span>: When <span class="tt">evl.psfhist</span> is set, the time history of the complex PSF.</li>
 <li><span class="tt">evlopdcov_1_x0_y0.fits</span> and <span class="tt">evlopdmean_1_x0_y0.fits</span>: When <span class="tt">evl.cov</span> or <span class="tt">evl.opdmean</span> is set, the cumulative average of the covariance and mean of the closed loop science OPD. Open loop versions are <span class="tt">evlopdcovol_1.fits</span> and <span class="tt">evlopdmeanol_1.fits</span>.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md17"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md10"></a>
 Subaperture Pixels</h2>
 <p>The subaperture pixels can be saved by specifying <span class="tt">save.setup=1</span> for models computed during the setup process, and <span class="tt">save.ints=1</span> for runtime data. The pixels are grouped by subapertures, with the subaperture ordering defined in <span class="tt">saloc</span> (see <span class="tt">setup/powfs0_saloc.bin</span>).</p>
 <ul>
@@ -239,7 +239,7 @@ Subaperture Pixels</h2>
 <li><span class="tt">wfs0_intsny_1.bin</span>: The noisy WFS pixels for every frame.</li>
 </ul>
 <p>The config input <span class="tt">powfs.bkgrndfn</span> uses the same format.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md18"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md11"></a>
 Other</h2>
 <p>These files are saved in <span class="tt">extra</span> when <span class="tt">save.extra=1</span>. Cell arrays with one element per WFS have empty elements for WFS that do not use the feature.</p>
 <ul>
@@ -452,7 +452,7 @@ Telemetry Data</h1>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">wfs0_lltopd_1</span>  </td><td class="markdownTableBodyNone">save.wfsopd  </td><td class="markdownTableBodyNone">The WFS laser launch telescope OPD.  </td></tr>
 </table>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md19"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md12"></a>
 Summary of save options</h2>
 <p>All the <span class="tt">save.*</span> options are documented in <span class="tt">config/maos/dbg.conf</span>. The following table summarizes their effects.</p>
 <table class="markdownTable">

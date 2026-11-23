@@ -1,9 +1,9 @@
 var algorithm =
 [
     [ "DM Actuator Influence Function", "d4/d15/algorithm.html#sect-dm-actuator", [
-      [ "Linear influence function", "d4/d15/algorithm.html#autotoc_md30", null ],
-      [ "Cubic influence function", "d4/d15/algorithm.html#autotoc_md31", null ],
-      [ "Implementation", "d4/d15/algorithm.html#autotoc_md32", null ]
+      [ "Linear influence function", "d4/d15/algorithm.html#autotoc_md23", null ],
+      [ "Cubic influence function", "d4/d15/algorithm.html#autotoc_md24", null ],
+      [ "Implementation", "d4/d15/algorithm.html#autotoc_md25", null ]
     ] ],
     [ "DM Hysteresis", "da/dbe/hysteresis.html", [
       [ "Implementation", "da/dbe/hysteresis.html#hyst-impl", null ]

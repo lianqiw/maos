@@ -26,15 +26,6 @@ var NAVTREE =
 [
   [ "MAOS", "index.html", [
     [ "Overview", "index.html", "index" ],
-    [ "CLAUDE.md", "d6/d23/md__c_l_a_u_d_e.html", [
-      [ "Build", "d6/d23/md__c_l_a_u_d_e.html#autotoc_md1", null ],
-      [ "Tests", "d6/d23/md__c_l_a_u_d_e.html#autotoc_md2", null ],
-      [ "Running", "d6/d23/md__c_l_a_u_d_e.html#autotoc_md3", null ],
-      [ "Architecture", "d6/d23/md__c_l_a_u_d_e.html#autotoc_md4", [
-        [ "Configuration parameters", "d6/d23/md__c_l_a_u_d_e.html#autotoc_md5", null ]
-      ] ],
-      [ "Conventions (from <span class=\"tt\">docs/91_basics.md</span>)", "d6/d23/md__c_l_a_u_d_e.html#autotoc_md6", null ]
-    ] ],
     [ "Introduction", "da/d9f/page10_intro.html", [
       [ "What is modeled", "da/d9f/page10_intro.html#intro-model", [
         [ "Configuration", "da/d9f/page10_intro.html#intro-config", null ],
@@ -109,44 +100,44 @@ var NAVTREE =
     ] ],
     [ "Examples", "d5/d29/page33_example.html", "d5/d29/page33_example" ],
     [ "Simulation Results", "dd/da9/page40_results.html", [
-      [ "RMS WFE", "dd/da9/page40_results.html#autotoc_md7", [
-        [ "Python", "dd/da9/page40_results.html#autotoc_md8", null ],
-        [ "MATLAB", "dd/da9/page40_results.html#autotoc_md9", null ]
+      [ "RMS WFE", "dd/da9/page40_results.html#autotoc_md0", [
+        [ "Python", "dd/da9/page40_results.html#autotoc_md1", null ],
+        [ "MATLAB", "dd/da9/page40_results.html#autotoc_md2", null ]
       ] ],
-      [ "Plotting Results", "dd/da9/page40_results.html#autotoc_md10", null ],
-      [ "Reading Results", "dd/da9/page40_results.html#autotoc_md11", [
-        [ ".bin file format", "dd/da9/page40_results.html#autotoc_md12", null ],
+      [ "Plotting Results", "dd/da9/page40_results.html#autotoc_md3", null ],
+      [ "Reading Results", "dd/da9/page40_results.html#autotoc_md4", [
+        [ ".bin file format", "dd/da9/page40_results.html#autotoc_md5", null ],
         [ "MATLAB", "dd/da9/page40_results.html#sect-mex", null ],
         [ "Python", "dd/da9/page40_results.html#sect-python", null ],
         [ "IDL", "dd/da9/page40_results.html#sect-idl", null ],
         [ "FITS", "dd/da9/page40_results.html#sect-fits", null ]
       ] ],
-      [ "Result Files", "dd/da9/page40_results.html#autotoc_md13", [
+      [ "Result Files", "dd/da9/page40_results.html#autotoc_md6", [
         [ "Wavefront error", "dd/da9/page40_results.html#sect-res", null ],
-        [ "Split tomography results", "dd/da9/page40_results.html#autotoc_md14", null ],
-        [ "Log files", "dd/da9/page40_results.html#autotoc_md15", null ],
-        [ "PSF", "dd/da9/page40_results.html#autotoc_md16", null ],
-        [ "Subaperture Pixels", "dd/da9/page40_results.html#autotoc_md17", null ],
-        [ "Other", "dd/da9/page40_results.html#autotoc_md18", null ]
+        [ "Split tomography results", "dd/da9/page40_results.html#autotoc_md7", null ],
+        [ "Log files", "dd/da9/page40_results.html#autotoc_md8", null ],
+        [ "PSF", "dd/da9/page40_results.html#autotoc_md9", null ],
+        [ "Subaperture Pixels", "dd/da9/page40_results.html#autotoc_md10", null ],
+        [ "Other", "dd/da9/page40_results.html#autotoc_md11", null ]
       ] ],
       [ "Geometry Data", "dd/da9/page40_results.html#geometry", null ],
       [ "Telemetry Data", "dd/da9/page40_results.html#telemetry", [
-        [ "Summary of save options", "dd/da9/page40_results.html#autotoc_md19", null ]
+        [ "Summary of save options", "dd/da9/page40_results.html#autotoc_md12", null ]
       ] ]
     ] ],
     [ "NFIRAOS Performance", "d6/d3f/page43_nfiraos.html", [
-      [ "Turbulence profile", "d6/d3f/page43_nfiraos.html#autotoc_md20", null ],
-      [ "NFIRAOS AO Performance", "d6/d3f/page43_nfiraos.html#autotoc_md21", [
-        [ "NFIRAOS", "d6/d3f/page43_nfiraos.html#autotoc_md22", null ],
-        [ "IRIS Imager", "d6/d3f/page43_nfiraos.html#autotoc_md23", [
-          [ "Wavefront error", "d6/d3f/page43_nfiraos.html#autotoc_md24", null ],
-          [ "J band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md25", null ],
-          [ "H band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md26", null ],
-          [ "K band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md27", null ]
+      [ "Turbulence profile", "d6/d3f/page43_nfiraos.html#autotoc_md13", null ],
+      [ "NFIRAOS AO Performance", "d6/d3f/page43_nfiraos.html#autotoc_md14", [
+        [ "NFIRAOS", "d6/d3f/page43_nfiraos.html#autotoc_md15", null ],
+        [ "IRIS Imager", "d6/d3f/page43_nfiraos.html#autotoc_md16", [
+          [ "Wavefront error", "d6/d3f/page43_nfiraos.html#autotoc_md17", null ],
+          [ "J band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md18", null ],
+          [ "H band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md19", null ],
+          [ "K band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md20", null ]
         ] ],
-        [ "MODHIS", "d6/d3f/page43_nfiraos.html#autotoc_md28", null ]
+        [ "MODHIS", "d6/d3f/page43_nfiraos.html#autotoc_md21", null ]
       ] ],
-      [ "NFIRAOS+", "d6/d3f/page43_nfiraos.html#autotoc_md29", null ]
+      [ "NFIRAOS+", "d6/d3f/page43_nfiraos.html#autotoc_md22", null ]
     ] ],
     [ "Algorithms", "d4/d15/algorithm.html", "d4/d15/algorithm" ],
     [ "Sky Coverage", "d5/d4c/skycoverage.html", [
@@ -191,16 +182,16 @@ var NAVTREEINDEX =
 "d4/d38/parms_8h.html#a7bf4ca9968bca8ce8b4bbb3aa41d7565",
 "d4/d38/parms_8h.html#adf33bd76b9ccf6fbb5cdaa7d6ae6641a",
 "d5/d85/surf_8h.html#ab9d628f58bc2c7aa07274f9f00462107",
-"d6/d94/maos_2types_8h.html#a54fd9212def44f2aed06393e3d6139eb",
-"d6/d94/maos_2types_8h.html#ae69c496d45aeef46c543e0306592f029",
-"d9/d45/plot__utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822",
-"da/dfb/dmath_8h.html#a785262f63f16980c7f9908ac985cb3bb",
-"dc/d59/cn2est_8h.html#a4834dcc10f7e6a8a0d9ed5f7bcf4ed1c",
-"dd/dc1/lmath_8h.html#a4cbc22ee4e0ba4f177d1a63eed187429",
-"de/d07/cmath_8h.html#ae5e33b317ede850a66030ced75691031",
-"de/de7/smath_8h.html#a9a25cfbabc1e4fba75bc7f7751a4aaf4",
-"df/def/type_8h.html#a380c1e2f1294c6b6ca9924bf9575dd9d",
-"df/def/type_8h.html#d4/d6c/structsmat"
+"d6/d94/maos_2types_8h.html#a5d0b1fa0a3a88bb8532ccd7631b3291f",
+"d6/d94/maos_2types_8h.html#aeb5b9028e45fb2109c6d262675a1ea93",
+"d9/d6e/page96_unittest.html",
+"da/dfb/dmath_8h.html#a7ff47722a9401a5bf0e98b3be7493920",
+"dc/d59/cn2est_8h.html#a742aa5a993650df584a3c505336266d5",
+"dd/dc1/lmath_8h.html#a5b9920077ade8f512d7c91820a5c1872",
+"de/d07/cmath_8h.html#aeb46f604c51f21d2ae0de2f764f3f14a",
+"de/de7/smath_8h.html#a9fec2042f28f1838095d50941f1e7e43",
+"df/def/type_8h.html#a42e2503f68240fc7269809cf7e7400cf",
+"df/def/type_8h.html#d6/de5/structcccell"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

@@ -111,7 +111,7 @@ $(function(){initNavTree('d4/d15/algorithm.html','../../',''); });
 </ul>
 <h1 class="doxsection"><a class="anchor" id="sect-dm-actuator"></a>
 DM Actuator Influence Function</h1>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md30"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md23"></a>
 Linear influence function</h2>
 <p>The linear influence function is defined as      </p><p class="formulaDsp">
 \[h(x;x_{i};\delta)=\begin{cases}
@@ -121,7 +121,7 @@ Linear influence function</h2>
 \]
 </p>
 <p> where \(\delta\) is usually equal to the grid spacing. A bilinear influence function is simply the product of two linear influence functions with variables \(x_{1}\) and \(x_{2}\).</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md31"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md24"></a>
 Cubic influence function</h2>
 <p>A cubic influence function that can reproduce piston/tip/tilt was proposed by Ellerbroek to model the piezo stack DM actuator. The influence function has the form   </p><p class="formulaDsp">
 \[h(x;x_{i};\delta)=h_{0}((x-x_{i})/\delta)
@@ -136,7 +136,7 @@ Cubic influence function</h2>
 \]
 </p>
 <p> where \(c\) is the inter-actuator coupling coefficient: the ratio \(h_0(1)/h_0(0)\) of the response at the nearest neighbor actuator to that at the actuator itself. The leading coefficient normalizes the influence function so that the sum over the actuator grid points, \(h_0(0)+2h_0(1)\), equals 1. The 2-d influence function is the product of the influence functions along \(x\) and \(y\).</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md32"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md25"></a>
 Implementation</h2>
 <p>The influence function is selected per grid by the <code>iac</code> member of <a class="el" href="../../d1/d83/loc_8h.html#da/ddc/structloc__t">loc_t</a> and <a class="el" href="../../dc/db7/map_8h.html#d6/da3/structmap__t">map_t</a>: 0 uses the bilinear influence function, and a positive value uses the cubic influence function with \(c=\)<code>iac</code>.</p>
 <ul>
