@@ -103,20 +103,16 @@ $(function(){initNavTree('d5/de3/strata_mosfire.html','../../',''); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><div class="fragment"><div class="line">#MOSFIRE spectrograph 6&#39;x3&#39; fov. Guider is 6.7&#39; off axis.</div>
-<div class="line">include=&quot;strata.conf&quot;</div>
+<div class="line">include=strata.conf</div>
 <div class="line"> </div>
 <div class="line">powfs.astscale=[765 800 800]</div>
 <div class="line">powfs.dtrat=[1 600 1000000]</div>
 <div class="line"> </div>
-<div class="line">fit.thetax = [-0.5 -0.5 -0.5 -0.5 -0.5 -0.25 -0.25 -0.25 -0.25 -0.25 0 0 0 0 0 0.25 0.25 0.25 0.25 0.25 0.5 0.5 0.5 0.5 0.5]*360 </div>
-<div class="line">fit.thetay = [-0.5 -0.25 0 0.25 0.5 -0.5 -0.25 0 0.25 0.5 -0.5 -0.25 0 0.25 0.5 -0.5 -0.25 0 0.25 0.5 -0.5 -0.25 0 0.25 0.5]*180 </div>
-<div class="line">fit.wt     = [1 1 1 1 1 1 1 1 1 1 1 1 0.5 1 1 1 1 1 1 1 1 1 1 1 1]  </div>
-<div class="line">fit.fov    = 1</div>
-<div class="line"> </div>
-<div class="line">evl.thetax = [0 0.25 0.5 0 0.25 0.5 0 0.25 0.5]*360</div>
-<div class="line">evl.thetay = [0 0 0 0.25 0.25 0.25 0.5 0.5 0.5]*180 </div>
-<div class="line">evl.wt     = [1 1 1 1 1 1 1 1 1] </div>
-<div class="line">evl.fov    = 1</div>
+<div class="line">#Switch to use full 6.8&#39; diameter fov</div>
+<div class="line">fit.thetax=&#39;type=cir; nring=5&#39; </div>
+<div class="line">fit.fov=408 </div>
+<div class="line">evl_x.conf </div>
+<div class="line">evl.fov=408</div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
