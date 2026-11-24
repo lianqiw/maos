@@ -52,7 +52,7 @@ typedef struct atm_cfg_t{
     lmat *ipsr;    /**<corresponding reconstruction layer*/
     long nx;      /**<turbulence screen size along x*/
     long ny;      /**<turbulence screen size along y*/
-    lmat *nxn;    /**<minimum turbulence screen size along to cover meta pupil*/
+    lmat *nxn;    /**<minimum turbulence screen size to cover the meta pupil, symmetric about the optical axis*/
     long nxnmax;  /**<max of nxn*/
     int method;   /**<0: FFT Von Karman. 1: FFT Biharmonic. 2: Fractal method.*/
     int frozenflow;  /**<frozen flow. automatic if closeloop=1*/

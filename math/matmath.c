@@ -1955,7 +1955,7 @@ static void* X(enc_thread)(thread_t* pdata){
 				P(ksinc, ir, iy)=sinc(ky*dr[ir])*dr[ir];
 			}
 		}
-		for(long iy=0; iy<ncomp2; iy++){
+		for(long iy=0; iy<ppsf->ny; iy++){//ny is 1 for slit
 			for(long ix=0; ix<ncomp2; ix++){
 				OMP_SIMD()
 				for(long ir=pdata->start; ir<pdata->end; ir++){
@@ -2017,12 +2017,22 @@ X(mat)* X(enc)(const X(mat)* psf, const X(mat)* dvec, int type, int nthread){
 		return NULL;
 	}
 	if(nthread<=0) nthread=NTHREAD;	
-	const R rmax=ceil(X(max)(dvec))+1;
-	long ncomp=nextfftsize(rmax*2);
+	const R xmax=ceil(X(max)(dvec))+1;
+	long ncomp=nextfftsize((type>=0?xmax/2:xmax)*2);
+	X(mat)* psfy=NULL;
+	if(type==2){//the slit is along y and only the profile along x matters. Sum along y first as cropping y loses energy.
+		psfy=X(new)(psf->nx, 1);
+		for(long iy=0; iy<psf->ny; iy++){
+			for(long ix=0; ix<psf->nx; ix++){
+				P(psfy, ix)+=P(psf, ix, iy);
+			}
+		}
+		psf=psfy;
+	}
 	const long ncomp_max=MAX(psf->nx, psf->ny);
 	X(mat)* psfc;
 	if(ncomp_max>ncomp){//reduce the size of array
-		psfc=X(new)(ncomp, ncomp);
+		psfc=X(new)(ncomp, type==2?1:ncomp);
 		X(embed)(psfc, psf, 0);
 		//info("1ncomp=%ld, %ld, nref=%d, %d, %p %p\n", ncomp, ncomp_max, mem_nref(psf->mem), mem_nref(psfc->mem), P(psf), P(psfc));
 	} else{
@@ -2030,8 +2040,9 @@ X(mat)* X(enc)(const X(mat)* psf, const X(mat)* dvec, int type, int nthread){
 		//info("2ncomp=%ld, %ld, nref=%d\n", ncomp, ncomp_max, mem_nref(psf->mem));
 		ncomp=ncomp_max;
 	}
+	X(free)(psfy);
 	long ncomp2=ncomp*2;//to avoid wrapping
-	XC(mat)* psf2=XC(new)(ncomp2, ncomp2);
+	XC(mat)* psf2=XC(new)(ncomp2, type==2?1:ncomp2);
 	XC(embedd)(psf2, psfc, 0);
 	X(free)(psfc);
 	XC(fftshift)(psf2);

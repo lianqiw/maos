@@ -289,7 +289,7 @@ dsp* mkht_cubic(propdata_t *propdata, real cubic_iac){
 			for(long ip=bp[iloc]; ip<count; ip++){
 				bx[ip]*=wtsum;
 			}
-			dbg("Scale weight by 1+%20g\n", wtsum-1);
+			//dbg("Scale weight by 1+%20g\n", wtsum-1);
 		}
 	}/*for */
 	bp[locout->nloc]=count;

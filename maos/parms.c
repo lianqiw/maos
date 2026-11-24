@@ -3069,13 +3069,23 @@ static void setup_parms_postproc_dirs(parms_t *parms){
 static void setup_parms_postproc_atm_size(parms_t *parms){
 	const int nps=parms->atm.nps;
 	long Nmax=(long)ceil(P(parms->atm.L0, 0)*2/parms->atm.dx);//default to 2*L0 to capture enough low resolution
-	long nxout[nps],nyout[nps];
 	parms->atm.nxn=lnew(nps,1);
+	const real guard=parms->atm.dx*3;
+	const real R=parms->aper.d*0.5;
 	for(int ips=0; ips<nps; ips++){
-		double guard=parms->atm.dx*3;
-		create_metapupil(0,&nxout[ips],&nyout[ips],parms->dirs,parms->aper.d,P(parms->atm.ht,ips),
-			parms->atm.dx,parms->atm.dx,0.5,guard,0,0,0,1);
-		P(parms->atm.nxn,ips)=MAX(nxout[ips],nyout[ips]);
+		/*The GPU hosts a part of the screen centered on the optical axis
+		  (gpu_atm2gpu), so nxn covers the farthest beam edge on either side
+		  of the axis. This is larger than the meta-pupil (create_metapupil)
+		  when the beams are not symmetric about the axis, e.g., evaluation
+		  directions only along +x.*/
+		real rmax=R;
+		for(int idir=0; idir<NY(parms->dirs); idir++){
+			const real ht=P(parms->atm.ht, ips)-P(parms->dirs, 3, idir);
+			const real r=MAX(fabs(P(parms->dirs, 0, idir)*ht), fabs(P(parms->dirs, 1, idir)*ht))
+				+fabs(1.-ht/P(parms->dirs, 2, idir))*R;
+			if(r>rmax) rmax=r;
+		}
+		P(parms->atm.nxn,ips)=2*(long)ceil((rmax+guard)/parms->atm.dx)+2;//2: offset and interpolation
 		Nmax=MAX(Nmax,P(parms->atm.nxn,ips));
 	}
 	/*Minimum screen size required. Used to transport atm to GPU. */
@@ -3110,8 +3120,8 @@ static void setup_parms_postproc_atm_size(parms_t *parms){
 	parms->atm.overx=lnew(parms->atm.nps,1);
 	parms->atm.overy=lnew(parms->atm.nps,1);
 	for(int ips=0; ips<parms->atm.nps; ips++){
-		P(parms->atm.overx,ips)=nxout[ips];
-		P(parms->atm.overy,ips)=nyout[ips];
+		P(parms->atm.overx,ips)=P(parms->atm.nxn,ips);
+		P(parms->atm.overy,ips)=P(parms->atm.nxn,ips);
 	}
 }
 /*

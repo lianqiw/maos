@@ -1,3 +1,28 @@
+"""
+Measure the PSF size (FWHM and ensquared energy width) from MAOS PSF outputs.
+
+MAOS saves the time averaged PSFs as FITS files: evlpsfcl_{seed}_x{x}_y{y}.fits
+(closed loop, one file per evaluation direction at field location x, y in
+arcsec) and evlpsfol_{seed}.fits (open loop, field averaged). Each file holds
+one PSF per wavelength with header keywords WVL (wavelength in m), DP (PSF
+pixel size in arcsec), and SUM (total PSF intensity).
+
+Two methods are provided:
+
+- proc_psf(): numerical. The FWHM is from the azimuthal average and the
+  ensquared energy width is interpolated from the ensquared energy curve, both
+  computed with FFT by libaos denc().
+- proc_psf_fit(): fit a Moffat (or Gaussian + Moffat) model with moffat_fit()
+  and compute the FWHM (moffat_fwhm) and ensquared energy width
+  (moffat_square_width) from the model.
+
+proc_psfs() processes all the directions of a simulation folder, averaging
+PSFs of multiple seeds, and caches intermediate results next to the PSF files
+(*.fits.npz) that are reused while newer than the PSF file.
+
+Requires libaos (scripts/libaos.py with aolib.so from the MAOS build), numpy,
+scipy and astropy. natsort is optional.
+"""
 import os
 from pathlib import Path
 import numpy as np
@@ -20,6 +45,18 @@ except:
     natsorted=sorted
 import re
 def strip_prefix(strings):
+    """
+    Remove the common prefix, and then any leading underscores, from each string.
+
+    Parameters
+    ----------
+    strings : list[str]
+
+    Returns
+    -------
+    list[str]
+        The input unchanged if it is empty.
+    """
     if not strings:
         return strings
 
@@ -29,10 +66,14 @@ def strip_prefix(strings):
     return arr
 def strip_common(strings):
     """
-    Remove:
-      1. common directory path
-      2. common filename prefix
-      3. common filename suffix
+    Shorten a list of file paths to the parts that differ, for use as labels.
+
+    Removes, in order:
+      1. the common directory path
+      2. the common prefix of the remaining names
+      3. the common suffix
+      4. the longest substring common to all the names, replaced by "...",
+         if it is longer than 5 characters
 
     Parameters
     ----------
@@ -90,47 +131,121 @@ def strip_common(strings):
     return names    
 # import maos_client
 def rms(*args, **kargs):
-    """compute rms of input"""
+    """
+    Root mean square of the input.
+
+    Parameters
+    ----------
+    *args : array_like
+        A single array, or several values that are combined into one array.
+    **kargs
+        Passed to np.mean, e.g. axis.
+
+    Returns
+    -------
+    The rms, sqrt(mean(|x|^2)). Complex input is supported.
+    """
     if len(args) > 1:
         arr = np.array(args)
     else:
         arr = np.array(args[0])
     return np.sqrt(np.mean(np.real(arr * np.conj(arr)), **kargs))
-def auto_crop_roi(img, threshold_rel=0.1, max_radius=None):
+def fft_size(n, larger=True):
+    """
+    Return an even integer with no prime factors other than 2, 3, 5 and 7,
+    which is efficient for FFT.
+
+    Parameters
+    ----------
+    n : int
+        The reference size.
+    larger : bool
+        True: the smallest such size >= n. False: the largest such size <= n
+        (n must be at least 2).
+
+    Returns
+    -------
+    int
+    """
+    def ok(m):
+        for f in (2, 3, 5, 7):
+            while m % f == 0:
+                m //= f
+        return m == 1
+    m = max(int(np.ceil(n)) if larger else int(np.floor(n)), 2)
+    m += m & 1 if larger else -(m & 1)
+    while not ok(m):
+        m += 2 if larger else -2
+    return m
+def auto_crop_roi(img, fraction=0.9, total=None):
+    """
+    Crop the image to the smallest square, centered on the FFT center, that
+    encloses `fraction` of the total energy.
+
+    The square of even size n has its pixel (n/2, n/2) at pixel (nx/2, ny/2)
+    of the image (the FFT center, where MAOS puts the PSF). n is increased to
+    a size convenient for FFT (fft_size()). If the energy is not reached, or n
+    does not fit in the image, n is the largest such size that fits.
+
+    Parameters
+    ----------
+    img : 2-D array
+        The image, indexed as img[y, x].
+    fraction : float
+        Fraction of the total energy to enclose, in (0, 1].
+    total : float, optional
+        The total energy, e.g., the SUM keyword of a MAOS PSF, which includes
+        the energy outside of the image. Defaults to the sum of img.
+
+    Returns
+    -------
+    sub : 2-D array
+        The cropped n*n image, a C-contiguous copy so that it can be modified
+        in place, e.g. by libaos dshift2center(). If the image is smaller than
+        2 pixels along either dimension, a copy of the whole image.
+    (x0, y0) : tuple of int
+        Position of sub[0, 0] in img.
+    """
     ny, nx = img.shape
-    if max_radius is None:
-        max_radius=int(min(nx,ny)/2)
-    # --- find peak
-    iy, ix = np.unravel_index(np.argmax(img), img.shape)
+    if min(nx, ny) < 2:
+        return np.array(img, order='C'), (0, 0)
+    cy, cx = ny // 2, nx // 2
+    #largest even half-size-symmetric square around (cy, cx) that fits
+    nmax = 2 * min(cy, cx, ny - cy, nx - cx)
+    if total is None:
+        total = np.sum(img)
+    #integral image: cs[i, j] is the sum of img[:i, :j]
+    cs = np.zeros((ny + 1, nx + 1))
+    cs[1:, 1:] = np.cumsum(np.cumsum(img, axis=0), axis=1)
+    h = np.arange(1, nmax // 2 + 1) #half size
+    ee = cs[cy + h, cx + h] - cs[cy - h, cx + h] - cs[cy + h, cx - h] + cs[cy - h, cx - h]
+    ind = np.nonzero(ee >= fraction * total)[0]
+    n = 2 * h[ind[0]] if ind.size else nmax
+    n = fft_size(n)
+    if n > nmax:
+        n = fft_size(nmax, larger=False)
+    y0, x0 = cy - n // 2, cx - n // 2
 
-    peak = img[iy, ix]
-    thresh = peak * threshold_rel
-
-    # --- radial growth (cheap approximation)
-    r = 1
-    while r < max_radius:
-        y0, y1 = max(0, iy-r), min(ny, iy+r+1)
-        x0, x1 = max(0, ix-r), min(nx, ix+r+1)
-
-        sub = img[y0:y1, x0:x1]
-
-        # stop when edges fall below threshold
-        if np.all(sub[[0, -1], :] < thresh) and np.all(sub[:, [0, -1]] < thresh):
-            break
-
-        r += 1
-
-    # final crop with margin
-    margin = int(r * 0.3)
-    y0 = max(0, iy - r - margin)
-    y1 = min(ny, iy + r + margin + 1)
-    x0 = max(0, ix - r - margin)
-    x1 = min(nx, ix + r + margin + 1)
-
-    return img[y0:y1, x0:x1], (x0, y0)
+    return np.array(img[y0:y0+n, x0:x0+n], order='C'), (x0, y0)
 
 class EllipticalMoffat2D(Fittable2DModel):
-    '''major-axis/axis-ratio parameterization of mofatt'''
+    """
+    Elliptical Moffat with major axis and axis ratio parameterization:
+
+        I(x, y) = amplitude * (1 + (x'/gamma)^2 + (y'/(q*gamma))^2)^(-alpha)
+
+    where (x', y') are the coordinates relative to (x_0, y_0) rotated by theta
+    so that x' is along the major axis.
+
+    Parameters
+    ----------
+    amplitude : peak value
+    x_0, y_0 : center (pixel)
+    gamma : Moffat core width along the major axis (pixel)
+    q : minor/major axis ratio, in (0, 1]
+    alpha : Moffat power index. The total flux is finite only for alpha>1.
+    theta : rotation of the major axis from the x axis (radian), in [-pi/2, pi/2]
+    """
     amplitude = Parameter(default=1.0)
     x_0 = Parameter(default=0.0)
     y_0 = Parameter(default=0.0)
@@ -165,6 +280,29 @@ class EllipticalMoffat2D(Fittable2DModel):
 
         return amplitude * (1.0 + r2)**(-alpha)
 class EllipticalGaussianMoffat(Fittable2DModel):
+    """
+    Sum of an elliptical Gaussian (core), an elliptical Moffat (halo) and a
+    constant background. Both components share the center, axis ratio and
+    rotation:
+
+        I(x, y) = background
+                + amplitude_g * exp(-0.5*((x'/sigma)^2 + (y'/(q*sigma))^2))
+                + amplitude_m * (1 + (x'/gamma)^2 + (y'/(q*gamma))^2)^(-alpha)
+
+    where (x', y') are the coordinates relative to (x_0, y_0) rotated by theta
+    so that x' is along the major axis.
+
+    Parameters
+    ----------
+    x_0, y_0 : center (pixel)
+    amplitude_g, sigma : Gaussian peak and standard deviation along the major
+        axis (pixel)
+    amplitude_m, gamma, alpha : Moffat peak, core width along the major axis
+        (pixel) and power index
+    q : minor/major axis ratio
+    theta : rotation of the major axis from the x axis (radian)
+    background : constant background
+    """
     x_0 = Parameter()
     y_0 = Parameter()
 
@@ -215,28 +353,40 @@ class EllipticalGaussianMoffat(Fittable2DModel):
 
         return background + gaussian + moffat
 
-def global_fwhm(model):
+def moffat_fwhm(model):
     """
     Calculate the circularized FWHM of a PSF model.
 
-    Supported models
-    ----------------
-    Circular Moffat:
-        amplitude, gamma, alpha
+    The half maximum radius along the major axis is found numerically from the
+    radial profile (the peak is the sum of the component amplitudes). For
+    elliptical models:
 
-    Elliptical Moffat:
-        amplitude, gamma, alpha, q
+        FWHM = sqrt(FWHM_major * FWHM_minor) = FWHM_major * sqrt(q)
 
-    Gaussian + Moffat:
-        amplitude_g, sigma,
-        amplitude_m, gamma, alpha, q
+    Supported models (identified by their parameter names):
+        Circular Moffat (astropy Moffat2D):
+            amplitude, gamma, alpha
+        Elliptical Moffat (EllipticalMoffat2D):
+            amplitude, gamma, alpha, q
+        Elliptical Gaussian + Moffat (EllipticalGaussianMoffat):
+            amplitude_g, sigma, amplitude_m, gamma, alpha, q
 
-    For elliptical models:
-        FWHM_global = sqrt(FWHM_major * FWHM_minor)
-                     = FWHM_major * sqrt(q)
+    The background, center and rotation do not affect the result.
 
-    Assumes the PSF is centered and the elliptical axes are
-    represented by the q parameter.
+    Parameters
+    ----------
+    model : astropy model
+        A fitted model, e.g., from moffat_fit().
+
+    Returns
+    -------
+    float
+        The FWHM in pixels.
+
+    Raises
+    ------
+    TypeError
+        For an unsupported model.
     """
 
     names = model.param_names
@@ -332,21 +482,38 @@ def global_fwhm(model):
       
 def moffat_slit_width(model, fraction=0.8):
     """
-    Return the width of an infinitely long slit that encloses
-    `fraction` of the total PSF energy.
+    Return the width of an infinitely long slit, centered on the PSF, that
+    encloses `fraction` of the total PSF energy.
 
-    The slit is aligned with the PSF major axis.
+    The slit is aligned with the PSF major axis, so the width is along the
+    minor axis. It is solved from the analytic slit enclosed energy of each
+    component (a regularized incomplete beta function for the Moffat, erf for
+    the Gaussian, weighted by their flux), in log(width) for robustness.
 
-    Supported models:
-        1. Circular Moffat:
-           amplitude, gamma, alpha
+    Supported models are the same as for moffat_fwhm(). The background is not
+    included.
 
-        2. Elliptical Moffat:
-           amplitude, gamma, alpha, q
+    Parameters
+    ----------
+    model : astropy model
+        A fitted model, e.g., from moffat_fit().
+    fraction : float
+        Enclosed energy fraction, in (0, 1).
 
-        3. Elliptical Gaussian + Moffat:
-           amplitude_g, sigma,
-           amplitude_m, gamma, alpha, q
+    Returns
+    -------
+    float
+        The slit width in pixels.
+
+    Raises
+    ------
+    ValueError
+        If fraction is outside (0, 1), alpha<=1 (infinite flux), or the total
+        flux is not positive.
+    TypeError
+        For an unsupported model.
+    RuntimeError
+        If the width cannot be bracketed.
     """
 
     if not 0 < fraction < 1:
@@ -534,10 +701,28 @@ def moffat_slit_width(model, fraction=0.8):
     )
 
     return np.exp(log_w)
-def model_flux(model):
+def moffat_flux(model):
     """
-    Total flux of a fitted PSF model (circular or elliptical Moffat, or
-    elliptical Gaussian + Moffat). The background is not included.
+    Total flux of a fitted PSF model, integrated analytically to infinity.
+
+    Moffat: pi*amplitude*gamma^2*q/(alpha-1). Gaussian: 2*pi*amplitude_g*sigma^2*q.
+    Supported models are the same as for moffat_fwhm(). The background is not
+    included.
+
+    Parameters
+    ----------
+    model : astropy model
+        A fitted model, e.g., from moffat_fit().
+
+    Returns
+    -------
+    float
+        The total flux in the units of the image times pixel^2.
+
+    Raises
+    ------
+    ValueError
+        If alpha<=1 (infinite flux).
     """
     names = model.param_names
     q = model.q.value if "q" in names else 1.0
@@ -549,12 +734,35 @@ def model_flux(model):
             + np.pi * model.amplitude_m.value * model.gamma.value**2 * q / (alpha - 1.0))
     else:
         return np.pi * model.amplitude.value * model.gamma.value**2 * q / (alpha - 1.0)
-def model_ensquare_width(model, fraction=0.8):
+def moffat_square_width(model, fraction=0.8):
     """
     Return the width of the square, aligned with the image axes and centered
     on the PSF, that encloses `fraction` of the total PSF energy.
 
-    Supported models are the same as for model_flux().
+    The enclosed energy is integrated numerically (dblquad) with the
+    background set to 0 and normalized by moffat_flux(). The width is solved
+    with brentq to a tolerance of 1e-4 times the larger of gamma and sigma.
+
+    Supported models are the same as for moffat_flux().
+
+    Parameters
+    ----------
+    model : astropy model
+        A fitted model, e.g., from moffat_fit().
+    fraction : float
+        Enclosed energy fraction, in (0, 1).
+
+    Returns
+    -------
+    float
+        The square width in pixels.
+
+    Raises
+    ------
+    ValueError
+        If fraction is outside (0, 1) or alpha<=1.
+    RuntimeError
+        If the width cannot be bracketed.
     """
     if not 0 < fraction < 1:
         raise ValueError("fraction must be between 0 and 1")
@@ -564,7 +772,7 @@ def model_ensquare_width(model, fraction=0.8):
         params[names.index("background")] = 0
     x_0 = model.x_0.value
     y_0 = model.y_0.value
-    total = model_flux(model)
+    total = moffat_flux(model)
     scale = model.gamma.value
     if "sigma" in names:
         scale = max(scale, model.sigma.value)
@@ -585,7 +793,37 @@ def model_ensquare_width(model, fraction=0.8):
     else:
         raise RuntimeError(f"Could not bracket fraction={fraction}.")
     return brentq(lambda w: ee(w) - fraction, 0, w_hi, xtol=1e-4 * scale)
-def fit_moffat_roi(img, alpha=3, name=None, shape=1):
+def moffat_fit(img, alpha=None, name=None, shape=1):
+    """
+    Fit a Moffat model to a PSF image.
+
+    The image is first cropped with auto_crop_roi() to speed up the fit. The
+    model is fitted with bounded least squares (TRFLSQFitter), with alpha
+    bounded to [1.5, 20]. A message is printed if the fit did not converge,
+    the relative residual sum((img-model)^2)/sum(img^2) exceeds 0.05, or
+    alpha approaches 1.
+
+    Parameters
+    ----------
+    img : 2-D array
+        The PSF image, indexed as img[y, x].
+    alpha : float, optional
+        Initial alpha for shape 0 and 1, and the fixed alpha for shape 2.
+        Defaults to 3, 2.5 and 2 for shape 0, 1 and 2 respectively.
+    name : str, optional
+        Name, e.g. the file name, printed when the fit is not good.
+    shape : int
+        The model:
+        0: circular Moffat (astropy Moffat2D),
+        1: elliptical Moffat (EllipticalMoffat2D),
+        2: elliptical Gaussian + Moffat (EllipticalGaussianMoffat) with alpha
+           fixed.
+
+    Returns
+    -------
+    astropy model
+        The fitted model, with x_0 and y_0 in the pixel coordinates of img.
+    """
     if True: #speed up
         sub, (xoff, yoff) = auto_crop_roi(img)
     else:
@@ -600,6 +838,8 @@ def fit_moffat_roi(img, alpha=3, name=None, shape=1):
     #B0=0
     # center (local)
     iy, ix = np.unravel_index(np.argmax(sub), sub.shape)
+    if alpha is None:
+        alpha=(3, 2.5, 2)[shape]
     if shape==0: #axial symmetric
         model = Moffat2D(
             amplitude=sub.max() ,#- B0,
@@ -615,7 +855,7 @@ def fit_moffat_roi(img, alpha=3, name=None, shape=1):
         y_0=iy,
         gamma=3.0,
         q=0.8,
-        alpha=2.5,
+        alpha=alpha,
         theta=0.0,
     )
     elif shape==2: #Elliptical moffat + ellitical Gaussian
@@ -628,7 +868,7 @@ def fit_moffat_roi(img, alpha=3, name=None, shape=1):
             #for Moffat
             amplitude_m=np.max(sub)/2,
             gamma=5,
-            alpha=2,
+            alpha=alpha,
             #Shared ellipticity. q is minor/major ratio
             q=0.8,
             theta=0,
@@ -641,13 +881,13 @@ def fit_moffat_roi(img, alpha=3, name=None, shape=1):
     #weights=(sub/np.max(sub))
     #weights[weights<.01]=0
     fit = fitter(model, x, y, sub)#, weights=weights)
-    ierr= fitter.fit_info["status"]<1
+    ierr= fitter.fit_info["status"]<1 #least_squares status: -1 or 0 is failure
     #Sanity check results
     model_img=fit(x,y)
     diff=np.sum((sub-model_img)**2)/np.sum(sub**2)
     if ierr or diff>0.05 or fit.alpha.value<=1+2e-7:
         print(f"Fitting is not good: {name}, diff={diff:.4g}, alpha={fit.alpha.value:.4g}, gamma={fit.gamma.value:.4g}")
-        if ierr>4:
+        if ierr:
             print("nfev:", fitter.fit_info["nfev"])
             print("message:", fitter.fit_info["message"])
     
@@ -658,6 +898,28 @@ def fit_moffat_roi(img, alpha=3, name=None, shape=1):
     return fit
 
 def parse_header_float(headers, key):
+    """
+    Read a numerical keyword from a list of headers.
+
+    Parameters
+    ----------
+    headers : list
+        One header per PSF. Each is either a FITS header string made of
+        80-character cards "KEY     = value / comment", or a dict mapping the
+        key to a "value / comment" string.
+    key : str
+        The upper case keyword, e.g., 'DP', 'WVL' or 'SUM'.
+
+    Returns
+    -------
+    np.ndarray
+        The value from each header.
+
+    Raises
+    ------
+    Exception
+        If the value cannot be parsed (no '/' after the value).
+    """
     res=[]
     for hh in headers:
         dp=''
@@ -675,6 +937,22 @@ def parse_header_float(headers, key):
         res.append(dp)
     return np.stack(res)
 def average_psf(fn):
+    """
+    Read PSFs from one file, or average them over several files (e.g., seeds).
+
+    Parameters
+    ----------
+    fn : str or list[str]
+        The file name(s). All files must have the same wavelengths and PSF
+        sizes.
+
+    Returns
+    -------
+    datas : array
+        One PSF per wavelength, as read by libaos read().
+    headers : list
+        The header of each PSF from the first file.
+    """
     if isinstance(fn, str):
         datas=read(fn)
     else:
@@ -691,7 +969,38 @@ def average_psf(fn):
     return datas, headers
 def proc_psf_fit(fn, fn_cache=None, EEs=(0.5, 0.8), **kargs):
     """
-        Read PSF from a file and compute FWHM using Moffat fitting
+    Read PSFs and compute their size by fitting a model with moffat_fit().
+
+    The fitted models are cached in fn_cache and reused while the cache is
+    newer than the (first) PSF file. The sizes are recomputed from the models
+    every time.
+
+    Parameters
+    ----------
+    fn : str or list[str]
+        The PSF file, or a list of files to average (see average_psf()).
+    fn_cache : str, optional
+        The cache file (.npz). Defaults to fn+'.npz' for a single file. For a
+        list of files no cache is used unless given.
+    EEs : sequence of float
+        Ensquared energy fractions.
+    **kargs
+        Passed to moffat_fit(), e.g., shape or alpha.
+
+    Returns
+    -------
+    ress : ndarray, shape (nwvl, 1+len(EEs))
+        Column 0 is the circularized FWHM (moffat_fwhm()). Column 1+i is the
+        width of the square that encloses EEs[i] of the energy
+        (moffat_square_width()). All in arcsec.
+    dps : ndarray
+        PSF pixel size (arcsec) for each wavelength.
+    sums : ndarray
+        Total PSF intensity for each wavelength.
+    wvls : ndarray
+        Wavelengths (micron).
+    model : ndarray of object
+        The fitted model for each wavelength.
     """
     if isinstance(fn, str):
         fn0=fn
@@ -725,24 +1034,62 @@ def proc_psf_fit(fn, fn_cache=None, EEs=(0.5, 0.8), **kargs):
         for iwvl in range(nwvl):
             #res=calc_fwhm_gaussian(datas[iwvl], dx=dps[iwvl])
             #res=maos_utils.print_psf_metrics(directory=f"{fd}/", x=-90, y=0, ee=50, seed=1)
-            model[iwvl]=fit_moffat_roi(datas[iwvl], name=fn0, **kargs)
+            model[iwvl]=moffat_fit(datas[iwvl], name=fn0, **kargs)
         if fn_cache is not None:
             np.savez(fn_cache, dps=dps, sums=sums, wvls=wvls, model=model)
     #no longer caching ress
     nwvl=wvls.size
-    ress=np.zeros((nwvl,1+len(EEs)*2))
+    ress=np.zeros((nwvl,1+len(EEs)))
     for iwvl in range(nwvl):
-        ress[iwvl, 0]=global_fwhm(model[iwvl])*dps[iwvl] #FWHM
+        ress[iwvl, 0]=moffat_fwhm(model[iwvl])*dps[iwvl] #FWHM
         #ress[iwvl, 1]=moffat_encircle_width(gamma[iwvl], alpha[iwvl], 0.5)*dps[iwvl] #EE-50 diameter
         #ress[iwvl, 2]=moffat_encircle_width(gamma[iwvl], alpha[iwvl], 0.8)*dps[iwvl] #EE-80 en-circled diameter
         for iEE in range(len(EEs)):
-            ress[iwvl, 1+iEE*2]=model_ensquare_width(model[iwvl], EEs[iEE])*dps[iwvl] #EE- en-squared width
-            ress[iwvl, 2+iEE*2]=moffat_slit_width(model[iwvl], EEs[iEE])*dps[iwvl] #EE- slit width
+            ress[iwvl, 1+iEE]=moffat_square_width(model[iwvl], EEs[iEE])*dps[iwvl] #EE- en-squared width
+            #ress[iwvl, 2+iEE*2]=moffat_slit_width(model[iwvl], EEs[iEE])*dps[iwvl] #EE- slit width
         
     return ress,dps,sums,wvls,model
 def proc_psf(fn, fn_cache=None, EEs=(0.5, 0.8), **kargs):
     """
-        Read PSF from a file and compute FWHM and ENC using FFT
+    Read PSFs and compute their size numerically with libaos denc().
+
+    For each wavelength the PSF is shifted to put its center of gravity at the
+    FFT center, then for r=0, 1, ..., nx/2-1 pixels:
+      - azavg: the azimuthal average at radius r, normalized by the center value;
+      - ensquare: the energy within a square of width 2r, normalized by the
+        total PSF intensity (header SUM), so the energy scattered outside of
+        the PSF image is accounted for.
+    These are cached in fn_cache and reused while the cache is newer than the
+    (first) PSF file. The sizes are interpolated from them every time.
+
+    Parameters
+    ----------
+    fn : str or list[str]
+        The PSF file, or a list of files to average (see average_psf()).
+    fn_cache : str, optional
+        The cache file (.npz). Defaults to fn+'.npz' for a single file. For a
+        list of files no cache is used unless given.
+    EEs : sequence of float
+        Ensquared energy fractions.
+    **kargs
+        Not used. Accepted so that proc_psfs() can pass the same arguments to
+        proc_psf() and proc_psf_fit().
+
+    Returns
+    -------
+    ress : ndarray, shape (nwvl, 1+len(EEs))
+        Column 0 is the FWHM, twice the radius where azavg drops to 0.5.
+        Column 1+i is the width of the square that encloses EEs[i] of the
+        energy. All in arcsec.
+    dps : ndarray
+        PSF pixel size (arcsec) for each wavelength.
+    sums : ndarray
+        Total PSF intensity for each wavelength.
+    wvls : ndarray
+        Wavelengths (micron).
+    enc : ndarray of object
+        For each wavelength a dict with 'r' (pixel), 'azavg', 'ensquare' and
+        'enslit' (currently None).
     """
     if isinstance(fn, str):
         fn0=fn
@@ -767,53 +1114,86 @@ def proc_psf(fn, fn_cache=None, EEs=(0.5, 0.8), **kargs):
             pass
 
     if skip==0:
-        try:
-            datas, headers=average_psf(fn)
-            dps=parse_header_float(headers, 'DP') #pixel width
-            wvls=parse_header_float(headers, 'WVL')*1e6 #wavelength, convert to micron
-            sums=parse_header_float(headers, 'SUM') #total intensity
-            nwvl=datas.shape[0]
-            enc=np.empty((nwvl), dtype=object)
+        datas, headers=average_psf(fn)
+        dps=parse_header_float(headers, 'DP') #pixel width
+        wvls=parse_header_float(headers, 'WVL')*1e6 #wavelength, convert to micron
+        sums=parse_header_float(headers, 'SUM') #total intensity
+        nwvl=datas.shape[0]
+        enc=np.empty((nwvl), dtype=object)
+        
+        for iwvl in range(nwvl):
+            img, _=auto_crop_roi(datas[iwvl], total=sums[iwvl]) #enclose 90% of the total energy
+            nx, ny=img.shape
+            if nx!=datas[iwvl].shape[0]:
+                print(f'size reduced from {datas[iwvl].shape[0]} to {nx}')
+            aos.dshift2center(img, 0.5, 0.5) #make CoG at FFT zero frequency
+            r=np.arange(0, nx/2, 1)
+            azavg=aos.denc(img, r, -1, 0)
+            azavg/=azavg[0]
             
-            for iwvl in range(nwvl):
-                img=datas[iwvl]
-                aos.dshift2center(img, 0.5, 0.5) #make CoG at FFT zero frequency
-                nx, ny=img.shape
-                r=np.arange(0, nx/2, 1)
-                azavg=aos.denc(img, r, -1, 0)
-                azavg/=azavg[0]
-                
-                enslit=(aos.denc(img, r*2, 2, 0)+aos.denc(img.T, r*2, 2, 0))/(2*sums[iwvl])
-                ensquare=aos.denc(img, r*2, 0, 0)/sums[iwvl];
-                enc[iwvl]={'r':r, 'azavg':azavg, 'ensquare':ensquare, 'enslit':enslit}
-            if fn_cache is not None:
-                np.savez(fn_cache, dps=dps, sums=sums, wvls=wvls, enc=enc)
-        except Exception as e:
-            print(f'Process {fn} failed: {e}')
-            return None
+            #enslit=(aos.denc(img, r*2, 2, 0)+aos.denc(img.T, r*2, 2, 0))/(2*sums[iwvl])
+            enslit=None
+            ensquare=aos.denc(img, r*2, 0, 0)/sums[iwvl];
+            enc[iwvl]={'r':r, 'azavg':azavg, 'ensquare':ensquare, 'enslit':enslit}
+        if fn_cache is not None:
+            np.savez(fn_cache, dps=dps, sums=sums, wvls=wvls, enc=enc)
     #no longer caching ress
     nwvl=wvls.size
-    ress=np.zeros((nwvl,1+len(EEs)*2))
+    ress=np.zeros((nwvl,1+len(EEs)))
     for iwvl in range(nwvl):
         azavg=enc[iwvl]['azavg']
         r=enc[iwvl]['r']
         ensquare=enc[iwvl]['ensquare']
-        enslit=enc[iwvl]['enslit']
+        #enslit=enc[iwvl]['enslit']
         #np.interp require data to be ascending
         ress[iwvl, 0]=np.interp(0.5, azavg[::-1], r[::-1])*2*dps[iwvl] #FWHM
         for iEE in range(len(EEs)):
-            ress[iwvl, 1+iEE*2]=np.interp(EEs[iEE], ensquare, r)*2*dps[iwvl] #Ensquared width
-            ress[iwvl, 2+iEE*2]=np.interp(EEs[iEE], enslit, r)*2*dps[iwvl] #Ensqlited width
+            ress[iwvl, 1+iEE]=np.interp(EEs[iEE], ensquare, r)*2*dps[iwvl] #Ensquared width
+            #ress[iwvl, 2+iEE*2]=np.interp(EEs[iEE], enslit, r)*2*dps[iwvl] #Ensqlited width
 
     return ress,dps,sums, wvls,enc
 
 def proc_psfs(fd, seeds=[1], use_fit=0, fdol=None,**kargs):
     """
-    Read PSFs from a folder and compute FWHM.
-    Multiple seeds are averaged before fitting
-    """
-    ressc=[] 
+    Compute the PSF size of all the evaluation directions in a MAOS output
+    folder.
 
+    The closed loop PSFs evlpsfcl_{seed}_x{x}_y{y}.fits are found in fd for the
+    first seed. For each direction, and for the open loop PSF
+    evlpsfol_{seed}.fits in fdol, the PSFs of all seeds are averaged before
+    being processed by proc_psf() (use_fit=0) or proc_psf_fit() (use_fit=1).
+    The intermediate results are cached in
+    {fd}/evlpsfcl_{seeds}_x{x}_y{y}_{enc|moffat}.fits.npz and
+    {fdol}/evlpsfol_{seeds}_{enc|moffat}.fits.npz, where {seeds} are the
+    seeds joined by '_'.
+
+    Parameters
+    ----------
+    fd : str
+        The folder with the closed loop PSFs.
+    seeds : list[int]
+        The seeds to average.
+    use_fit : int
+        0: numerical method (proc_psf()). 1: model fitting (proc_psf_fit()).
+    fdol : str, optional
+        The folder with the open loop PSF. Defaults to fd.
+    **kargs
+        Passed to proc_psf() or proc_psf_fit(), e.g., EEs.
+
+    Returns
+    -------
+    dict or None
+        None if no closed loop PSF is found. Otherwise, with nfield
+        directions sorted by x then y, and nres=1+len(EEs) columns as returned
+        by proc_psf():
+        'cl' : (nfield, nwvl, nres) closed loop results (arcsec)
+        'avg', 'std' : (nwvl, nres) mean and standard deviation of 'cl'
+            over the field
+        'ol' : (nwvl, nres) open loop results (arcsec)
+        'fx', 'fy', 'fr' : (nfield,) field location x, y and radius (arcsec)
+        'dps' : PSF pixel size (arcsec) for each wavelength
+        'wvls' : wavelengths (micron)
+    """
     ress=[] #result array
     fr=[] #field point radius
     fx=[] #field point x
@@ -861,18 +1241,17 @@ def proc_psfs(fd, seeds=[1], use_fit=0, fdol=None,**kargs):
     for seed in seeds[1:]:
         fns2.append(f"{fdol}/evlpsfol_{seed}.fits")
     fn_cache=f"{fdol}/evlpsfol_{'_'.join(map(str, seeds))}{'_moffat' if use_fit else '_enc'}.fits.npz"
+
     if use_fit:
         ressol, dps, _, wvls, _=proc_psf_fit(fns2, fn_cache, **kargs)
     else:
         ressol, dps, _, wvls, _=proc_psf(fns2, fn_cache, **kargs)
-    ressc.append({'avg':avg, 'std':err, 'cl':ress, 'ol':ressol,'fr':fr, 'fx':fx, 'fy':fy, 'dps':dps, 'wvls':wvls})
-    if len(ressc)>1: #collect seeds
-        ressc = {k: rms(np.array([d[k] for d in ressc if d is not None]), axis=0) for k in ressc[0]}
-    elif len(ressc)==1:
-        ressc = ressc[0]
-    else:
-        ressc = None
-    return ressc
+    return {'avg':avg, 'std':err, 'cl':ress, 'ol':ressol,'fr':fr, 'fx':fx, 'fy':fy, 'dps':dps, 'wvls':wvls}
     
 def concat_dict(ress):
+    """
+    Stack a list of dicts with the same keys (e.g., from proc_psfs() for
+    several folders) into a dict of arrays with a new leading axis. None
+    entries are skipped.
+    """
     return {k: np.array([d[k] for d in ress if d is not None]) for k in ress[0]}

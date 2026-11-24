@@ -2,7 +2,7 @@
 window.port = '';
 window.pcol = "ws://";
 window.hcol = "http://";
-const iconName = {0:"❓", 1: "▶️", 2: "🕒", 3: "🆕", 4: "🕒", 11: "✅", 12: "❌", 13: "❌", 14: "❌", 15: "❌" };
+const iconName = {0:"❓", 1: "🔴", 2: "🕒", 3: "🆕", 4: "🕒", 11: "✅", 12: "❌", 13: "❌", 14: "❌", 15: "❌" };
 //Notice: 
 //Always define Components outside of App.
 //Components defined within App() will always be rerendered when App() renders. Move it outside to avoid.
@@ -187,8 +187,8 @@ function App() {
               i[11] = parseInt(i[11]);//remaining time
               i[12] = parseInt(i[12]);//total time
               const nostep = parseInt(i[8]) == 0 || parseInt(i[10]) == 0;//nseed or nsim is 0: no simulation step is reported.
-              const icon = (nostep && i[3] == 11) ? "⏭️" : iconName[i[3]];//skipped. a job that finishes within 1 second has a total time of 0.
-              const frac = Math.round(100 * (i[12] == 0 ? (i[3] == 11 ? 1 : 0) : 1 - i[11] / i[12])) + '%';
+              const icon = (nostep && i[3] == 11) ? "⏩" : iconName[i[3]];//skipped. a job that finishes within 1 second has a total time of 0.
+              const frac = Math.round(100 * (i[12] == 0 ? ((i[3] == 11 && !nostep) ? 1 : 0) : 1 - i[11] / i[12])) + '%';
               let prog = nostep ? "" : i[7] + '/' + i[8] + ' ' + step2str(i[9]) + '/' + step2str(i[10])+' '+sec2str(i[3]==1?i[11]:i[12])
               if (i[5] === '0.00') i[5] = '';
               if (i[6] === '0.00') i[6] = '';
@@ -448,7 +448,7 @@ function App() {
               <li onClick={() => { cmdHost(active, "clear_all"); }}>🧹 Clear All Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               {selectedRows.size>0 && <li onClick={() => { cmdHost(active, "clear_selected"); }}>☑️ Clear Selected Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>}
               <li onClick={() => { cmdHost(active, "clear_finished"); }}>✅ Clear Finished Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
-              <li onClick={() => { cmdHost(active, "clear_skipped"); }}>⏭️ Clear Skipped Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
+              <li onClick={() => { cmdHost(active, "clear_skipped"); }}>⏩ Clear Skipped Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               <li onClick={() => { cmdHost(active, "clear_crashed"); }}>❌ Clear Crashed Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               <li onClick={() => { cmdHost(active, selectedRows.size>0?"kill_selected":"kill_all"); }}>🛑 Kill {selectedRows.size>0?"Selected":"All"} Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               {selectedRows.size>0 && <li onClick={() => { cmdHost(active, "restart_selected"); }}>🔄 Restart Selected Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>}
