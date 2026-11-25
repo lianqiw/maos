@@ -143,8 +143,8 @@ $(function(){initNavTree('da/d85/strata.html','../../',''); });
 <div class="line">powfs.atmthruput=[0.896 0.896 0.896]  #these numbers are current kapa number</div>
 <div class="line">powfs.telthruput=[0.36*0.9 0.32 0.03]  #these numbers are current kapa number</div>
 <div class="line"> </div>
-<div class="line">evl.wvl     = [0.31 0.5 0.7 0.8 0.9 1.0 1.25 1.65 2.15]*1e-6 #For IR add 1.25 1.65 2.15</div>
-<div class="line">evl.psfsize = [960, 512, 360, 300, 256, 240, 180, 128, 90] #proportional to wvl^(-6/5). make sure it is large enough for worse seeing.</div>
+<div class="line">evl.wvl     = [0.31 0.5 0.7 0.8 0.9 1.0 1.25 1.65 2.15] #can be in micron or in meter</div>
+<div class="line">evl.psfsize = [1400 512 360 300 256 240 180  128  90] #proportional to wvl^(-6/5). make sure it is large enough for worst seeing.</div>
 <div class="line">evl.psfmean = 1 #save time averaged PSF </div>
 <div class="line">evl.psfol   = 1 #save open loop PSF</div>
 <div class="line">evl.psf     = [1] #enable PSF for direction</div>
