@@ -1,6 +1,25 @@
 #!/usr/bin/env python3
 """
 This module contains routines to embed opds defined on coordinates to 2-d array and plot.
+
+Usage:
+    from draw import draw
+    draw(img)              #plot a 2-d array (a 1-d array of n*n is reshaped to n*n)
+    draw(loc)              #plot the points of loc (2*n array of x and y coordinates)
+    draw(loc, opd)         #embed opd (defined on loc) on a 2-d grid and plot
+    draw(cell)             #plot each element of a cell (object) array in subplots (up to 60)
+    python3 draw.py file1.bin [file2.bin ...]  #plot files read with readbin
+
+Keyword arguments of draw():
+    ext=[x0,x1,y0,y1]: extent of the image (passed to imshow).
+    dx=d: sampling of the image (or of loc) to compute the extent.
+    center=n or (ny,nx): crop (or pad) the image to this size around the center.
+    clim=(min,max): color limits.
+    colorbar=0: disable the colorbar.
+    nrow=, ncol= (or nx=): layout of the subplots for multiple images.
+    figsize=: figure size for new figures.
+
+Requirements: numpy, scipy, matplotlib.
 """
 #from aolib import *
 import sys
@@ -11,9 +30,21 @@ import scipy.sparse
 #import struct
 
 def iscell(arr):
+    """Whether arr is a cell array (numpy object array)."""
     return isinstance(arr, np.ndarray) and arr.dtype.name=='object'
     
 def coord2grid(x, **kargs):
+    """Map coordinates x to integer indices on a regular grid.
+
+    Args:
+        x: 1-d array of coordinates.
+        dx (keyword): grid sampling. If absent or 0, it is estimated as the
+            median of the spacing between sorted unique coordinates.
+
+    Returns:
+        (ix, nx, dx, xi): integer index of each coordinate, number of grid
+        points, grid sampling, and [min, max] of x.
+    """
     xmin = x.min()
     xmax = x.max()
     x2 = x-xmin
@@ -51,6 +82,7 @@ def unwrap(arg):
     return arg
 
 def isvec(arg):
+    """Whether arg is a vector (1-d, or 2-d with a singleton dimension)."""
     return arg.ndim == 1 or (arg.ndim == 2 and (arg.shape[0] == 1 or arg.shape[1] == 1))
 
 def center(img, n):
@@ -67,6 +99,8 @@ def center(img, n):
 
 
 def isloc(arg):
+    """Whether arg looks like a loc: a 2*n (or n*2) numeric array (n>2) of
+    coordinates that are mostly distinct points on a regular grid."""
     if not isinstance(arg, np.ndarray):
         return False
     if iscell(arg):
@@ -89,6 +123,21 @@ def isloc(arg):
     return True
 
 def locembed(loc, opd, return_ext=0, **kargs):
+    """Embed opd defined on coordinates loc onto a 2-d grid (used by draw(loc, opd)).
+
+    Args:
+        loc: 2*n (or n*2) array of x and y coordinates.
+        opd: values on loc: a vector of n, an array of n*m or m*n (m frames),
+            or a cell array of them. Sparse arrays and lists are accepted.
+        return_ext: also return the extent.
+        dx (keyword): grid sampling (default: estimated from loc).
+
+    Returns:
+        ims (2-d array of ny*nx with NaN where loc has no point, or an array
+        of them for several frames or cells), and ext=[x0, x1, y0, y1] (edges
+        of the pixels) if return_ext is set. None if the size of opd is not a
+        multiple of n.
+    """
     # draw(loc, opd): embed opd onto loc
     if loc.shape[0]>2 and loc.shape[1]==2: #need a transpose
         loc=loc.T
@@ -101,8 +150,8 @@ def locembed(loc, opd, return_ext=0, **kargs):
         ims = []
         ext = None
         for opdi in opd:
-            if opdi.size>0:
-                ims_i,ext=locembed(loc, opdi, return_ext, **kargs)
+            if opdi is not None and np.size(opdi)>0:
+                ims_i,ext=locembed(loc, opdi, 1, **kargs)
                 ims.append(ims_i)
         ims=np.asarray(ims)
         if ims.size == 1:
@@ -139,6 +188,8 @@ def locembed(loc, opd, return_ext=0, **kargs):
     else:
         return ims
 def isimg(arg0):
+    """Whether arg0 can be drawn as a single image (or curve): a sparse array, a
+    1-d numeric array, or a 2-d numeric array whose aspect ratio is within 100."""
     if scipy.sparse.issparse(arg0):
         return True
     elif isinstance(arg0, np.ndarray):
@@ -146,6 +197,14 @@ def isimg(arg0):
             arg0=arg0[0]
         return iscell(arg0)==False and (arg0.ndim==1 or (arg0.ndim==2 and arg0.shape[0]*100>arg0.shape[1] and arg0.shape[1]*100>arg0.shape[0]))
 def draw(*args, **kargs):
+    """Plot arrays, cell arrays, or OPDs defined on coordinates (see the module docstring).
+
+    Returns:
+        draw(loc, opd): (ims, ext) as returned by locembed.
+        draw(img): the image (or curve) drawn.
+        draw(cell): the cell array drawn.
+        None if nothing is drawn.
+    """
     if(len(args)==0):
         return
     #if not 'keep' in kargs or kargs['keep'] == 0:
@@ -166,11 +225,15 @@ def draw(*args, **kargs):
             return None
         elif len(args) >= 2:
             ct=0
+            ims, ext = None, None
             for arg1 in args[1:]:
                 ct+=1
                 if ct>1:
                     plt.figure(figsize=kargs.get('figsize'))
-                ims, ext = locembed(loc, arg1, return_ext=1, **kargs)
+                res = locembed(loc, arg1, return_ext=1, **kargs)
+                if res is None: #wrong shape. message is printed by locembed
+                    continue
+                ims, ext = res
                 kargs['ext']=ext
                 draw(ims, **kargs)
             return ims, ext
@@ -205,7 +268,7 @@ def draw(*args, **kargs):
                     return img
             try:
                 plt.gca().images[-1].colorbar.remove()
-            except:
+            except (IndexError, AttributeError, KeyError, ValueError): #no previous image or colorbar
                 pass
             #if img.dtype.name.find('complex')>-1:
             if np.iscomplexobj(img):
@@ -214,8 +277,8 @@ def draw(*args, **kargs):
                 img=img.toarray()
             if 'center' in kargs:
                 img=center(img, kargs['center'])
-            if 'ext' not in kargs and 'dx' in kargs:
-                kargs['ext']=np.array([-img.shape[0]/2, img.shape[0]/2, -img.shape[1]/2, img.shape[1]/2])*kargs['dx']
+            if 'ext' not in kargs and 'dx' in kargs: #extent is [left, right, bottom, top]: x is along columns
+                kargs['ext']=np.array([-img.shape[1]/2, img.shape[1]/2, -img.shape[0]/2, img.shape[0]/2])*kargs['dx']
             im=plt.imshow(img, extent=kargs.get('ext'), origin='lower', cmap='jet')
             #for im in gca().get_images():
             #im.set_clim(0, 0.5)
@@ -284,6 +347,8 @@ def draw(*args, **kargs):
 # Use as standalone script
 if __name__ == "__main__":
     from readbin import readbin
+    if len(sys.argv)<2:
+        raise SystemExit('Usage: draw.py file1 [file2 ...]')
     args = list()
     for fn in sys.argv[1:]:
         args.append(readbin(fn))

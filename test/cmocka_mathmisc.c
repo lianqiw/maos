@@ -171,6 +171,8 @@ static size_t fill_as(void *buf, uint32_t magic, const long *vals, int n){
 	case M_FLT: for(int i=0; i<n; i++) ((float *)buf)[i]=(float)vals[i]; return n*sizeof(float);
 	case M_INT32: for(int i=0; i<n; i++) ((int *)buf)[i]=(int)vals[i]; return n*sizeof(int);
 	case M_INT64: for(int i=0; i<n; i++) ((int64_t *)buf)[i]=(int64_t)vals[i]; return n*sizeof(int64_t);
+	case M_INT16: for(int i=0; i<n; i++) ((int16_t *)buf)[i]=(int16_t)vals[i]; return n*sizeof(int16_t);
+	case M_UINT8: for(int i=0; i<n; i++) ((uint8_t *)buf)[i]=(uint8_t)vals[i]; return n*sizeof(uint8_t);
 	case M_CMP: for(int i=0; i<n; i++) ((dcomplex *)buf)[i]=COMPLEX((double)vals[i], 0.); return n*sizeof(dcomplex);
 	case M_ZMP: for(int i=0; i<n; i++) ((fcomplex *)buf)[i]=FCOMPLEX((float)vals[i], 0.f); return n*sizeof(fcomplex);
 	default: return 0;
@@ -183,6 +185,8 @@ static double get_as(const void *buf, uint32_t magic, int i){
 	case M_FLT: return ((const float *)buf)[i];
 	case M_INT32: return ((const int *)buf)[i];
 	case M_INT64: return (double)((const int64_t *)buf)[i];
+	case M_INT16: return ((const int16_t *)buf)[i];
+	case M_UINT8: return ((const uint8_t *)buf)[i];
 	case M_CMP: return creal(((const dcomplex *)buf)[i]);
 	case M_ZMP: return crealf(((const fcomplex *)buf)[i]);
 	default: return NAN;
@@ -191,24 +195,27 @@ static double get_as(const void *buf, uint32_t magic, int i){
 /** readvec() converts between all supported data types. */
 static void mathmisc_readvec(void **state){
 	(void)state;
-	const uint32_t types[]={M_DBL, M_FLT, M_INT32, M_INT64, M_CMP, M_ZMP};
+	const uint32_t types[]={M_DBL, M_FLT, M_INT32, M_INT64, M_CMP, M_ZMP, M_INT16, M_UINT8};
 	const int nt=sizeof(types)/sizeof(types[0]);
-	const long vals[5]={3, -7, 0, 1024, 42};
+	const long vals0[5]={3, -7, 0, 1024, 42};
+	const long vals8[5]={3, 255, 0, 128, 42};//for uint8
 	const int n=5;
 	for(int ifile=0; ifile<nt; ifile++){
 		for(int ip=0; ip<nt; ip++){
 			uint32_t mf=types[ifile], mp=types[ip];
+			const long *vals=(mf==M_UINT8||mp==M_UINT8)?vals8:vals0;
 			char src[5*16], dst[5*16];
 			memset(dst, 0, sizeof(dst));
 			size_t len=fill_as(src, mf, vals, n);
-			size_t size=(mp==M_DBL||mp==M_INT64||mp==M_ZMP)?8:(mp==M_CMP?16:4);
+			size_t size=(mp==M_DBL||mp==M_INT64||mp==M_ZMP)?8:(mp==M_CMP?16:(mp==M_INT16?2:(mp==M_UINT8?1:4)));
 			file_t *fp=pipe_with(src, len);
 			assert_non_null(fp);
 			int ans=readvec(dst, mp, mf, size, n, fp);
 			zfclose(fp);
 			int fcomp=(mf==M_CMP||mf==M_ZMP);
 			int pcomp=(mp==M_CMP||mp==M_ZMP);
-			if(fcomp&&!pcomp){//complex to real is not supported
+			int psmall=(mp==M_INT16||mp==M_UINT8);
+			if((fcomp&&!pcomp)||(psmall&&mf!=mp)){//complex to real, and conversion to int16 or uint8 are not supported
 				assert_int_not_equal(ans, 0);
 			}else{
 				assert_int_equal(ans, 0);

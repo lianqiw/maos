@@ -104,7 +104,7 @@ static mxArray* readdata(file_t* fp, mxArray** header, int start, int howmany){
 	case M_INT64: byte=8; id=mxINT64_CLASS; break;
 	case M_INT32: byte=4; id=mxINT32_CLASS; break;
 	case M_INT16: byte=2; id=mxINT16_CLASS; break;
-	case M_INT8:  byte=1; id=mxINT8_CLASS; break;
+	case M_UINT8: byte=1; id=mxUINT8_CLASS; break;
 	default: id=(mxClassID)0;
 	}
 	if(issp&&start==-1){

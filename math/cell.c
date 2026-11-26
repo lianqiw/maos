@@ -410,8 +410,16 @@ void writedata(file_t* fp, const_anyarray A_, long ncol){
 			cspwritedata(fp, A_.cs);break;
 		case M_ZSP:
 			zspwritedata(fp, A_.zs);break;
-		default:
-			error("Unknown id=%u\n", A_.c->id);
+		default:{
+			const cell *A=A_.c;
+			const int id=A->id&0xFFFF;
+			if(id==M_INT64||id==M_INT32||id==M_INT16||id==M_UINT8){//other integer arrays, e.g., from python
+				const size_t size=id==M_INT64?8:(id==M_INT32?4:(id==M_INT16?2:1));
+				if(ncol<=0) writearr(fp, 0, size, A->id, A->keywords, P(A), NX(A), NY(A));
+			}else{
+				error("Unknown id=%u\n", A->id);
+			}
+		}
 	}
 }
 
@@ -466,7 +474,8 @@ void writebin_header(anyarray Ac_, const char* keywords, const char* format, ...
 	intended only for the fundamental data. header is read first if header==0 or header->id==0.
 
    @param[in] fp File to read from.
-   @param[in] id Requested type of the fundamental data. 0 to use the type in the file.
+   @param[in] id Requested type of the fundamental data. 0 to use the type in the file
+   (integer arrays of all sizes are read as lmat).
    @param[in,out] header Header of the block. May be NULL. Its str is taken by the returned cell array.
    @return Newly allocated data; the caller frees it. NULL if empty or if reading fails.
 */
@@ -505,7 +514,13 @@ cell *readdata(file_t *fp, M_ID id, header_t *header){
 	}else{
 		void *out=NULL;
 		
-		if(!id) id=header->id;
+		if(!id){
+			id=header->id;
+			switch(id&0xFFFF){//integer arrays of all sizes are read as lmat
+			case M_INT64: case M_INT32: case M_INT16: case M_UINT8:
+				id=M_LONG;break;
+			}
+		}
 		switch(id&0xFFFF){
 		case M_DBL:
 			out=dreaddata(fp, header);break;

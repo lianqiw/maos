@@ -76,7 +76,7 @@ typedef struct file_t{
 #define M_DSP32  0x6407
 #define M_FLT   0x6408
 #define M_ZMP   0x6409 //float complex
-#define M_INT8  0x640A
+#define M_UINT8 0x640A
 #define M_INT16 0x640B
 
 #define M_SSP64  0x6430  /*single precision float + int64 */

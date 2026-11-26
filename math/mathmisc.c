@@ -346,6 +346,20 @@ int readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t 
 		//TEST_CONVERT(M_SPINT, spint, M_ZMP, fcomplex)
 		TEST_CONVERT(M_SPINT, spint, M_INT32, int)
 		TEST_CONVERT(M_SPINT, spint, M_INT64, int64_t)
+		TEST_CONVERT(M_DBL, double, M_INT16, int16_t)
+		TEST_CONVERT(M_DBL, double, M_UINT8, uint8_t)
+		TEST_CONVERT(M_FLT, float, M_INT16, int16_t)
+		TEST_CONVERT(M_FLT, float, M_UINT8, uint8_t)
+		TEST_CONVERT(M_CMP, dcomplex, M_INT16, int16_t)
+		TEST_CONVERT(M_CMP, dcomplex, M_UINT8, uint8_t)
+		TEST_CONVERT(M_ZMP, fcomplex, M_INT16, int16_t)
+		TEST_CONVERT(M_ZMP, fcomplex, M_UINT8, uint8_t)
+		TEST_CONVERT(M_INT32, int, M_INT16, int16_t)
+		TEST_CONVERT(M_INT32, int, M_UINT8, uint8_t)
+		TEST_CONVERT(M_INT64, int64_t, M_INT16, int16_t)
+		TEST_CONVERT(M_INT64, int64_t, M_UINT8, uint8_t)
+		TEST_CONVERT(M_SPINT, spint, M_INT16, int16_t)
+		TEST_CONVERT(M_SPINT, spint, M_UINT8, uint8_t)
 	else{
 		ans=-1;
 		warning("Please implement conversion from %x to %x\n", magic_file, magic_p);

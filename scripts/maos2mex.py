@@ -1,17 +1,47 @@
 #!/usr/bin/env python3
+"""Generate mex/maos2mex.h, which exports the maos simulation state to Matlab.
+
+Usage:
+    maos2mex.py [srcdir output]
+
+    srcdir: MAOS source tree (the directory containing maos/, lib/, mex/).
+    output: file to write.
+    Without arguments, srcdir is the parent directory of this script and the
+    output is maos2mex.h in the current directory.
+
+    The build runs it from the mex build directory (mex/Makefile.am) as
+        scripts/maos2mex.py $(SRC_DIR) maos2mex.h
+
+Inputs:
+    Struct definitions parsed (with maos_parse.py) from srcdir/lib/*.h,
+    sys/scheduler_client.h, mex/aolib.h, maos/parms.h and maos/types.h.
+    Starting from sim_t, struct members that are themselves parsed structs
+    are expanded recursively.
+
+Output:
+    C code included by the maos mex (mex/maos.c) containing, for each
+    reachable struct type, "static mxArray *get_<type>(...)" which converts
+    the struct to a Matlab struct (members of supported types only; others
+    are skipped), get_data_help(), and get_data(simu, key) which returns the
+    struct selected by key (e.g. "parms", "recon"), as used by
+    maos('get', key) in Matlab.
+"""
 from __future__ import print_function
 import sys,os.path
 import glob
 import maos_parse
 from pathlib import Path
-if len(sys.argv)>2 and os.path.isdir(sys.argv[1]+'/maos/'):
+if len(sys.argv)==3:
     srcdir=sys.argv[1]
     fnout=sys.argv[2]
-else:
+elif len(sys.argv)==1:
     srcdir=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     fnout='maos2mex.h' #output to build directory
+else:
+    print('Usage: '+sys.argv[0]+' [srcdir output]', file=sys.stderr)
+    sys.exit(0 if len(sys.argv)==2 and sys.argv[1] in ('-h','--help') else 1)
 if not os.path.isdir(srcdir+'/maos/'):
-    raise(Exception('Unable to find maos source dir'))
+    sys.exit('maos2mex.py: '+srcdir+' is not the maos source dir (no maos/ subdirectory)')
 
 simu_all=list();
 
@@ -23,10 +53,23 @@ headerlist.append(srcdir+'/maos/types.h')
 structs=maos_parse.parse_structs('', headerlist)
 #funcs=maos_parse.parse_func('',headerlist)
 
-simu=dict()
+if 'sim_t' not in structs:
+    sys.exit('maos2mex.py: unable to parse struct sim_t from '+srcdir+'/maos/types.h')
 simu=structs['sim_t']
-unknowns=dict()
+unknowns=dict() #count of unsupported member types (for debugging)
+expanding=set() #id() of structs being expanded, to stop recursive types
 def expand_struct(struct):
+    """Expand, in place, struct members whose type is a parsed struct.
+
+    Parameters:
+        struct: dict {member: type} from maos_parse.parse_structs(). Each
+            member whose type (with one '*' removed) is a parsed struct is
+            replaced by [type, member dict], recursively. Members already
+            expanded (lists) are left alone. A member of a struct type that
+            is currently being expanded (a recursive type) is left as a type
+            string, so it is skipped as an unknown pointer by var2mx().
+    """
+    expanding.add(id(struct))
     for key in struct:
         val0=struct[key]
     
@@ -37,13 +80,29 @@ def expand_struct(struct):
             val=val0
             ispointer=0
         if isinstance(val, str) and structs.get(val):
+            if id(structs[val]) in expanding: #recursive type. Do not expand.
+                continue
             if isinstance(structs[val], dict): #other types
                 expand_struct(structs[val])
             struct[key]=[val0, structs[val]]
+    expanding.discard(id(struct))
 
 expand_struct(simu)
 #Convert cname of type ctype in C to mexname in Matlab
 def var2mx(mexname, cname, ctype):
+    """Return a C statement converting a non-struct member to an mxArray.
+
+    Parameters:
+        mexname: C lvalue receiving the mxArray (e.g. "\ttmp2").
+        cname: C expression of the member (e.g. "simu->dmreal").
+        ctype: its type as parsed (e.g. "dcell*", "int").
+
+    Returns:
+        "mexname=xxx2mx(cname);" for numeric arrays/cells/loc/map/sparse
+        (any2mx), strings (str2mx), and mxCreateDoubleScalar() for scalars.
+        For other types a comment starting with "//" is returned (the caller
+        drops it) and the type is counted in unknowns.
+    """
     out=""
     ans=1
     ctype0=ctype
@@ -76,10 +135,35 @@ def var2mx(mexname, cname, ctype):
                 unknowns[ctype0]=1
             return "//unknown type    "+cname+":"+ctype0+';'
 
-fundefs=dict()
-funheaders=dict()
-funcalls=dict()
+fundefs=dict()    #get_<type> name -> function definition
+funheaders=dict() #get_<type> name -> prototype
+funcalls=dict()   #get_<type> name -> call used by get_data() for top level members
 def struct2mx(vartype, nvar, funprefix, parentpointer, fullpointer, varname, struct):
+    """Generate get_<type>() converting a struct to a Matlab struct.
+
+    The definition and prototype are stored in fundefs and funheaders (keyed
+    by the type name without "_t" and "*", lower case; a type reached again
+    overwrites the same entry). Members that are expanded structs are
+    handled recursively; the member "save" is skipped. Members named powfs,
+    wfs and wfsr are arrays of structs whose length is (parms->)npowfs,
+    nwfs or nwfsr; all others are single structs.
+
+    Parameters:
+        vartype: C type of the struct, with or without '*'. Without '*' the
+            struct is embedded and its address is passed.
+        nvar: ignored; recomputed from varname as described above.
+        funprefix: "" for the top level call, otherwise the parent's type
+            name plus "_"; used to decide which members get_data() exports.
+        parentpointer: C expression prefix to reach this member from the
+            parent's get_ function (e.g. "simu->").
+        fullpointer: C expression prefix to reach this member from simu.
+        varname: member name (e.g. "parms").
+        struct: member dict from expand_struct().
+
+    Returns:
+        The C call of the generated function (e.g. "get_parms(simu->parms);"),
+        or '' if the struct has no member that could be converted.
+    """
     if vartype[-1]=='*':
         ispointer=1
     else:
@@ -175,22 +259,25 @@ struct2mx("sim_t*", "1", "","","", "simu", simu)
 #for x in unknowns:
     #print("  Unknown ({:2d}) times type: {}".format(unknowns[x], x))
 
-fc=open(fnout,'w')
-keys=funheaders.keys()
-keys=sorted(keys, key=lambda item: (int(item.partition(' ')[0]) if item[0].isdigit() else float('inf'), item))
-for key in keys:
-    print(funheaders[key], file=fc)
-keys=fundefs.keys()
-keys=sorted(keys, key=lambda item: (int(item.partition(' ')[0]) if item[0].isdigit() else float('inf'), item))
-for key in keys:
-    print(fundefs[key], file=fc)
-print("static void get_data_help(){\n", end="", file=fc)
-for key in funcalls:
-    print("\tinfo(\""+key+"=maos('get','"+key+"')\\n\");", file=fc)
-print("}", file=fc)
-print("static mxArray *get_data(sim_t *simu, const char *key){\n\t", end="", file=fc)
-for key in funcalls:
-    #print(key)
-    print("if(!strcmp(key, \""+key.replace("simu_","")+"\")) return "+funcalls[key]+"\n\telse ", end="", file=fc)
-print("{get_data_help();return mxCreateDoubleMatrix(0,0,mxREAL);}\n}", file=fc)
-fc.close()
+#Sort key: names starting with a number sort numerically by their first
+#space separated word, before all others; then alphabetically.
+def sort_key(item):
+    return (int(item.partition(' ')[0]) if item[0].isdigit() else float('inf'), item)
+with open(fnout,'w') as fc:
+    keys=funheaders.keys()
+    keys=sorted(keys, key=sort_key)
+    for key in keys:
+        print(funheaders[key], file=fc)
+    keys=fundefs.keys()
+    keys=sorted(keys, key=sort_key)
+    for key in keys:
+        print(fundefs[key], file=fc)
+    print("static void get_data_help(){\n", end="", file=fc)
+    for key in funcalls:
+        print("\tinfo(\""+key+"=maos('get','"+key+"')\\n\");", file=fc)
+    print("}", file=fc)
+    print("static mxArray *get_data(sim_t *simu, const char *key){\n\t", end="", file=fc)
+    for key in funcalls:
+        #print(key)
+        print("if(!strcmp(key, \""+key.replace("simu_","")+"\")) return "+funcalls[key]+"\n\telse ", end="", file=fc)
+    print("{get_data_help();return mxCreateDoubleMatrix(0,0,mxREAL);}\n}", file=fc)

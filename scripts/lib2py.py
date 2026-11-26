@@ -1,9 +1,35 @@
 #!/usr/bin/env python3
+"""Generate scripts/libaos.py, the ctypes Python bindings of aolib.so.
 
-#2019-07-18 First version
+Usage:
+    lib2py.py [srcdir [output]]
 
-#Convert functions defined in aolib.h to aoslib.py that is callable by Python
-#derived from lib2mex.py
+    srcdir: MAOS source tree (the directory containing maos/, lib/, mex/).
+        Defaults to the parent directory of this script.
+    output: file to write. Defaults to srcdir/scripts/libaos.py.
+
+Inputs:
+    Function declarations and struct definitions are parsed (with
+    maos_parse.py) from srcdir/lib/*.h, srcdir/sys/scheduler_client.h and
+    srcdir/mex/aolib.h. maos/parms.h and maos/types.h are not used.
+
+Output:
+    A Python module that does "from interface import *" (scripts/interface.py
+    provides lib, the ctypes types, py2cell, ct2py, make_class, ...) and
+    defines one wrapper per parsed C function that has arguments. For each
+    function, the C prototype is used as the docstring; restype is set; numpy
+    and Python values are converted to C types; pointer-to-pointer arguments
+    (type**) and leading real*/double* arguments are treated as outputs and
+    returned (after the C return value, if any) instead of taken as inputs.
+    Structs used by the wrappers are recreated with make_class(). Functions
+    with an argument or return type that cannot be mapped are skipped and
+    reported on stdout.
+
+The build does not run this script; run it by hand after changing the
+headers (scripts/libaos.py is not tracked by git). Progress (one line per
+function, plus unknown types and skipped functions) is printed to stdout.
+"""
+#2019-07-18 First version, derived from lib2mex.py
 
 #from __future__ import print_function
 import os, sys
@@ -12,15 +38,21 @@ from pathlib import Path
 import json
 import glob
 fnout=None
-if len(sys.argv)>2:
+if len(sys.argv)>3 or (len(sys.argv)>1 and sys.argv[1] in ('-h','--help')):
+    print('Usage: '+sys.argv[0]+' [srcdir [output]]', file=sys.stderr)
+    sys.exit(0 if len(sys.argv)<=3 else 1)
+if len(sys.argv)>1:
     srcdir=sys.argv[1]
-    fnout=sys.argv[2]
+    if len(sys.argv)>2:
+        fnout=sys.argv[2]
 else:
     srcdir=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if fnout is None:
     fnout=srcdir+'/scripts/libaos.py'
 if not os.path.isdir(srcdir+'/maos/'):
-    raise(Exception('Unable to find maos source dir'))
+    sys.exit('lib2py.py: '+srcdir+' is not the maos source dir (no maos/ subdirectory)')
+if not os.path.isfile(srcdir+'/mex/aolib.h'):
+    sys.exit('lib2py.py: '+srcdir+'/mex/aolib.h not found')
 simu_all=list();
 headerlist=glob.glob(srcdir+'/lib/*.h')
 headerlist.append(srcdir+'/sys/scheduler_client.h')
@@ -57,6 +89,26 @@ aotype2py={
 }
 #process variable type
 def handle_type(argtype, argname, leading):
+    """Map one C function argument to Python wrapper code.
+
+    Parameters:
+        argtype: C type as returned by maos_parse.parse_func (e.g. "dmat*").
+        argname: argument name, possibly with a "[n]" array suffix.
+        leading: true if all preceding arguments were outputs. A real* or
+            double* argument is then taken as a scalar output.
+
+    Returns:
+        (py2c, prep_type, prep_in, prep_out, pyarg_out):
+        py2c: expression passed to the C function.
+        prep_type: struct type name if the argument is a struct (its
+            make_class definition must be emitted), else None or ''.
+        prep_in: code line(s) converting the Python input before the call.
+        prep_out: code line(s) allocating storage for an output argument.
+            Non-empty means the argument is an output, not a Python input.
+        pyarg_out: expression returning the output value to Python, or ''.
+        If the type is not supported, every element (or py2c/argname) is
+        'Unknown', which makes the caller skip the function.
+    """
     if argname.count('[')>0 and argname[-1]==']' and (argtype=='real' or argtype=='double'):
         nel=argname[argname.find('[')+1:-1]
         if nel.isdigit(): #fixed size array is output
@@ -67,7 +119,7 @@ def handle_type(argtype, argname, leading):
     elif argtype=='panyarray':
         argtype='cell**'
 
-    if (len(argtype)>3 and argtype[-3:]=='***') or argname.count('[')>0: #known
+    if (len(argtype)>3 and argtype[-3:]=='***') or argname.count('[')>0: #unknown
         return ('Unknown', 'Unknown','Unknown','Unknown', 'Unknown')
     elif argtype[-2:]=='**': #output
         isout=1
@@ -125,7 +177,7 @@ def handle_type(argtype, argname, leading):
             else:
                 py2c=argname+'.ctypes.data_as(c_void_p)'
 
-    if isout==1: #function pointer input is also output for struct pointer
+    if isout==1: #pointer to pointer argument is an output (C allocates the object)
         prep_out=f'    {argname}=POINTER({pytype})()\n' #create memory for pointer to pointer (output)
         if prep_type:
             pyarg_out=argname #generic struct stay in ctypes
@@ -139,6 +191,19 @@ def handle_type(argtype, argname, leading):
 
 #process function return type
 def handle_output(funtype, funname):
+    """Map a C function return type to Python wrapper code.
+
+    Parameters:
+        funtype: C return type (not 'void').
+        funname: C function name.
+
+    Returns:
+        (fun_rtn, fun_val, str_def):
+        fun_rtn: code line setting lib.<funname>.restype ('Unknown' in it if
+            the type is not supported).
+        fun_val: expression converting the result "out" to Python.
+        str_def: struct type name if the result is a struct, else None.
+    """
     if funtype[-1:]=='*': #pointer
         ispointer=1;
         funtype=funtype[:-1]
@@ -168,6 +233,7 @@ def handle_output(funtype, funname):
         fun_rtn='None'
     return ('    lib.'+funname+'.restype='+fun_rtn, fun_val, str_def)
 
+#Generate one Python wrapper per C function.
 strdef={} #definition of structs
 funcalls=list()
 for funname in funcs: #loop over functions
@@ -198,6 +264,8 @@ for funname in funcs: #loop over functions
         argtype=arg[0]
         argname=arg[1]
 
+        #Rename arguments that would shadow Python keywords, builtins, the
+        #loc class of interface.py, or the local variable "out".
         basename=argname.split('[')[0]
         if basename in ['loc','input','in','out','str','string','len','format','type','min','max']:
             argname=basename+'_'+argname[len(basename):]
@@ -221,7 +289,7 @@ for funname in funcs: #loop over functions
                 pyargin+=argname+','#python function input argument
     if verbose:
         print(funname, pyargin)
-    if pyargin[-1]==',':
+    if len(pyargin)>0 and pyargin[-1]==',':
         pyargin=pyargin[0:-1]
     if argin[-1]==',':
         argin=argin[0:-1]
@@ -255,12 +323,11 @@ for funname in funcs: #loop over functions
     #if(fundef.find('Unknown'))>-1:
     #    print("'''", file=fpout)
 
-fpout=open(fnout,'w')
-print("#!/usr/bin/env python", file=fpout)
-print("\n#Do not modify! This file is automatically generated by lib2py.py.\n", file=fpout)
-print("from interface import *", file=fpout)
-for argtype, argval in strdef.items():
-    print(argtype+'=make_class(\''+argtype+'\''+','+json.dumps(argval)+')', file=fpout)
-for fundef in funcalls:
-    print(fundef, file=fpout)
-fpout.close()
+with open(fnout,'w') as fpout:
+    print("#!/usr/bin/env python", file=fpout)
+    print("\n#Do not modify! This file is automatically generated by lib2py.py.\n", file=fpout)
+    print("from interface import *", file=fpout)
+    for argtype, argval in strdef.items():
+        print(argtype+'=make_class(\''+argtype+'\''+','+json.dumps(argval)+')', file=fpout)
+    for fundef in funcalls:
+        print(fundef, file=fpout)

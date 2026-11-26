@@ -133,9 +133,9 @@ static void writedata(file_t* fp, const mxArray* arr, const mxArray* header){
 				byte=2;
 				magic=M_INT16;
 				break;
-			case mxINT8_CLASS:
+			case mxUINT8_CLASS:
 				byte=1;
-				magic=M_INT8;
+				magic=M_UINT8;
 				break;
 			default:
 				error("Please implement this class type\n");

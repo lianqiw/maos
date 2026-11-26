@@ -255,7 +255,7 @@ Commonly used \c magic numbers (enum in \c sys/bin.h):
 | 0x6404 | \c M_CMP | double complex |
 | 0x6409 | \c M_ZMP | float complex |
 | 0x6403, 0x6405 | \c M_INT64, \c M_INT32 | 64 or 32 bit integers |
-| 0x640A, 0x640B | \c M_INT8, \c M_INT16 | 8 or 16 bit integers |
+| 0x640A, 0x640B | \c M_UINT8, \c M_INT16 | unsigned 8 bit or signed 16 bit integers |
 | 0x6401, 0x6400 | \c M_DSP64, \c M_CSP64 | sparse double/complex with 64 bit index |
 | 0x6407, 0x6406 | \c M_DSP32, \c M_CSP32 | sparse double/complex with 32 bit index |
 | 0x6430--0x6433 | \c M_SSP64, \c M_SSP32, \c M_ZSP64, \c M_ZSP32 | single precision sparse |

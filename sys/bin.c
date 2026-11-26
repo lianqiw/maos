@@ -1010,7 +1010,7 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int naxis, ...){
 	case M_INT16:
 		bitpix=16;
 		break;
-	case M_INT8:
+	case M_UINT8:
 		bitpix=8;
 		break;
 	default:
@@ -1027,7 +1027,8 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int naxis, ...){
 	char header[FITS_NH][80];
 	memset(header, ' ', sizeof(char)*FITS_NH*80);
 	int hc=0;
-	if(fp->isfits==1){
+	const int primary=(fp->isfits==1);
+	if(primary){
 		snprintf(header[hc], 80, "%-8s= %20s", "SIMPLE", "T");    header[hc][30]=' '; hc++;
 		fp->isfits++;
 	} else{
@@ -1047,7 +1048,7 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int naxis, ...){
 		snprintf(header[hc], 80, "%-5s%-3d= %20lu", "NAXIS", i+1,
 			(unsigned long)(dims[i])); header[hc][30]=' '; hc++;
 	}
-	if(fp->isfits==1){//Write the extend keyword which does not mendate extension to be present.
+	if(primary){//Write the extend keyword which does not mendate extension to be present.
 		snprintf(header[hc], 80, "%-8s= %20s", "EXTEND", "T");    header[hc][30]=' '; hc++;
 	} else{
 		snprintf(header[hc], 80, "%-8s= %20s", "PCOUNT", "0");    header[hc][30]=' '; hc++;
@@ -1216,7 +1217,7 @@ read_fits_header(header_t* header, file_t* fp){
 		header->id=M_INT16;
 		break;
 	case 8:
-		header->id=M_INT8;
+		header->id=M_UINT8;
 		break;
 	default:
 		zferr(fp, 2);

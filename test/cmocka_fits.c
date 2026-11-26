@@ -435,7 +435,7 @@ static void fits_mmap(void **state){
 }
 
 /*Raw arrays of each element type for fits_raw.*/
-static const int8_t raw_i8[6]={-128, -1, 0, 1, 64, 127};
+static const uint8_t raw_u8[6]={0, 1, 127, 128, 200, 255};
 static const int16_t raw_i16[6]={-32768, -300, 0, 1, 300, 32767};
 static const int32_t raw_i32[6]={INT32_MIN, -70000, 0, 1, 70000, INT32_MAX};
 static const int64_t raw_i64[6]={INT64_MIN, -5000000000LL, 0, 1, 5000000000LL, INT64_MAX};
@@ -450,7 +450,7 @@ typedef struct{
 static const raw_t raws[]={
 	{M_INT16, 2, raw_i16, 3, 2},
 	{M_INT32, 4, raw_i32, 2, 3},
-	{M_INT8, 1, raw_i8, 2, 3},//not last: checks that the fits block padding after 1 byte data is skipped
+	{M_UINT8, 1, raw_u8, 2, 3},//not last: checks that the fits block padding after 1 byte data is skipped
 	{M_INT64, 8, raw_i64, 6, 1},
 	{M_ZMP, 8, raw_zmp, 3, 2},
 	{M_DBL, 8, raw_dbl, 1, 6},
@@ -564,6 +564,9 @@ static void fits_complex(void **state){
 		read_full(fds[0], buf, sizeof(buf));//one header block and one data block
 		close(fds[0]);
 		assert_memory_equal(buf, "SIMPLE  =", 9);
+		//the primary header has EXTEND but not PCOUNT/GCOUNT, which are for extensions
+		assert_non_null(memmem(buf, 2880, "EXTEND  =", 9));
+		assert_null(memmem(buf, 2880, "PCOUNT", 6));
 		if(it==0){
 			float re, im;
 			from_big(&re, buf+2880, 4);
@@ -594,6 +597,64 @@ static void fits_complex(void **state){
 	}
 	zfree(Az);
 	cfree(Ac);
+}
+static void *int_writer(void *data){
+	writer_t *w=(writer_t *)data;
+	file_t *fp=zfdopen_as(w->fd, "w", w->suffix);
+	for(int i=0; i<4; i++){//the integer arrays of raws
+		writearr(fp, 0, raws[i].size, raws[i].magic, NULL, raws[i].p, raws[i].nx, raws[i].ny);
+	}
+	zfclose(fp);
+	return NULL;
+}
+/**
+   Integer arrays of all sizes are read as lmat in bin and fits formats. 8 bit
+   integers are unsigned, as is BITPIX=8 in fits.
+*/
+static void fits_int(void **state){
+	(void)state;
+	for(int is=0; is<NSUFFIX; is++){
+		int fds[2];
+		assert_int_equal(pipe(fds), 0);
+		writer_t w={fds[1], suffixes[is], NULL};
+		pthread_t thread;
+		pthread_create(&thread, NULL, int_writer, &w);
+		file_t *fp=zfdopen_as(fds[0], "r", suffixes[is]);
+		cell *B=readbin_fp(fp, 0, 1);
+		pthread_join(thread, NULL);
+		zfclose(fp);
+		assert_non_null(B);
+		assert_int_equal(PN(B), 4);
+		for(int i=0; i<4; i++){
+			lmat *l=lmat_cast(P(B, i));
+			assert_non_null(l);
+			assert_int_equal(NX(l), raws[i].nx);
+			assert_int_equal(NY(l), raws[i].ny);
+			for(long j=0; j<PN(l); j++){
+				long v=0;
+				switch(raws[i].size){
+				case 1: v=((const uint8_t *)raws[i].p)[j]; break;
+				case 2: v=((const int16_t *)raws[i].p)[j]; break;
+				case 4: v=((const int32_t *)raws[i].p)[j]; break;
+				default: v=(long)((const int64_t *)raws[i].p)[j]; break;
+				}
+				assert_int_equal(P(l, j), v);
+			}
+		}
+		cellfree(B);
+	}
+	//raw bytes of uint8 in fits are stored as is
+	int fds[2];
+	assert_int_equal(pipe(fds), 0);
+	file_t *fp=zfdopen_as(fds[1], "w", ".fits");
+	writearr(fp, 0, 1, M_UINT8, NULL, raw_u8, 6, 1);
+	zfclose(fp);
+	unsigned char buf[2880*2];
+	read_full(fds[0], buf, sizeof(buf));
+	close(fds[0]);
+	assert_non_null(memmem(buf, 2880, "BITPIX  =                    8", 30));
+	assert_null(memmem(buf, 2880, "BZERO", 5));
+	assert_memory_equal(buf+2880, raw_u8, 6);
 }
 /**
    Asynchronous writing (as used by dnew_file and dcellnew_file) is not
@@ -663,5 +724,6 @@ UNITTEST_MAIN(
 	cmocka_unit_test(fits_mmap),
 	cmocka_unit_test(fits_raw),
 	cmocka_unit_test(fits_complex),
+	cmocka_unit_test(fits_int),
 	cmocka_unit_test(fits_async),
 )

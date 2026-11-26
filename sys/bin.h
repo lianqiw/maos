@@ -55,7 +55,7 @@ enum {//last 2 bytes
 	
 	M_FLT    =0x6408,  /*single precision float. */
 	M_ZMP    =0x6409,  /*single precision complex */
-	M_INT8   =0x640A,  /*int 8  array */
+	M_UINT8  =0x640A,  /*unsigned int 8 array (FITS BITPIX=8 is unsigned) */
 	M_INT16  =0x640B,  /*int 16 array */
 
 	//From 0x6410 to 0x6424 are cell arrays that are not longer used except 0x6421
@@ -101,7 +101,7 @@ static inline int magic_iscomplex(uint32_t magic){
 #error "Unknown long size"
 #endif
 #define M_INT M_INT32
-#define M_STR M_INT8
+#define M_STR M_UINT8
 
 #if defined(DLONG)
 typedef long spint;
